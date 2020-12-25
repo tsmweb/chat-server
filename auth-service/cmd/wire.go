@@ -1,0 +1,56 @@
+//+build wireinject
+
+package main
+
+import (
+	"github.com/google/wire"
+	"github.com/tsmweb/auth-service/helper/database"
+	"github.com/tsmweb/auth-service/helper/handler"
+	"github.com/tsmweb/auth-service/helper/setting"
+	"github.com/tsmweb/auth-service/profile"
+	"github.com/tsmweb/helper-go/auth"
+	"github.com/tsmweb/helper-go/middleware"
+)
+
+func InitProfileRouter() *profile.Router {
+	wire.Build(
+		profile.NewRouter,
+		handler.NewHandler,
+		jwtProvider,
+		middleware.NewAuth,
+		profile.NewController,
+		profile.NewGetUseCase,
+		profile.NewCreateUseCase,
+		profile.NewUpdateUseCase,
+		profile.NewRepositoryPostgres,
+		dataBaseProvider)
+
+	return &profile.Router{}
+}
+
+/*
+ * PROVIDERS
+ */
+
+// Data Base
+var databaseInstance database.Database
+
+func dataBaseProvider() database.Database {
+	if databaseInstance == nil {
+		databaseInstance = database.NewPostgresDatabase()
+	}
+
+	return databaseInstance
+}
+
+// Authentication JWT
+var jwtInstance *auth.JWT
+
+func jwtProvider() *auth.JWT {
+	if jwtInstance == nil {
+		jwtInstance = auth.NewJWT(setting.PathPrivateKey(), setting.PathPublicKey())
+	}
+
+	return jwtInstance
+}
+
