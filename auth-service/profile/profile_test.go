@@ -7,7 +7,7 @@ import (
 
 func TestNewProfile(t *testing.T) {
 	pwd := "123456"
-	p, err := NewRouter("+5518999999999", "Steve", "Jobs", pwd)
+	p, err := NewProfile("+5518999999999", "Steve", "Jobs", pwd)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, p.ID)
@@ -56,7 +56,7 @@ func TestProfile_Validate(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		_, err := NewRouter(tc.id, tc.name, tc.lastname, tc.password)
+		_, err := NewProfile(tc.id, tc.name, tc.lastname, tc.password)
 		assert.Equal(t, err, tc.want)
 	}
 }

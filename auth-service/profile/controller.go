@@ -8,16 +8,16 @@ type Controller interface {
 }
 
 type controller struct {
-	getUseCase *GetUseCase
-	createUseCase *CreateUseCase
-	updateUseCase *UpdateUseCase
+	getUseCase GetUseCase
+	createUseCase CreateUseCase
+	updateUseCase UpdateUseCase
 }
 
 // NewController creates a new instance of Controller.
 func NewController(
-	getUseCase *GetUseCase,
-	createUseCase *CreateUseCase,
-	updateUseCase *UpdateUseCase) Controller {
+	getUseCase GetUseCase,
+	createUseCase CreateUseCase,
+	updateUseCase UpdateUseCase) Controller {
 
 	return &controller{
 		getUseCase: getUseCase,

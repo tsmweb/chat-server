@@ -5,16 +5,20 @@ import (
 	"github.com/tsmweb/helper-go/cerror"
 )
 
-type CreateUseCase struct {
+type CreateUseCase interface {
+	Execute(ID string, name string, lastname string, password string) error
+}
+
+type createUseCase struct {
 	repository Repository
 }
 
-func NewCreateUseCase(repository Repository) *CreateUseCase {
-	return &CreateUseCase{repository}
+func NewCreateUseCase(repository Repository) CreateUseCase {
+	return &createUseCase{repository}
 }
 
-func (u *CreateUseCase) Execute(ID string, name string, lastname string, password string) error {
-	p, err := NewRouter(ID, name, lastname, password)
+func (u *createUseCase) Execute(ID string, name string, lastname string, password string) error {
+	p, err := NewProfile(ID, name, lastname, password)
 	if err != nil {
 		return err
 	}

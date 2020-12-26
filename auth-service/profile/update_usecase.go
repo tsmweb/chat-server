@@ -5,15 +5,19 @@ import (
 	"github.com/tsmweb/helper-go/cerror"
 )
 
-type UpdateUseCase struct {
+type UpdateUseCase interface {
+	Execute(profile Profile) error
+}
+
+type updateUseCase struct {
 	repository Repository
 }
 
-func NewUpdateUseCase(repository Repository) *UpdateUseCase {
-	return &UpdateUseCase{repository}
+func NewUpdateUseCase(repository Repository) UpdateUseCase {
+	return &updateUseCase{repository}
 }
 
-func (u *UpdateUseCase) Execute(profile Profile) error {
+func (u *updateUseCase) Execute(profile Profile) error {
 	err := profile.Validate(UPDATE)
 	if err != nil {
 		return err
