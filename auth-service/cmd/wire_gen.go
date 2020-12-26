@@ -7,7 +7,6 @@ package main
 
 import (
 	"github.com/tsmweb/auth-service/helper/database"
-	"github.com/tsmweb/auth-service/helper/handler"
 	"github.com/tsmweb/auth-service/helper/setting"
 	"github.com/tsmweb/auth-service/profile"
 	"github.com/tsmweb/helper-go/auth"
@@ -18,15 +17,14 @@ import (
 
 func InitProfileRouter() *profile.Router {
 	jwt := jwtProvider()
-	handlerHandler := handler.NewHandler(jwt)
 	auth := middleware.NewAuth(jwt)
 	database := dataBaseProvider()
 	repository := profile.NewRepositoryPostgres(database)
 	getUseCase := profile.NewGetUseCase(repository)
 	createUseCase := profile.NewCreateUseCase(repository)
 	updateUseCase := profile.NewUpdateUseCase(repository)
-	controller := profile.NewController(getUseCase, createUseCase, updateUseCase)
-	router := profile.NewRouter(handlerHandler, auth, controller)
+	controller := profile.NewController(jwt, getUseCase, createUseCase, updateUseCase)
+	router := profile.NewRouter(auth, controller)
 	return router
 }
 

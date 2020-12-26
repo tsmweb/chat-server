@@ -5,7 +5,6 @@ package main
 import (
 	"github.com/google/wire"
 	"github.com/tsmweb/auth-service/helper/database"
-	"github.com/tsmweb/auth-service/helper/handler"
 	"github.com/tsmweb/auth-service/helper/setting"
 	"github.com/tsmweb/auth-service/profile"
 	"github.com/tsmweb/helper-go/auth"
@@ -15,14 +14,13 @@ import (
 func InitProfileRouter() *profile.Router {
 	wire.Build(
 		profile.NewRouter,
-		handler.NewHandler,
-		jwtProvider,
 		middleware.NewAuth,
 		profile.NewController,
 		profile.NewGetUseCase,
 		profile.NewCreateUseCase,
 		profile.NewUpdateUseCase,
 		profile.NewRepositoryPostgres,
+		jwtProvider,
 		dataBaseProvider)
 
 	return &profile.Router{}
