@@ -4,8 +4,8 @@ import (
 	"errors"
 	"github.com/tsmweb/auth-service/helper/setting"
 	"github.com/tsmweb/auth-service/profile"
-	"github.com/tsmweb/helper-go/auth"
-	"github.com/tsmweb/helper-go/cerror"
+	"github.com/tsmweb/go-helper-api/auth"
+	"github.com/tsmweb/go-helper-api/cerror"
 	"log"
 )
 
@@ -17,11 +17,11 @@ type Service interface {
 
 type service struct {
 	repository Repository
-	jwt        *auth.JWT
+	jwt        auth.JWT
 }
 
 // NewService creates a new instance of Service.
-func NewService(repository Repository, jwt *auth.JWT) Service {
+func NewService(repository Repository, jwt auth.JWT) Service {
 	return &service{repository, jwt}
 }
 

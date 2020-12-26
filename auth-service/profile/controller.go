@@ -3,9 +3,9 @@ package profile
 import (
 	"encoding/json"
 	"errors"
-	"github.com/tsmweb/helper-go/auth"
-	"github.com/tsmweb/helper-go/cerror"
-	ctlr "github.com/tsmweb/helper-go/controller"
+	"github.com/tsmweb/go-helper-api/auth"
+	"github.com/tsmweb/go-helper-api/cerror"
+	ctlr "github.com/tsmweb/go-helper-api/controller"
 	"log"
 	"net/http"
 )
@@ -26,7 +26,7 @@ type controller struct {
 
 // NewController creates a new instance of Controller.
 func NewController(
-	jwt *auth.JWT,
+	jwt auth.JWT,
 	getUseCase GetUseCase,
 	createUseCase CreateUseCase,
 	updateUseCase UpdateUseCase) Controller {

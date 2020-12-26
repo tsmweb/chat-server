@@ -3,7 +3,7 @@ package profile
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/tsmweb/helper-go/middleware"
+	"github.com/tsmweb/go-helper-api/middleware"
 	"github.com/urfave/negroni"
 )
 
@@ -17,12 +17,12 @@ func init() {
 
 // Router for Profile end points.
 type Router struct {
-	auth *middleware.Auth
+	auth middleware.Auth
 	controller Controller
 }
 
 // // NewRouter creates a router for Profile.
-func NewRouter(a *middleware.Auth, c Controller) *Router {
+func NewRouter(a middleware.Auth, c Controller) *Router {
 	return &Router{
 		auth: a,
 		controller: c,

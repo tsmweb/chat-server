@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"github.com/lib/pq"
 	"github.com/tsmweb/auth-service/helper/database"
-	"github.com/tsmweb/helper-go/cerror"
+	"github.com/tsmweb/go-helper-api/cerror"
 )
 
 // repositoryPostgres implementation for Repository interface.

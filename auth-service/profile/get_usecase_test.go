@@ -2,11 +2,10 @@ package profile
 
 import (
 	"errors"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/tsmweb/helper-go/cerror"
+	"github.com/tsmweb/go-helper-api/cerror"
 	"testing"
-
-	assert "github.com/stretchr/testify/require"
 )
 
 func TestGetUseCase_Execute(t *testing.T) {

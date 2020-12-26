@@ -2,7 +2,7 @@ package profile
 
 import (
 	"errors"
-	"github.com/tsmweb/helper-go/cerror"
+	"github.com/tsmweb/go-helper-api/cerror"
 )
 
 type CreateUseCase interface {

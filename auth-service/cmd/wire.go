@@ -7,8 +7,8 @@ import (
 	"github.com/tsmweb/auth-service/helper/database"
 	"github.com/tsmweb/auth-service/helper/setting"
 	"github.com/tsmweb/auth-service/profile"
-	"github.com/tsmweb/helper-go/auth"
-	"github.com/tsmweb/helper-go/middleware"
+	"github.com/tsmweb/go-helper-api/auth"
+	"github.com/tsmweb/go-helper-api/middleware"
 )
 
 func InitProfileRouter() *profile.Router {
@@ -42,9 +42,9 @@ func dataBaseProvider() database.Database {
 }
 
 // Authentication JWT
-var jwtInstance *auth.JWT
+var jwtInstance auth.JWT
 
-func jwtProvider() *auth.JWT {
+func jwtProvider() auth.JWT {
 	if jwtInstance == nil {
 		jwtInstance = auth.NewJWT(setting.PathPrivateKey(), setting.PathPublicKey())
 	}

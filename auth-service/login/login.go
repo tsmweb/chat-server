@@ -1,6 +1,6 @@
 package login
 
-import "github.com/tsmweb/helper-go/cerror"
+import "github.com/tsmweb/go-helper-api/cerror"
 
 // Login data model.
 type Login struct {

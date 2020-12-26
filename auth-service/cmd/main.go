@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/tsmweb/auth-service/helper/setting"
-	"github.com/tsmweb/helper-go/middleware"
+	"github.com/tsmweb/go-helper-api/middleware"
 	"github.com/urfave/negroni"
 	"log"
 	"os"

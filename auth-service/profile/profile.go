@@ -1,7 +1,7 @@
 package profile
 
 import (
-	"github.com/tsmweb/helper-go/util/hashutil"
+	"github.com/tsmweb/go-helper-api/util/hashutil"
 )
 
 // Presenter data model

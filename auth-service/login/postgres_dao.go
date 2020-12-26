@@ -3,8 +3,8 @@ package login
 import (
 	"database/sql"
 	"github.com/tsmweb/auth-service/helper/database"
-	"github.com/tsmweb/helper-go/cerror"
-	"github.com/tsmweb/helper-go/util/hashutil"
+	"github.com/tsmweb/go-helper-api/cerror"
+	"github.com/tsmweb/go-helper-api/util/hashutil"
 )
 
 // postgresDAO implementation for DAO interface.

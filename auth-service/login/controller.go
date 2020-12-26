@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/tsmweb/auth-service/profile"
-	"github.com/tsmweb/helper-go/auth"
-	"github.com/tsmweb/helper-go/cerror"
-	"github.com/tsmweb/helper-go/controller"
+	"github.com/tsmweb/go-helper-api/auth"
+	"github.com/tsmweb/go-helper-api/cerror"
+	"github.com/tsmweb/go-helper-api/controller"
 	"net/http"
 )
 
@@ -17,7 +17,7 @@ type Controller struct {
 }
 
 // NewRouter creates a new instance of Presenter.
-func NewController(jwt *auth.JWT, service Service) *Controller {
+func NewController(jwt auth.JWT, service Service) *Controller {
 	return &Controller{
 		controller.NewController(jwt),
 		service,
