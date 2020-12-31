@@ -5,7 +5,7 @@ type Presenter struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
 	LastName string `json:"lastname"`
-	Password string `json:"password, omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 // ToEntity mapper Presenter to Entity

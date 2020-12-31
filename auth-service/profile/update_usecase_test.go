@@ -12,8 +12,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when profile.Validate fails with ErrValidateModel", func(t *testing.T) {
-		t.Parallel()
-
+		//t.Parallel()
 		profile := Profile{
 			ID: "+5518999999999",
 			Name: "",
@@ -28,11 +27,8 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 	})
 
 	t.Run("when repository fails", func(t *testing.T) {
-		t.Parallel()
-
+		//t.Parallel()
 		r := new(mockRepository)
-		defer r.AssertExpectations(t)
-
 		r.On("Update", mock.Anything).
 			Return(errors.New("error")).
 			Once()
@@ -50,11 +46,8 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 	})
 
 	t.Run("when repository fails with ErrNotFound", func(t *testing.T) {
-		t.Parallel()
-
+		//t.Parallel()
 		r := new(mockRepository)
-		defer r.AssertExpectations(t)
-
 		r.On("Update", mock.Anything).
 			Return(cerror.ErrNotFound).
 			Once()
@@ -72,11 +65,8 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 	})
 
 	t.Run("when repository succeeds", func(t *testing.T) {
-		t.Parallel()
-
+		//t.Parallel()
 		r := new(mockRepository)
-		defer r.AssertExpectations(t)
-
 		r.On("Update", mock.Anything).
 			Return(nil).
 			Once()

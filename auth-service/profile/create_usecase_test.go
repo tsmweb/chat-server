@@ -12,8 +12,7 @@ func TestCreateUseCase_Execute(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when NewRouter fails with ErrValidateModel", func(t *testing.T) {
-		t.Parallel()
-
+		//t.Parallel()
 		r := new(mockRepository)
 		uc := NewCreateUseCase(r)
 		err := uc.Execute("+5518999999999", "Steve", "Jobs", "")
@@ -22,11 +21,8 @@ func TestCreateUseCase_Execute(t *testing.T) {
 	})
 
 	t.Run("when repository fails", func(t *testing.T) {
-		t.Parallel()
-
+		//t.Parallel()
 		r := new(mockRepository)
-		defer r.AssertExpectations(t)
-
 		r.On("Create", mock.Anything).
 			Return(errors.New("error")).
 			Once()
@@ -38,11 +34,8 @@ func TestCreateUseCase_Execute(t *testing.T) {
 	})
 
 	t.Run("when repository fails with ErrRecordAlreadyRegistered", func(t *testing.T) {
-		t.Parallel()
-
+		//t.Parallel()
 		r := new(mockRepository)
-		defer r.AssertExpectations(t)
-
 		r.On("Create", mock.Anything).
 			Return(cerror.ErrRecordAlreadyRegistered).
 			Once()
@@ -54,11 +47,8 @@ func TestCreateUseCase_Execute(t *testing.T) {
 	})
 
 	t.Run("when repository succeeds", func(t *testing.T) {
-		t.Parallel()
-
+		//t.Parallel()
 		r := new(mockRepository)
-		defer r.AssertExpectations(t)
-
 		r.On("Create", mock.Anything).
 			Return(nil).
 			Once()

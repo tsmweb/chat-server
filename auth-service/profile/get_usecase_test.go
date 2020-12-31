@@ -12,11 +12,8 @@ func TestGetUseCase_Execute(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when repository fails", func(t *testing.T) {
-		t.Parallel()
-
+		//t.Parallel()
 		r := new(mockRepository)
-		defer r.AssertExpectations(t)
-
 		r.On("Get", mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
@@ -28,11 +25,8 @@ func TestGetUseCase_Execute(t *testing.T) {
 	})
 
 	t.Run("when repository fails with ErrProfileNotFound", func(t *testing.T) {
-		t.Parallel()
-
+		//t.Parallel()
 		r := new(mockRepository)
-		defer r.AssertExpectations(t)
-
 		r.On("Get", mock.Anything).
 			Return(nil, cerror.ErrNotFound).
 			Once()
@@ -44,17 +38,14 @@ func TestGetUseCase_Execute(t *testing.T) {
 	})
 
 	t.Run("when repository succeeds", func(t *testing.T) {
-		t.Parallel()
-
-		r := new(mockRepository)
-		defer r.AssertExpectations(t)
-
+		//t.Parallel()
 		profile := Profile{
 			ID:       "+5518999999999",
 			Name:     "Steve",
 			LastName: "Jobs",
 		}
 
+		r := new(mockRepository)
 		r.On("Get", "+5518999999999").
 			Return(profile, nil).
 			Once()

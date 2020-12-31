@@ -51,6 +51,8 @@ func (c *controller) Get() http.Handler {
 
 		p, err := c.getUseCase.Execute(ID)
 		if err != nil {
+			log.Println(err.Error())
+
 			if errors.Is(err, ErrProfileNotFound) {
 				c.RespondWithError(w, http.StatusNotFound, err.Error())
 				return
@@ -85,6 +87,8 @@ func (c *controller) Create() http.Handler {
 
 		err = c.createUseCase.Execute(input.ID, input.Name, input.LastName, input.Password)
 		if err != nil {
+			log.Println(err.Error())
+
 			var errValidateModel *cerror.ErrValidateModel
 			if errors.As(err, &errValidateModel) {
 				c.RespondWithError(w, http.StatusBadRequest, err.Error())
@@ -122,6 +126,7 @@ func (c *controller) Update() http.Handler {
 		input := Presenter{}
 		err = json.NewDecoder(r.Body).Decode(&input)
 		if err != nil {
+			log.Println(err.Error())
 			c.RespondWithError(w, http.StatusUnprocessableEntity, "Malformed JSON")
 			return
 		}
@@ -134,6 +139,8 @@ func (c *controller) Update() http.Handler {
 
 		err = c.updateUseCase.Execute(input.ToEntity())
 		if err != nil {
+			log.Println(err.Error())
+
 			var errValidateModel *cerror.ErrValidateModel
 			if errors.As(err, &errValidateModel) {
 				c.RespondWithError(w, http.StatusBadRequest, err.Error())
