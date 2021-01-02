@@ -8,6 +8,7 @@ package main
 import (
 	"github.com/tsmweb/auth-service/helper/database"
 	"github.com/tsmweb/auth-service/helper/setting"
+	"github.com/tsmweb/auth-service/login"
 	"github.com/tsmweb/auth-service/profile"
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/middleware"
@@ -25,6 +26,18 @@ func InitProfileRouter() *profile.Router {
 	updateUseCase := profile.NewUpdateUseCase(repository)
 	controller := profile.NewController(jwt, getUseCase, createUseCase, updateUseCase)
 	router := profile.NewRouter(auth, controller)
+	return router
+}
+
+func InitLoginRouter() *login.Router {
+	jwt := jwtProvider()
+	auth := middleware.NewAuth(jwt)
+	database := dataBaseProvider()
+	repository := login.NewRepositoryPostgres(database)
+	loginUseCase := login.NewLoginUseCase(repository, jwt)
+	updateUseCase := login.NewUpdateUseCase(repository)
+	controller := login.NewController(jwt, loginUseCase, updateUseCase)
+	router := login.NewRoutes(auth, controller)
 	return router
 }
 

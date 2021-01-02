@@ -6,109 +6,122 @@ import (
 	"github.com/tsmweb/auth-service/profile"
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/cerror"
-	"github.com/tsmweb/go-helper-api/controller"
 	"net/http"
+
+	ctlr "github.com/tsmweb/go-helper-api/controller"
 )
 
-// Presenter provides the end point for the routers.
-type Controller struct {
-	*controller.Controller
-	service Service
+// Controller provides the end point for the routers.
+type Controller interface {
+	Login() http.Handler
+	Update() http.Handler
 }
 
-// NewRouter creates a new instance of Presenter.
-func NewController(jwt auth.JWT, service Service) *Controller {
-	return &Controller{
-		controller.NewController(jwt),
-		service,
+type controller struct {
+	*ctlr.Controller
+	loginUseCase LoginUseCase
+	updateUseCase UpdateUseCase
+}
+
+// NewController creates a new instance of Controller.
+func NewController(
+	jwt auth.JWT,
+	loginUseCase LoginUseCase,
+	updateUseCase UpdateUseCase) Controller {
+	return &controller{
+		ctlr.NewController(jwt),
+		loginUseCase,
+		updateUseCase,
 	}
 }
 
 // Login returns a token if ID and password are valid.
-// Login end point for route .../login [POST method]
-func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
-	if !c.HasContentType(r, controller.MimeApplicationJSON) {
-		c.RespondWithError(w, http.StatusUnsupportedMediaType, http.StatusText(http.StatusUnsupportedMediaType))
-		return
-	}
-
-	login := Login{}
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&login)
-	if err != nil {
-		c.RespondWithError(w, http.StatusUnprocessableEntity, "Malformed JSON")
-		return
-	}
-
-	token, err := c.service.Login(login)
-	if err != nil {
-		var errValidateModel *cerror.ErrValidateModel
-		if errors.As(err, &errValidateModel) {
-			c.RespondWithError(w, http.StatusBadRequest, err.Error())
+func (c *controller) Login() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !c.HasContentType(r, ctlr.MimeApplicationJSON) {
+			c.RespondWithError(w, http.StatusUnsupportedMediaType, http.StatusText(http.StatusUnsupportedMediaType))
 			return
 		}
 
-		if errors.Is(err, profile.ErrProfileNotFound) {
-			c.RespondWithError(w, http.StatusNotFound, err.Error())
+		input := ViewModel{}
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&input)
+		if err != nil {
+			c.RespondWithError(w, http.StatusUnprocessableEntity, "Malformed JSON")
 			return
 		}
 
-		if errors.Is(err, cerror.ErrUnauthorized) {
-			c.RespondWithError(w, http.StatusUnauthorized, err.Error())
+		token, err := c.loginUseCase.Execute(input.ID, input.Password)
+		if err != nil {
+			var errValidateModel *cerror.ErrValidateModel
+			if errors.As(err, &errValidateModel) {
+				c.RespondWithError(w, http.StatusBadRequest, err.Error())
+				return
+			}
+
+			if errors.Is(err, profile.ErrProfileNotFound) {
+				c.RespondWithError(w, http.StatusNotFound, err.Error())
+				return
+			}
+
+			if errors.Is(err, cerror.ErrUnauthorized) {
+				c.RespondWithError(w, http.StatusUnauthorized, err.Error())
+				return
+			}
+
+			c.RespondWithError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		c.RespondWithError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	c.RespondWithJSON(w, http.StatusOK, token)
+		c.RespondWithJSON(w, http.StatusOK, &TokenAuth{Token: token})
+	})
 }
 
 // Update updates password in data base.
-// Update end point for route .../login [PUT method]
-func (c *Controller) Update(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	if !c.HasContentType(r, controller.MimeApplicationJSON) {
-		c.RespondWithError(w, http.StatusUnsupportedMediaType, http.StatusText(http.StatusUnsupportedMediaType))
-		return
-	}
-
-	ID, err := c.ExtractID(r)
-	if err != nil {
-		c.RespondWithError(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
-		return
-	}
-
-	login := Login{}
-	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&login)
-	if err != nil {
-		c.RespondWithError(w, http.StatusUnprocessableEntity, "Malformed JSON")
-		return
-	}
-
-	//checks if the ID owns the data
-	if login.ID != ID {
-		c.RespondWithError(w, http.StatusUnauthorized, "You are not authorized to change the data")
-		return
-	}
-
-	err = c.service.Update(login)
-	if err != nil {
-		var errValidateModel *cerror.ErrValidateModel
-		if errors.As(err, &errValidateModel) {
-			c.RespondWithError(w, http.StatusBadRequest, err.Error())
+func (c *controller) Update() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !c.HasContentType(r, ctlr.MimeApplicationJSON) {
+			c.RespondWithError(w, http.StatusUnsupportedMediaType, http.StatusText(http.StatusUnsupportedMediaType))
 			return
 		}
 
-		if errors.Is(err, profile.ErrProfileNotFound) {
-			c.RespondWithError(w, http.StatusNotFound, err.Error())
+		ID, err := c.ExtractID(r)
+		if err != nil {
+			c.RespondWithError(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 			return
 		}
 
-		c.RespondWithError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
+		input := ViewModel{}
+		decoder := json.NewDecoder(r.Body)
+		err = decoder.Decode(&input)
+		if err != nil {
+			c.RespondWithError(w, http.StatusUnprocessableEntity, "Malformed JSON")
+			return
+		}
 
-	w.WriteHeader(http.StatusOK)
+		// checks if the ID owns the data
+		if input.ID != ID {
+			c.RespondWithError(w, http.StatusUnauthorized, "You are not authorized to change the data")
+			return
+		}
+
+		err = c.updateUseCase.Execute(input.ToEntity())
+		if err != nil {
+			var errValidateModel *cerror.ErrValidateModel
+			if errors.As(err, &errValidateModel) {
+				c.RespondWithError(w, http.StatusBadRequest, err.Error())
+				return
+			}
+
+			if errors.Is(err, profile.ErrProfileNotFound) {
+				c.RespondWithError(w, http.StatusNotFound, err.Error())
+				return
+			}
+
+			c.RespondWithError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	})
 }

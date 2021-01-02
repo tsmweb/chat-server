@@ -18,22 +18,25 @@ func init() {
 // Router for Login end points.
 type Router struct {
 	auth middleware.Auth
-	controller *Controller
+	controller Controller
 }
 
 // NewRoutes creates a router for Login.
-func NewRoutes(controller *Controller, auth middleware.Auth) *Router {
-	return &Router{auth, controller}
+func NewRoutes(a middleware.Auth, c Controller) *Router {
+	return &Router{
+		auth: a,
+		controller: c,
+	}
 }
 
-// Route sets the end points for the Login.
-func (r *Router) Route(router *mux.Router) {
+// MakeRouters creates a router for Login.
+func (r *Router) MakeRouters(mr *mux.Router) {
 	// POST /login
-	router.HandleFunc(resource, r.controller.Login).Methods("POST")
+	mr.Handle(resource, r.controller.Login()).Methods("POST")
 
 	// PUT /login
-	router.Handle(resource, negroni.New(
+	mr.Handle(resource, negroni.New(
 		negroni.HandlerFunc(r.auth.RequireTokenAuth),
-		negroni.HandlerFunc(r.controller.Update),
+		negroni.Wrap(r.controller.Update()),
 	)).Methods("PUT")
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/tsmweb/auth-service/helper/common"
 	"github.com/tsmweb/go-helper-api/cerror"
 	"net/http"
 	"net/http/httptest"
@@ -13,7 +14,7 @@ import (
 
 func TestNewController(t *testing.T) {
 	c := NewController(
-			new(mockJWT),
+			new(common.MockJWT),
 			new(mockGetUseCase),
 			new(mockCreateUseCase),
 			new(mockUpdateUseCase))
@@ -36,7 +37,7 @@ func TestController_Get(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, resource, nil)
 		rec := httptest.NewRecorder()
 
-		mJWT := new(mockJWT)
+		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", req, "id").
 			Return(nil, errors.New("error")).
 			Once()
@@ -59,7 +60,7 @@ func TestController_Get(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, resource, nil)
 		rec := httptest.NewRecorder()
 
-		mJWT := new(mockJWT)
+		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", req, "id").
 			Return("+5518999999999", nil).
 			Once()
@@ -82,7 +83,7 @@ func TestController_Get(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, resource, nil)
 		rec := httptest.NewRecorder()
 
-		mJWT := new(mockJWT)
+		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", req, "id").
 			Return("+5518999999999", nil).
 			Once()
@@ -111,7 +112,7 @@ func TestController_Get(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, resource, nil)
 		rec := httptest.NewRecorder()
 
-		mJWT := new(mockJWT)
+		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", req, "id").
 			Return("+5518999999999", nil).
 			Once()
@@ -129,7 +130,7 @@ func TestController_Create(t *testing.T) {
 
 	t.Run("when controller return StatusUnsupportedMediaType", func(t *testing.T) {
 		//t.Parallel()
-		presenter := Presenter{
+		vm := ViewModel{
 			ID:       "+5518999999999",
 			Name:     "Steve",
 			LastName: "Jobs",
@@ -138,19 +139,19 @@ func TestController_Create(t *testing.T) {
 
 		mGet := new(mockGetUseCase)
 		mCreate := new(mockCreateUseCase)
-		mCreate.On("Execute", presenter.ID, presenter.Name, presenter.LastName, presenter.Password).
+		mCreate.On("Execute", vm.ID, vm.Name, vm.LastName, vm.Password).
 			Return(nil).
 			Once()
 		mUpdate := new(mockUpdateUseCase)
 
-		json, err := json.Marshal(presenter)
+		json, err := json.Marshal(vm)
 		assert.Nil(t, err)
 
 		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader(json))
 		req.Header.Set("Content-Type", "text/plain")
 		rec := httptest.NewRecorder()
 
-		mJWT := new(mockJWT)
+		mJWT := new(common.MockJWT)
 
 		ctrl := NewController(mJWT, mGet, mCreate, mUpdate)
 		ctrl.Create().ServeHTTP(rec, req)
@@ -160,7 +161,7 @@ func TestController_Create(t *testing.T) {
 
 	t.Run("when controller return StatusBadRequest", func(t *testing.T) {
 		//t.Parallel()
-		presenter := Presenter{
+		vm := ViewModel{
 			ID:       "+5518999999999",
 			LastName: "Jobs",
 			Password: "123456",
@@ -168,19 +169,19 @@ func TestController_Create(t *testing.T) {
 
 		mGet := new(mockGetUseCase)
 		mCreate := new(mockCreateUseCase)
-		mCreate.On("Execute", presenter.ID, "", presenter.LastName, presenter.Password).
+		mCreate.On("Execute", vm.ID, "", vm.LastName, vm.Password).
 			Return(ErrNameValidateModel).
 			Once()
 		mUpdate := new(mockUpdateUseCase)
 
-		jsonBody, err := json.Marshal(presenter)
+		jsonBody, err := json.Marshal(vm)
 		assert.Nil(t, err)
 
 		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader(jsonBody))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
-		mJWT := new(mockJWT)
+		mJWT := new(common.MockJWT)
 
 		ctrl := NewController(mJWT, mGet, mCreate, mUpdate)
 		ctrl.Create().ServeHTTP(rec, req)
@@ -190,7 +191,7 @@ func TestController_Create(t *testing.T) {
 
 	t.Run("when controller return StatusUnprocessableEntity", func(t *testing.T) {
 		//t.Parallel()
-		presenter := Presenter{
+		vm := ViewModel{
 			ID:       "+5518999999999",
 			Name:     "Steve",
 			LastName: "Jobs",
@@ -199,7 +200,7 @@ func TestController_Create(t *testing.T) {
 
 		mGet := new(mockGetUseCase)
 		mCreate := new(mockCreateUseCase)
-		mCreate.On("Execute", presenter.ID, presenter.Name, presenter.LastName, presenter.Password).
+		mCreate.On("Execute", vm.ID, vm.Name, vm.LastName, vm.Password).
 			Return(nil).
 			Once()
 		mUpdate := new(mockUpdateUseCase)
@@ -208,7 +209,7 @@ func TestController_Create(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
-		mJWT := new(mockJWT)
+		mJWT := new(common.MockJWT)
 
 		ctrl := NewController(mJWT, mGet, mCreate, mUpdate)
 		ctrl.Create().ServeHTTP(rec, req)
@@ -218,7 +219,7 @@ func TestController_Create(t *testing.T) {
 
 	t.Run("when controller return StatusConflict", func(t *testing.T) {
 		//t.Parallel()
-		presenter := Presenter{
+		vm := ViewModel{
 			ID:       "+5518999999999",
 			Name:     "Steve",
 			LastName: "Jobs",
@@ -227,19 +228,19 @@ func TestController_Create(t *testing.T) {
 
 		mGet := new(mockGetUseCase)
 		mCreate := new(mockCreateUseCase)
-		mCreate.On("Execute", presenter.ID, presenter.Name, presenter.LastName, presenter.Password).
+		mCreate.On("Execute", vm.ID, vm.Name, vm.LastName, vm.Password).
 			Return(cerror.ErrRecordAlreadyRegistered).
 			Once()
 		mUpdate := new(mockUpdateUseCase)
 
-		jsonBody, err := json.Marshal(presenter)
+		jsonBody, err := json.Marshal(vm)
 		assert.Nil(t, err)
 
 		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader(jsonBody))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
-		mJWT := new(mockJWT)
+		mJWT := new(common.MockJWT)
 
 		ctrl := NewController(mJWT, mGet, mCreate, mUpdate)
 		ctrl.Create().ServeHTTP(rec, req)
@@ -249,7 +250,7 @@ func TestController_Create(t *testing.T) {
 
 	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		presenter := Presenter{
+		vm := ViewModel{
 			ID:       "+5518999999999",
 			Name:     "Steve",
 			LastName: "Jobs",
@@ -258,19 +259,19 @@ func TestController_Create(t *testing.T) {
 
 		mGet := new(mockGetUseCase)
 		mCreate := new(mockCreateUseCase)
-		mCreate.On("Execute", presenter.ID, presenter.Name, presenter.LastName, presenter.Password).
+		mCreate.On("Execute", vm.ID, vm.Name, vm.LastName, vm.Password).
 			Return(cerror.ErrInternalServer).
 			Once()
 		mUpdate := new(mockUpdateUseCase)
 
-		jsonBody, err := json.Marshal(presenter)
+		jsonBody, err := json.Marshal(vm)
 		assert.Nil(t, err)
 
 		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader(jsonBody))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
-		mJWT := new(mockJWT)
+		mJWT := new(common.MockJWT)
 
 		ctrl := NewController(mJWT, mGet, mCreate, mUpdate)
 		ctrl.Create().ServeHTTP(rec, req)
@@ -280,7 +281,7 @@ func TestController_Create(t *testing.T) {
 
 	t.Run("when controller return StatusCreated", func(t *testing.T) {
 		//t.Parallel()
-		presenter := Presenter{
+		vm := ViewModel{
 			ID:       "+5518999999999",
 			Name:     "Steve",
 			LastName: "Jobs",
@@ -289,19 +290,19 @@ func TestController_Create(t *testing.T) {
 
 		mGet := new(mockGetUseCase)
 		mCreate := new(mockCreateUseCase)
-		mCreate.On("Execute", presenter.ID, presenter.Name, presenter.LastName, presenter.Password).
+		mCreate.On("Execute", vm.ID, vm.Name, vm.LastName, vm.Password).
 			Return(nil).
 			Once()
 		mUpdate := new(mockUpdateUseCase)
 
-		jsonBody, err := json.Marshal(presenter)
+		jsonBody, err := json.Marshal(vm)
 		assert.Nil(t, err)
 
 		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader(jsonBody))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
-		mJWT := new(mockJWT)
+		mJWT := new(common.MockJWT)
 
 		ctrl := NewController(mJWT, mGet, mCreate, mUpdate)
 		ctrl.Create().ServeHTTP(rec, req)
@@ -313,7 +314,7 @@ func TestController_Create(t *testing.T) {
 func TestController_Update(t *testing.T) {
 	t.Run("when controller return StatusUnsupportedMediaType", func(t *testing.T) {
 		//t.Parallel()
-		presenter := Presenter{
+		vm := ViewModel{
 			ID:       "+5518999999999",
 			Name:     "Steve",
 			LastName: "Jobs",
@@ -322,18 +323,18 @@ func TestController_Update(t *testing.T) {
 		mGet := new(mockGetUseCase)
 		mCreate := new(mockCreateUseCase)
 		mUpdate := new(mockUpdateUseCase)
-		mUpdate.On("Execute", presenter.ToEntity()).
+		mUpdate.On("Execute", vm.ToEntity()).
 			Return(nil).
 			Once()
 
-		json, err := json.Marshal(presenter)
+		json, err := json.Marshal(vm)
 		assert.Nil(t, err)
 
 		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader(json))
 		req.Header.Set("Content-Type", "text/plain")
 		rec := httptest.NewRecorder()
 
-		mJWT := new(mockJWT)
+		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", req, "id").
 			Return("+5518999999999", nil).
 			Once()
@@ -346,7 +347,7 @@ func TestController_Update(t *testing.T) {
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
-		presenter := Presenter{
+		vm := ViewModel{
 			ID:       "+5518999999999",
 			Name:     "Steve",
 			LastName: "Jobs",
@@ -355,18 +356,18 @@ func TestController_Update(t *testing.T) {
 		mGet := new(mockGetUseCase)
 		mCreate := new(mockCreateUseCase)
 		mUpdate := new(mockUpdateUseCase)
-		mUpdate.On("Execute", presenter.ToEntity()).
+		mUpdate.On("Execute", vm.ToEntity()).
 			Return(nil).
 			Once()
 
-		json, err := json.Marshal(presenter)
+		json, err := json.Marshal(vm)
 		assert.Nil(t, err)
 
 		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader(json))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
-		mJWT := new(mockJWT)
+		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", req, "id").
 			Return(nil, errors.New("error")).
 			Once()
@@ -379,7 +380,7 @@ func TestController_Update(t *testing.T) {
 
 	t.Run("when controller return StatusUnprocessableEntity", func(t *testing.T) {
 		//t.Parallel()
-		presenter := Presenter{
+		vm := ViewModel{
 			ID:       "+5518999999999",
 			Name:     "Steve",
 			LastName: "Jobs",
@@ -389,7 +390,7 @@ func TestController_Update(t *testing.T) {
 		mGet := new(mockGetUseCase)
 		mCreate := new(mockCreateUseCase)
 		mUpdate := new(mockUpdateUseCase)
-		mUpdate.On("Execute", presenter.ToEntity()).
+		mUpdate.On("Execute", vm.ToEntity()).
 			Return(nil).
 			Once()
 
@@ -397,7 +398,7 @@ func TestController_Update(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
-		mJWT := new(mockJWT)
+		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", req, "id").
 			Return("+5518999999999", nil).
 			Once()
@@ -410,7 +411,7 @@ func TestController_Update(t *testing.T) {
 
 	t.Run("when controller return StatusUnauthorized", func(t *testing.T) {
 		//t.Parallel()
-		presenter := Presenter{
+		vm := ViewModel{
 			ID:       "+5518999999999",
 			Name:     "Steve",
 			LastName: "Jobs",
@@ -419,18 +420,18 @@ func TestController_Update(t *testing.T) {
 		mGet := new(mockGetUseCase)
 		mCreate := new(mockCreateUseCase)
 		mUpdate := new(mockUpdateUseCase)
-		mUpdate.On("Execute", presenter.ToEntity()).
+		mUpdate.On("Execute", vm.ToEntity()).
 			Return(nil).
 			Once()
 
-		jsonBody, err := json.Marshal(presenter)
+		jsonBody, err := json.Marshal(vm)
 		assert.Nil(t, err)
 
 		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader(jsonBody))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
-		mJWT := new(mockJWT)
+		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", req, "id").
 			Return("+5511988888888", nil).
 			Once()
@@ -443,7 +444,7 @@ func TestController_Update(t *testing.T) {
 
 	t.Run("when controller return StatusBadRequest", func(t *testing.T) {
 		//t.Parallel()
-		presenter := Presenter{
+		vm := ViewModel{
 			ID:       "+5518999999999",
 			LastName: "Jobs",
 		}
@@ -451,18 +452,18 @@ func TestController_Update(t *testing.T) {
 		mGet := new(mockGetUseCase)
 		mCreate := new(mockCreateUseCase)
 		mUpdate := new(mockUpdateUseCase)
-		mUpdate.On("Execute", presenter.ToEntity()).
+		mUpdate.On("Execute", vm.ToEntity()).
 			Return(ErrNameValidateModel).
 			Once()
 
-		jsonBody, err := json.Marshal(presenter)
+		jsonBody, err := json.Marshal(vm)
 		assert.Nil(t, err)
 
 		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader(jsonBody))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
-		mJWT := new(mockJWT)
+		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", req, "id").
 			Return("+5518999999999", nil).
 			Once()
@@ -475,7 +476,7 @@ func TestController_Update(t *testing.T) {
 
 	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		presenter := Presenter{
+		vm := ViewModel{
 			ID:       "+5518999999999",
 			Name:     "Steve",
 			LastName: "Jobs",
@@ -484,18 +485,18 @@ func TestController_Update(t *testing.T) {
 		mGet := new(mockGetUseCase)
 		mCreate := new(mockCreateUseCase)
 		mUpdate := new(mockUpdateUseCase)
-		mUpdate.On("Execute", presenter.ToEntity()).
+		mUpdate.On("Execute", vm.ToEntity()).
 			Return(cerror.ErrInternalServer).
 			Once()
 
-		jsonBody, err := json.Marshal(presenter)
+		jsonBody, err := json.Marshal(vm)
 		assert.Nil(t, err)
 
 		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader(jsonBody))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
-		mJWT := new(mockJWT)
+		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", req, "id").
 			Return("+5518999999999", nil).
 			Once()
@@ -508,7 +509,7 @@ func TestController_Update(t *testing.T) {
 
 	t.Run("when controller return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		presenter := Presenter{
+		vm := ViewModel{
 			ID:       "+5518999999999",
 			Name:     "Steve",
 			LastName: "Jobs",
@@ -517,18 +518,18 @@ func TestController_Update(t *testing.T) {
 		mGet := new(mockGetUseCase)
 		mCreate := new(mockCreateUseCase)
 		mUpdate := new(mockUpdateUseCase)
-		mUpdate.On("Execute", presenter.ToEntity()).
+		mUpdate.On("Execute", vm.ToEntity()).
 			Return(nil).
 			Once()
 
-		jsonBody, err := json.Marshal(presenter)
+		jsonBody, err := json.Marshal(vm)
 		assert.Nil(t, err)
 
 		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader(jsonBody))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
-		mJWT := new(mockJWT)
+		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", req, "id").
 			Return("+5518999999999", nil).
 			Once()

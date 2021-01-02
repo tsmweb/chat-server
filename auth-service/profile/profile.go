@@ -4,7 +4,7 @@ import (
 	"github.com/tsmweb/go-helper-api/util/hashutil"
 )
 
-// Presenter data model
+// Profile data model
 type Profile struct {
 	ID       string
 	Name     string
@@ -12,7 +12,7 @@ type Profile struct {
 	Password string
 }
 
-// NewRouter create a new profile
+// NewProfile create a new Profile
 func NewProfile(ID string, name string, lastname string, password string) (Profile, error) {
 	p := Profile{
 		ID:       ID,
@@ -26,7 +26,7 @@ func NewProfile(ID string, name string, lastname string, password string) (Profi
 		return p, err
 	}
 
-	pwd, err := generatePassword(password)
+	pwd, err := hashutil.HashSHA1(password)
 	if err != nil {
 		return p, err
 	}
@@ -35,7 +35,7 @@ func NewProfile(ID string, name string, lastname string, password string) (Profi
 	return p, nil
 }
 
-// Validate model Presenter.
+// Validate model Profile.
 func (p Profile) Validate(op Operation) error {
 	if p.ID == "" {
 		return ErrIDValidateModel
@@ -48,13 +48,4 @@ func (p Profile) Validate(op Operation) error {
 	}
 
 	return nil
-}
-
-func generatePassword(raw string) (string ,error) {
-	hash, err := hashutil.HashSHA1(raw)
-	if err != nil {
-		return "", err
-	}
-
-	return hash, nil
 }

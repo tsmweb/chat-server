@@ -19,8 +19,8 @@ func main() {
 	profileRouter := InitProfileRouter()
 	profileRouter.MakeRouters(router)
 
-	//loginRouter := InitLoginRouter()
-	//loginRouter.MakeRouters(router)
+	loginRouter := InitLoginRouter()
+	loginRouter.MakeRouters(router)
 
 	handler := middleware.GZIP(router)
 	handler = middleware.CORS(handler)

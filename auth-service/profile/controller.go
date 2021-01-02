@@ -62,10 +62,10 @@ func (c *controller) Get() http.Handler {
 			return
 		}
 
-		presenter := Presenter{}
-		presenter.FromEntity(p)
+		vm := ViewModel{}
+		vm.FromEntity(p)
 
-		c.RespondWithJSON(w, http.StatusOK, presenter)
+		c.RespondWithJSON(w, http.StatusOK, vm)
 	})
 }
 
@@ -77,7 +77,7 @@ func (c *controller) Create() http.Handler {
 			return
 		}
 
-		input := Presenter{}
+		input := ViewModel{}
 		err := json.NewDecoder(r.Body).Decode(&input)
 		if err != nil {
 			log.Println(err.Error())
@@ -123,7 +123,7 @@ func (c *controller) Update() http.Handler {
 			return
 		}
 
-		input := Presenter{}
+		input := ViewModel{}
 		err = json.NewDecoder(r.Body).Decode(&input)
 		if err != nil {
 			log.Println(err.Error())

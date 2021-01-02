@@ -11,7 +11,7 @@ import (
 func TestCreateUseCase_Execute(t *testing.T) {
 	//t.Parallel()
 
-	t.Run("when NewRouter fails with ErrValidateModel", func(t *testing.T) {
+	t.Run("when use case fails with ErrValidateModel", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		uc := NewCreateUseCase(r)
@@ -20,20 +20,7 @@ func TestCreateUseCase_Execute(t *testing.T) {
 		assert.Equal(t, ErrPasswordValidateModel, err)
 	})
 
-	t.Run("when repository fails", func(t *testing.T) {
-		//t.Parallel()
-		r := new(mockRepository)
-		r.On("Create", mock.Anything).
-			Return(errors.New("error")).
-			Once()
-
-		uc := NewCreateUseCase(r)
-		err := uc.Execute("+5518999999999", "Steve", "Jobs", "123456")
-
-		assert.NotNil(t, err)
-	})
-
-	t.Run("when repository fails with ErrRecordAlreadyRegistered", func(t *testing.T) {
+	t.Run("when use case fails with ErrRecordAlreadyRegistered", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		r.On("Create", mock.Anything).
@@ -46,7 +33,20 @@ func TestCreateUseCase_Execute(t *testing.T) {
 		assert.Equal(t, cerror.ErrRecordAlreadyRegistered, err)
 	})
 
-	t.Run("when repository succeeds", func(t *testing.T) {
+	t.Run("when use case fails with ErrInternalServer", func(t *testing.T) {
+		//t.Parallel()
+		r := new(mockRepository)
+		r.On("Create", mock.Anything).
+			Return(errors.New("error")).
+			Once()
+
+		uc := NewCreateUseCase(r)
+		err := uc.Execute("+5518999999999", "Steve", "Jobs", "123456")
+
+		assert.Equal(t, cerror.ErrInternalServer, err)
+	})
+
+	t.Run("when use case succeeds", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		r.On("Create", mock.Anything).

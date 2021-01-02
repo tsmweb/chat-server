@@ -11,19 +11,6 @@ import (
 func TestGetUseCase_Execute(t *testing.T) {
 	//t.Parallel()
 
-	t.Run("when repository fails", func(t *testing.T) {
-		//t.Parallel()
-		r := new(mockRepository)
-		r.On("Get", mock.Anything).
-			Return(nil, errors.New("error")).
-			Once()
-
-		uc := NewGetUseCase(r)
-		_, err := uc.Execute("+5518999999999")
-
-		assert.NotNil(t, err)
-	})
-
 	t.Run("when repository fails with ErrProfileNotFound", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
@@ -37,7 +24,20 @@ func TestGetUseCase_Execute(t *testing.T) {
 		assert.Equal(t, ErrProfileNotFound, err)
 	})
 
-	t.Run("when repository succeeds", func(t *testing.T) {
+	t.Run("when use case fails with ErrInternalServer", func(t *testing.T) {
+		//t.Parallel()
+		r := new(mockRepository)
+		r.On("Get", mock.Anything).
+			Return(nil, errors.New("error")).
+			Once()
+
+		uc := NewGetUseCase(r)
+		_, err := uc.Execute("+5518999999999")
+
+		assert.Equal(t, cerror.ErrInternalServer, err)
+	})
+
+	t.Run("when use case succeeds", func(t *testing.T) {
 		//t.Parallel()
 		profile := Profile{
 			ID:       "+5518999999999",
