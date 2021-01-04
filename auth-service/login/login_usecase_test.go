@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/tsmweb/auth-service/helper/common"
+	"github.com/tsmweb/auth-service/common"
 	"github.com/tsmweb/auth-service/helper/setting"
 	"github.com/tsmweb/auth-service/profile"
 	"github.com/tsmweb/go-helper-api/cerror"

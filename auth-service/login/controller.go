@@ -6,6 +6,7 @@ import (
 	"github.com/tsmweb/auth-service/profile"
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/cerror"
+	"log"
 	"net/http"
 
 	ctlr "github.com/tsmweb/go-helper-api/controller"
@@ -47,12 +48,14 @@ func (c *controller) Login() http.Handler {
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&input)
 		if err != nil {
+			log.Println(err.Error())
 			c.RespondWithError(w, http.StatusUnprocessableEntity, "Malformed JSON")
 			return
 		}
 
 		token, err := c.loginUseCase.Execute(input.ID, input.Password)
 		if err != nil {
+			log.Println(err.Error())
 			var errValidateModel *cerror.ErrValidateModel
 			if errors.As(err, &errValidateModel) {
 				c.RespondWithError(w, http.StatusBadRequest, err.Error())
@@ -87,6 +90,7 @@ func (c *controller) Update() http.Handler {
 
 		ID, err := c.ExtractID(r)
 		if err != nil {
+			log.Println(err.Error())
 			c.RespondWithError(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 			return
 		}
@@ -95,6 +99,7 @@ func (c *controller) Update() http.Handler {
 		decoder := json.NewDecoder(r.Body)
 		err = decoder.Decode(&input)
 		if err != nil {
+			log.Println(err.Error())
 			c.RespondWithError(w, http.StatusUnprocessableEntity, "Malformed JSON")
 			return
 		}
@@ -107,6 +112,7 @@ func (c *controller) Update() http.Handler {
 
 		err = c.updateUseCase.Execute(input.ToEntity())
 		if err != nil {
+			log.Println(err.Error())
 			var errValidateModel *cerror.ErrValidateModel
 			if errors.As(err, &errValidateModel) {
 				c.RespondWithError(w, http.StatusBadRequest, err.Error())
