@@ -7,30 +7,32 @@ import (
 	"testing"
 )
 
-func TestGetUseCase_Execute(t *testing.T) {
+func TestGetPresenceUseCase_Execute(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when use case fails with ErrContactNotFound", func(t *testing.T) {
 		//t.Parallel()
+		var presence PresenceType = NotFound
+
 		r := new(mockRepository)
-		r.On("Get", mock.Anything, mock.Anything).
-			Return(nil, nil).
+		r.On("GetPresence", mock.Anything, mock.Anything).
+			Return(presence, nil).
 			Once()
 
-		uc := NewGetUseCase(r)
+		uc := NewGetPresenceUseCase(r)
 		_, err := uc.Execute("+5518999999999", "+5518977777777")
 
 		assert.Equal(t, ErrContactNotFound, err)
 	})
 
-	t.Run("when use case fails with Error", func(t *testing.T) {
+	t.Run("when use case fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("Get", mock.Anything, mock.Anything).
+		r.On("GetPresence", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
 
-		uc := NewGetUseCase(r)
+		uc := NewGetPresenceUseCase(r)
 		_, err := uc.Execute("+5518999999999", "+5518977777777")
 
 		assert.NotNil(t, err)
@@ -38,22 +40,17 @@ func TestGetUseCase_Execute(t *testing.T) {
 
 	t.Run("when use case succeeds", func(t *testing.T) {
 		//t.Parallel()
-		contact := &Contact{
-			ID: "+5518977777777",
-			Name: "Bill",
-			LastName: "Gates",
-			ProfileID: "+5518999999999",
-		}
+		var presence PresenceType = Online
 
 		r := new(mockRepository)
-		r.On("Get", mock.Anything, mock.Anything).
-			Return(contact, nil).
+		r.On("GetPresence", mock.Anything, mock.Anything).
+			Return(presence, nil).
 			Once()
 
-		uc := NewGetUseCase(r)
-		c, err := uc.Execute("+5518999999999", "+5518977777777")
+		uc := NewGetPresenceUseCase(r)
+		p, err := uc.Execute("+5518999999999", "+5518977777777")
 
 		assert.Nil(t, err)
-		assert.Equal(t, contact, c)
+		assert.Equal(t, presence, p)
 	})
 }

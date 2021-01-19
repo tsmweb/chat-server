@@ -1,13 +1,8 @@
 package contact
 
-import (
-	"errors"
-	"github.com/tsmweb/go-helper-api/cerror"
-)
-
 // GetAllUseCase returns a list of contacts by profileID, otherwise an error is returned.
 type GetAllUseCase interface {
-	Execute(profileID string) ([]Contact, error)
+	Execute(profileID string) ([]*Contact, error)
 }
 
 type getAllUseCase struct {
@@ -20,16 +15,13 @@ func NewGetAllUseCase(r Repository) GetAllUseCase {
 }
 
 // Execute executes the get use case.
-func (u *getAllUseCase) Execute(profileID string) ([]Contact, error) {
+func (u *getAllUseCase) Execute(profileID string) ([]*Contact, error) {
 	contacts, err := u.repository.GetAll(profileID)
 	if err != nil {
-		if errors.Is(err, cerror.ErrNotFound) {
-			return contacts, ErrContactNotFound
-		}
-		return contacts, cerror.ErrInternalServer
+		return nil, err
 	}
-	if len(contacts) == 0 {
-		return contacts, ErrContactNotFound
+	if contacts == nil || len(contacts) == 0 {
+		return nil, ErrContactNotFound
 	}
 
 	return contacts, nil

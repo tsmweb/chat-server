@@ -1,9 +1,9 @@
 package contact
 
 import (
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/tsmweb/go-helper-api/cerror"
 	"testing"
 )
 
@@ -12,7 +12,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 
 	t.Run("when use case fails with ErrValidateModel", func(t *testing.T) {
 		//t.Parallel()
-		contact := Contact{
+		contact := &Contact{
 			ID: "+5518977777777",
 			Name: "Bill",
 			LastName: "Gates",
@@ -30,10 +30,10 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		r.On("Update", mock.Anything).
-			Return(cerror.ErrNotFound).
+			Return(0, nil).
 			Once()
 
-		contact := Contact{
+		contact := &Contact{
 			ID: "+5518977777777",
 			Name: "Bill",
 			LastName: "Gates",
@@ -46,14 +46,14 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 		assert.Equal(t, ErrContactNotFound, err)
 	})
 
-	t.Run("when use case fails with ErrInternalServer", func(t *testing.T) {
+	t.Run("when use case fails with Error", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		r.On("Update", mock.Anything).
-			Return(cerror.ErrInternalServer).
+			Return(0, errors.New("error")).
 			Once()
 
-		contact := Contact{
+		contact := &Contact{
 			ID: "+5518977777777",
 			Name: "Bill",
 			LastName: "Gates",
@@ -63,17 +63,17 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 		uc := NewUpdateUseCase(r)
 		err := uc.Execute(contact)
 
-		assert.Equal(t, cerror.ErrInternalServer, err)
+		assert.NotNil(t, err)
 	})
 
 	t.Run("when use case succeeds", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		r.On("Update", mock.Anything).
-			Return(nil).
+			Return(1, nil).
 			Once()
 
-		contact := Contact{
+		contact := &Contact{
 			ID: "+5518977777777",
 			Name: "Bill",
 			LastName: "Gates",

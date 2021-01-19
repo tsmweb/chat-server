@@ -4,7 +4,6 @@ import (
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/tsmweb/go-helper-api/cerror"
 	"testing"
 )
 
@@ -15,7 +14,7 @@ func TestGetAllUseCase_Execute(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		r.On("GetAll", mock.Anything).
-			Return(nil, cerror.ErrNotFound).
+			Return(nil, nil).
 			Once()
 
 		uc := NewGetAllUseCase(r)
@@ -24,7 +23,7 @@ func TestGetAllUseCase_Execute(t *testing.T) {
 		assert.Equal(t, ErrContactNotFound, err)
 	})
 
-	t.Run("when use case fails with ErrInternalServer", func(t *testing.T) {
+	t.Run("when use case fails with Error", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		r.On("GetAll", mock.Anything).
@@ -34,12 +33,12 @@ func TestGetAllUseCase_Execute(t *testing.T) {
 		uc := NewGetAllUseCase(r)
 		_, err := uc.Execute("+5518999999999")
 
-		assert.Equal(t, cerror.ErrInternalServer, err)
+		assert.NotNil(t, err)
 	})
 
 	t.Run("when use case succeeds", func(t *testing.T) {
 		//t.Parallel()
-		contacts := []Contact{
+		contacts := []*Contact{
 			{
 				ID: "+5518977777777",
 				Name: "Bill",

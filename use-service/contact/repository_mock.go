@@ -8,23 +8,21 @@ type mockRepository struct {
 }
 
 // Get represents the simulated method for the Get feature in the Repository layer.
-func (m *mockRepository) Get(profileID, contactID string) (Contact, error) {
-	c := Contact{}
+func (m *mockRepository) Get(profileID, contactID string) (*Contact, error) {
 	args := m.Called(profileID, contactID)
 	if args.Get(0) == nil {
-		return c, args.Error(1)
+		return nil, args.Error(1)
 	}
-	return args.Get(0).(Contact), nil
+	return args.Get(0).(*Contact), nil
 }
 
 // GetAll represents the simulated method for the GetAll feature in the Repository layer.
-func (m *mockRepository) GetAll(profileID string) ([]Contact, error) {
-	var c []Contact
+func (m *mockRepository) GetAll(profileID string) ([]*Contact, error) {
 	args := m.Called(profileID)
 	if args.Get(0) == nil {
-		return c, args.Error(1)
+		return nil, args.Error(1)
 	}
-	return args.Get(0).([]Contact), nil
+	return args.Get(0).([]*Contact), nil
 }
 
 // ExistsProfile represents the simulated method for the ExistsProfile feature in the Repository layer.
@@ -36,20 +34,53 @@ func (m *mockRepository) ExistsProfile(ID string) (bool, error) {
 	return args.Get(0).(bool), nil
 }
 
+// GetPresence represents the simulated method for the GetPresence feature in the Repository layer.
+func (m *mockRepository) GetPresence(profileID, contactID string) (PresenceType, error) {
+	args := m.Called(profileID, contactID)
+	if args.Error(1) != nil {
+		return NotFound, args.Error(1)
+	}
+	return args.Get(0).(PresenceType), nil
+}
+
 // Create represents the simulated method for the Create feature in the Repository layer.
-func (m *mockRepository) Create(c Contact) error {
+func (m *mockRepository) Create(c *Contact) error {
 	args := m.Called(c)
 	return args.Error(0)
 }
 
 // Update represents the simulated method for the Update feature in the Repository layer.
-func (m *mockRepository) Update(c Contact) error {
+func (m *mockRepository) Update(c *Contact) (int, error) {
 	args := m.Called(c)
-	return args.Error(0)
+	if args.Error(1) != nil {
+		return 0, args.Error(1)
+	}
+	return args.Get(0).(int), nil
 }
 
 // Delete represents the simulated method for the Delete feature in the Repository layer.
-func (m *mockRepository) Delete(c Contact) error {
+func (m *mockRepository) Delete(c *Contact) (int, error) {
 	args := m.Called(c)
-	return args.Error(0)
+	if args.Error(1) != nil {
+		return 0, args.Error(1)
+	}
+	return args.Get(0).(int), nil
+}
+
+// Block represents the simulated method for the Block feature in the Repository layer.
+func (m *mockRepository) Block(profileID, contactID string) (bool, error) {
+	args := m.Called(profileID, contactID)
+	if args.Error(1) != nil {
+		return false, args.Error(1)
+	}
+	return args.Get(0).(bool), nil
+}
+
+// Unblock represents the simulated method for the Unblock feature in the Repository layer.
+func (m *mockRepository) Unblock(profileID, contactID string) (bool, error) {
+	args := m.Called(profileID, contactID)
+	if args.Error(1) != nil {
+		return false, args.Error(1)
+	}
+	return args.Get(0).(bool), nil
 }

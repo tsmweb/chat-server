@@ -9,8 +9,8 @@ type Contact struct {
 }
 
 // NewContact create a new Contact
-func NewContact(ID string, name string, lastname string, profileID string) (Contact, error) {
-	c := Contact{
+func NewContact(ID string, name string, lastname string, profileID string) (*Contact, error) {
+	c := &Contact{
 		ID: ID,
 		Name: name,
 		LastName: lastname,

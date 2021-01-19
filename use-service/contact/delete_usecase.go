@@ -1,13 +1,8 @@
 package contact
 
-import (
-	"errors"
-	"github.com/tsmweb/go-helper-api/cerror"
-)
-
 // DeleteUseCase delete a Contact, otherwise an error is returned.
 type DeleteUseCase interface {
-	Execute(contact Contact) error
+	Execute(contact *Contact) error
 }
 
 type deleteUseCase struct {
@@ -20,13 +15,13 @@ func NewDeleteUseCase(r Repository) DeleteUseCase {
 }
 
 // Execute executes the creation use case.
-func (u *deleteUseCase) Execute(contact Contact) error {
-	err := u.repository.Delete(contact)
+func (u *deleteUseCase) Execute(contact *Contact) error {
+	rows, err := u.repository.Delete(contact)
 	if err != nil {
-		if errors.Is(err, cerror.ErrNotFound) {
-			return ErrContactNotFound
-		}
-		return cerror.ErrInternalServer
+		return err
+	}
+	if rows <= 0 {
+		return ErrContactNotFound
 	}
 
 	return nil

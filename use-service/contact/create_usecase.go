@@ -28,7 +28,7 @@ func (u *createUseCase) Execute(ID, name, lastname, profileID string) error {
 
 	ok, err := u.repository.ExistsProfile(ID)
 	if err != nil {
-		return cerror.ErrInternalServer
+		return err
 	}
 	if !ok {
 		return ErrProfileNotFound
@@ -37,9 +37,9 @@ func (u *createUseCase) Execute(ID, name, lastname, profileID string) error {
 	err = u.repository.Create(c)
 	if err != nil {
 		if errors.Is(err, cerror.ErrRecordAlreadyRegistered) {
-			return err
+			return ErrContactAlreadyExists
 		}
-		return cerror.ErrInternalServer
+		return err
 	}
 
 	return nil
