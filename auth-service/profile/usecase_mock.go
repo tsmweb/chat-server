@@ -8,13 +8,12 @@ type mockGetUseCase struct {
 }
 
 // Execute represents the simulated method for the Get feature in the UseCase layer.
-func (m *mockGetUseCase) Execute(ID string) (Profile, error) {
-	p := Profile{}
+func (m *mockGetUseCase) Execute(ID string) (*Profile, error) {
 	args := m.Called(ID)
 	if args.Get(0) == nil {
-		return p, args.Error(1)
+		return nil, args.Error(1)
 	}
-	return args.Get(0).(Profile), nil
+	return args.Get(0).(*Profile), nil
 }
 
 // mockCreateUseCase injects mock dependency into Controller layer.
@@ -23,7 +22,7 @@ type mockCreateUseCase struct {
 }
 
 // Execute represents the simulated method for the Create feature in the UseCase layer.
-func (m *mockCreateUseCase) Execute(ID string, name string, lastname string, password string) error {
+func (m *mockCreateUseCase) Execute(ID, name, lastname, password string) error {
 	args := m.Called(ID, name, lastname, password)
 	return args.Error(0)
 }
@@ -34,7 +33,7 @@ type mockUpdateUseCase struct {
 }
 
 // Execute represents the simulated method for the Update feature in the UseCase layer.
-func (m *mockUpdateUseCase) Execute(p Profile) error {
+func (m *mockUpdateUseCase) Execute(p *Profile) error {
 	args := m.Called(p)
 	return args.Error(0)
 }

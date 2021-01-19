@@ -64,7 +64,7 @@ func TestLoginUseCase_Execute(t *testing.T) {
 		assert.Equal(t, cerror.ErrUnauthorized, err)
 	})
 
-	t.Run("when use case fails with ErrInternalServer", func(t *testing.T) {
+	t.Run("when use case fails with Error", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		r.On("Login", mock.Anything).
@@ -75,7 +75,7 @@ func TestLoginUseCase_Execute(t *testing.T) {
 		uc := NewLoginUseCase(r, j)
 		_, err := uc.Execute("+5518999999999", "123456")
 
-		assert.Equal(t, cerror.ErrInternalServer, err)
+		assert.NotNil(t, err)
 
 		r.On("Login", mock.Anything).
 			Return(true, nil).
@@ -87,7 +87,7 @@ func TestLoginUseCase_Execute(t *testing.T) {
 
 		_, err = uc.Execute("+5518999999999", "123456")
 
-		assert.Equal(t, cerror.ErrInternalServer, err)
+		assert.NotNil(t, err)
 	})
 
 	t.Run("when use case success", func(t *testing.T) {

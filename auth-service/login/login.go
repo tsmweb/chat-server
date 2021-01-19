@@ -9,8 +9,8 @@ type Login struct {
 }
 
 // NewLogin create a new Login.
-func NewLogin(ID string, password string) (Login, error) {
-	l := Login{
+func NewLogin(ID, password string) (*Login, error) {
+	l := &Login{
 		ID: ID,
 		Password: password,
 	}

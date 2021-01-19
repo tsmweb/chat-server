@@ -9,8 +9,8 @@ type ViewModel struct {
 }
 
 // ToEntity mapper ViewModel to Entity
-func (v *ViewModel) ToEntity() Profile {
-	return Profile{
+func (v *ViewModel) ToEntity() *Profile {
+	return &Profile{
 		ID:       v.ID,
 		Name:     v.Name,
 		LastName: v.LastName,
@@ -19,7 +19,7 @@ func (v *ViewModel) ToEntity() Profile {
 }
 
 // FromEntity mapper Entity to ViewModel
-func (v *ViewModel) FromEntity(entity Profile) {
+func (v *ViewModel) FromEntity(entity *Profile) {
 	v.ID = entity.ID
 	v.Name = entity.Name
 	v.LastName = entity.LastName

@@ -7,8 +7,8 @@ type ViewModel struct {
 }
 
 // ToEntity mapper ViewModel to Entity
-func (p *ViewModel) ToEntity() Login {
-	return Login{
+func (p *ViewModel) ToEntity() *Login {
+	return &Login{
 		ID: p.ID,
 		Password: p.Password,
 	}

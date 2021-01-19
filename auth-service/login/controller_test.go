@@ -156,7 +156,7 @@ func TestController_Login(t *testing.T) {
 		mJWT := new(common.MockJWT)
 		mLogin := new(mockLoginUseCase)
 		mLogin.On("Execute", vm.ID, vm.Password).
-			Return("", cerror.ErrInternalServer).
+			Return("", errors.New("error")).
 			Once()
 		mUpdate := new(mockUpdateUseCase)
 
@@ -223,7 +223,7 @@ func TestController_Update(t *testing.T) {
 		assert.Equal(t, http.StatusUnsupportedMediaType, rec.Code)
 	})
 
-	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
+	t.Run("when JWT fails with Error", func(t *testing.T) {
 		//t.Parallel()
 		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader([]byte("{}")))
 		req.Header.Set("Content-Type", "application/json")
@@ -369,7 +369,7 @@ func TestController_Update(t *testing.T) {
 		mLogin := new(mockLoginUseCase)
 		mUpdate := new(mockUpdateUseCase)
 		mUpdate.On("Execute", vm.ToEntity()).
-			Return(cerror.ErrInternalServer).
+			Return(errors.New("error")).
 			Once()
 
 		ctrl := NewController(mJWT, mLogin, mUpdate)

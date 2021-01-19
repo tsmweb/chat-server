@@ -18,8 +18,8 @@ func NewRepositoryPostgres(db database.Database) Repository {
 }
 
 // Get returns the profile by id.
-func (r *repositoryPostgres) Get(ID string) (Profile, error) {
-	profile := Profile{}
+func (r *repositoryPostgres) Get(ID string) (*Profile, error) {
+	profile := &Profile{}
 
 	err := r.dataBase.DB().QueryRow("SELECT ID, name, lastname FROM profile WHERE ID = $1", ID).Scan(
 		&profile.ID,
@@ -27,17 +27,17 @@ func (r *repositoryPostgres) Get(ID string) (Profile, error) {
 		&profile.LastName)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return profile, cerror.ErrNotFound
+			return nil, cerror.ErrNotFound
 		}
 
-		return profile, err
+		return nil, err
 	}
 
 	return profile, nil
 }
 
 // Create new profile in the data base.
-func (r *repositoryPostgres) Create(profile Profile) error {
+func (r *repositoryPostgres) Create(profile *Profile) error {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return err
@@ -72,10 +72,10 @@ func (r *repositoryPostgres) Create(profile Profile) error {
 }
 
 // Update profile data in the data base.
-func (r *repositoryPostgres) Update(profile Profile) error {
+func (r *repositoryPostgres) Update(profile *Profile) (int, error) {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
-		return err
+		return -1, err
 	}
 
 	result, err := txn.Exec(`
@@ -85,20 +85,20 @@ func (r *repositoryPostgres) Update(profile Profile) error {
 		profile.Name, profile.LastName, profile.ID)
 	if err != nil {
 		txn.Rollback()
-		return err
+		return -1, err
 	}
 
 	ra, _ := result.RowsAffected()
 	if ra != 1 {
 		txn.Rollback()
-		return cerror.ErrNotFound
+		return 0, nil
 	}
 
 	err = txn.Commit()
 	if err != nil {
 		txn.Rollback()
-		return err
+		return -1, err
 	}
 
-	return nil
+	return int(ra), nil
 }

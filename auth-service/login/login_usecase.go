@@ -11,7 +11,7 @@ import (
 // LoginUseCase returns a token if the credentials are valid, otherwise an error
 // is returned.
 type LoginUseCase interface {
-	Execute(ID string, password string) (string, error)
+	Execute(ID, password string) (string, error)
 }
 
 type loginUseCase struct {
@@ -25,7 +25,7 @@ func NewLoginUseCase(repository Repository, jwt auth.JWT) LoginUseCase {
 }
 
 // Execute executes the login use case.
-func (u *loginUseCase) Execute(ID string, password string) (string, error) {
+func (u *loginUseCase) Execute(ID, password string) (string, error) {
 	l, err := NewLogin(ID, password)
 	if err != nil {
 		return "", err
@@ -36,17 +36,16 @@ func (u *loginUseCase) Execute(ID string, password string) (string, error) {
 		if errors.Is(err, cerror.ErrNotFound) {
 			return "", profile.ErrProfileNotFound
 		} else {
-			return "", cerror.ErrInternalServer
+			return "", err
 		}
 	}
-
 	if !ok {
 		return "", cerror.ErrUnauthorized
 	}
 
 	token, err := u.jwt.GenerateToken(ID, setting.ExpireToken())
 	if err != nil {
-		return "", cerror.ErrInternalServer
+		return "", err
 	}
 
 	if len(token) == 0 {

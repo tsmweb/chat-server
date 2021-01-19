@@ -6,7 +6,6 @@ import (
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/tsmweb/auth-service/common"
-	"github.com/tsmweb/go-helper-api/cerror"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -48,7 +47,7 @@ func TestController_Get(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return ErrInternalServer", func(t *testing.T) {
+	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
 		req := httptest.NewRequest(http.MethodGet, resource, nil)
 		rec := httptest.NewRecorder()
@@ -59,7 +58,7 @@ func TestController_Get(t *testing.T) {
 			Once()
 		mGet := new(mockGetUseCase)
 		mGet.On("Execute", "+5518999999999").
-			Return(nil, cerror.ErrInternalServer).
+			Return(nil, errors.New("error")).
 			Once()
 		mCreate := new(mockCreateUseCase)
 		mUpdate := new(mockUpdateUseCase)
@@ -70,7 +69,7 @@ func TestController_Get(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return ErrProfileNotFound", func(t *testing.T) {
+	t.Run("when controller return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
 		req := httptest.NewRequest(http.MethodGet, resource, nil)
 		rec := httptest.NewRecorder()
@@ -94,7 +93,7 @@ func TestController_Get(t *testing.T) {
 
 	t.Run("when controller return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		profile := Profile{
+		profile := &Profile{
 			ID:       "+5518999999999",
 			Name:     "Steve",
 			LastName: "Jobs",
@@ -215,7 +214,7 @@ func TestController_Create(t *testing.T) {
 		mGet := new(mockGetUseCase)
 		mCreate := new(mockCreateUseCase)
 		mCreate.On("Execute", vm.ID, vm.Name, vm.LastName, vm.Password).
-			Return(cerror.ErrRecordAlreadyRegistered).
+			Return(ErrProfileAlreadyExists).
 			Once()
 		mUpdate := new(mockUpdateUseCase)
 
@@ -245,7 +244,7 @@ func TestController_Create(t *testing.T) {
 		mGet := new(mockGetUseCase)
 		mCreate := new(mockCreateUseCase)
 		mCreate.On("Execute", vm.ID, vm.Name, vm.LastName, vm.Password).
-			Return(cerror.ErrInternalServer).
+			Return(errors.New("error")).
 			Once()
 		mUpdate := new(mockUpdateUseCase)
 
@@ -427,7 +426,7 @@ func TestController_Update(t *testing.T) {
 		mCreate := new(mockCreateUseCase)
 		mUpdate := new(mockUpdateUseCase)
 		mUpdate.On("Execute", vm.ToEntity()).
-			Return(cerror.ErrInternalServer).
+			Return(errors.New("error")).
 			Once()
 
 		ctrl := NewController(mJWT, mGet, mCreate, mUpdate)

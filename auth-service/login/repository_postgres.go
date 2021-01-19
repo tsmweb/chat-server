@@ -17,7 +17,7 @@ func NewRepositoryPostgres(db database.Database) Repository {
 }
 
 // Login returns if ID and password are valid.
-func (r *repositoryPostgres) Login(login Login) (bool, error) {
+func (r *repositoryPostgres) Login(login *Login) (bool, error) {
 	err := r.dataBase.DB().
 		QueryRow(`SELECT 1 FROM login WHERE client_id = $1 AND password = $2`, login.ID, login.Password).
 		Err()
@@ -34,27 +34,33 @@ func (r *repositoryPostgres) Login(login Login) (bool, error) {
 }
 
 // Update login data in the data base.
-func (r *repositoryPostgres) Update(login Login) error {
+func (r *repositoryPostgres) Update(login *Login) (int, error) {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
-		return err
+		return -1, err
 	}
 
-	_, err = txn.Exec(`
+	result, err := txn.Exec(`
 		UPDATE login 
 		SET password = $1, update_at = CURRENT_TIMESTAMP
 		WHERE client_id = $2`,
 		login.Password, login.ID)
 	if err != nil {
 		txn.Rollback()
-		return err
+		return -1, err
+	}
+
+	ra, _ := result.RowsAffected()
+	if ra != 1 {
+		txn.Rollback()
+		return 0, nil
 	}
 
 	err = txn.Commit()
 	if err != nil {
 		txn.Rollback()
-		return err
+		return -1, err
 	}
 
-	return nil
+	return int(ra), nil
 }

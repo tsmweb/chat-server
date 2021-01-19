@@ -13,8 +13,8 @@ type Profile struct {
 }
 
 // NewProfile create a new Profile
-func NewProfile(ID string, name string, lastname string, password string) (Profile, error) {
-	p := Profile{
+func NewProfile(ID, name, lastname, password string) (*Profile, error) {
+	p := &Profile{
 		ID:       ID,
 		Name:     name,
 		LastName: lastname,

@@ -1,13 +1,8 @@
 package profile
 
-import (
-	"errors"
-	"github.com/tsmweb/go-helper-api/cerror"
-)
-
 // UpdateUseCase updates a Profile, otherwise an error is returned.
 type UpdateUseCase interface {
-	Execute(profile Profile) error
+	Execute(profile *Profile) error
 }
 
 type updateUseCase struct {
@@ -20,19 +15,18 @@ func NewUpdateUseCase(repository Repository) UpdateUseCase {
 }
 
 // Execute executes the update use case.
-func (u *updateUseCase) Execute(profile Profile) error {
+func (u *updateUseCase) Execute(profile *Profile) error {
 	err := profile.Validate(UPDATE)
 	if err != nil {
 		return err
 	}
 
-	err = u.repository.Update(profile)
+	rows, err := u.repository.Update(profile)
 	if err != nil {
-		if errors.Is(err, cerror.ErrNotFound) {
-			return ErrProfileNotFound
-		} else {
-			return cerror.ErrInternalServer
-		}
+		return err
+	}
+	if rows <= 0 {
+		return ErrProfileNotFound
 	}
 
 	return nil

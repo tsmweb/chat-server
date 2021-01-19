@@ -62,7 +62,7 @@ func (c *controller) Get() http.Handler {
 			return
 		}
 
-		vm := ViewModel{}
+		vm := &ViewModel{}
 		vm.FromEntity(p)
 
 		c.RespondWithJSON(w, http.StatusOK, vm)
@@ -77,7 +77,7 @@ func (c *controller) Create() http.Handler {
 			return
 		}
 
-		input := ViewModel{}
+		input := &ViewModel{}
 		err := json.NewDecoder(r.Body).Decode(&input)
 		if err != nil {
 			log.Println(err.Error())
@@ -95,7 +95,7 @@ func (c *controller) Create() http.Handler {
 				return
 			}
 
-			if errors.Is(err, cerror.ErrRecordAlreadyRegistered) {
+			if errors.Is(err, ErrProfileAlreadyExists) {
 				c.RespondWithError(w, http.StatusConflict, err.Error())
 				return
 			}
@@ -123,7 +123,7 @@ func (c *controller) Update() http.Handler {
 			return
 		}
 
-		input := ViewModel{}
+		input := &ViewModel{}
 		err = json.NewDecoder(r.Body).Decode(&input)
 		if err != nil {
 			log.Println(err.Error())

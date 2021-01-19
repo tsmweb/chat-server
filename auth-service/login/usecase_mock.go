@@ -8,7 +8,7 @@ type mockLoginUseCase struct {
 }
 
 // Execute represents the simulated method for the Login feature in the UseCase layer.
-func (m *mockLoginUseCase) Execute(ID string, password string) (string, error) {
+func (m *mockLoginUseCase) Execute(ID, password string) (string, error) {
 	args := m.Called(ID, password)
 	if args.Get(1) != nil {
 		return "", args.Error(1)
@@ -23,7 +23,7 @@ type mockUpdateUseCase struct {
 }
 
 // Execute represents the simulated method for the Update feature in the UseCase layer.
-func (m *mockUpdateUseCase) Execute(l Login) error {
+func (m *mockUpdateUseCase) Execute(l *Login) error {
 	args := m.Called(l)
 	return args.Error(0)
 }

@@ -1,14 +1,13 @@
 package login
 
 import (
-	"errors"
 	"github.com/tsmweb/auth-service/profile"
 	"github.com/tsmweb/go-helper-api/cerror"
 )
 
 // UpdateUseCase updates the login password, otherwise an error will be returned.
 type UpdateUseCase interface {
-	Execute(login Login) error
+	Execute(login *Login) error
 }
 
 type updateUseCase struct {
@@ -23,7 +22,7 @@ func NewUpdateUseCase(r Repository) UpdateUseCase {
 }
 
 // Execute executes the update use case.
-func (u *updateUseCase) Execute(login Login) error {
+func (u *updateUseCase) Execute(login *Login) error {
 	err := login.Validate()
 	if err != nil {
 		return err
@@ -34,13 +33,12 @@ func (u *updateUseCase) Execute(login Login) error {
 		return cerror.ErrInternalServer
 	}
 
-	err = u.repository.Update(login)
+	rows, err := u.repository.Update(login)
 	if err != nil {
-		if errors.Is(err, cerror.ErrNotFound) {
-			return profile.ErrProfileNotFound
-		} else {
-			return cerror.ErrInternalServer
-		}
+		return err
+	}
+	if rows <= 0 {
+		return profile.ErrProfileNotFound
 	}
 
 	return nil

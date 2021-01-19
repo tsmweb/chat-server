@@ -7,7 +7,7 @@ import (
 
 // CreateUseCase creates a new Profile, otherwise an error is returned.
 type CreateUseCase interface {
-	Execute(ID string, name string, lastname string, password string) error
+	Execute(ID, name, lastname, password string) error
 }
 
 type createUseCase struct {
@@ -20,7 +20,7 @@ func NewCreateUseCase(repository Repository) CreateUseCase {
 }
 
 // Execute executes the creation use case.
-func (u *createUseCase) Execute(ID string, name string, lastname string, password string) error {
+func (u *createUseCase) Execute(ID, name, lastname, password string) error {
 	p, err := NewProfile(ID, name, lastname, password)
 	if err != nil {
 		return err
@@ -29,9 +29,9 @@ func (u *createUseCase) Execute(ID string, name string, lastname string, passwor
 	err = u.repository.Create(p)
 	if err != nil {
 		if errors.Is(err, cerror.ErrRecordAlreadyRegistered) {
-			return err
+			return ErrProfileAlreadyExists
 		} else {
-			return cerror.ErrInternalServer
+			return err
 		}
 	}
 

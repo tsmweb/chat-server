@@ -8,7 +8,7 @@ type mockRepository struct {
 }
 
 // Login represents the simulated method for the Login feature in the Repository layer.
-func (m *mockRepository) Login(l Login) (bool, error) {
+func (m *mockRepository) Login(l *Login) (bool, error) {
 	args := m.Called(l)
 	if args.Get(1) != nil {
 		return false, args.Error(1)
@@ -19,7 +19,10 @@ func (m *mockRepository) Login(l Login) (bool, error) {
 
 // Update represents the simulated method for the Update feature in the
 // Repository layer.
-func (m *mockRepository) Update(l Login) error {
+func (m *mockRepository) Update(l *Login) (int, error) {
 	args := m.Called(l)
-	return args.Error(0)
+	if args.Error(1) != nil {
+		return -1, args.Error(1)
+	}
+	return args.Get(0).(int), nil
 }
