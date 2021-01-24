@@ -14,7 +14,7 @@ func NewGetAllUseCase(r Repository) GetAllUseCase {
 	return &getAllUseCase{repository: r}
 }
 
-// Execute executes the get use case.
+// Execute performs the use case to get all.
 func (u *getAllUseCase) Execute(profileID string) ([]*Contact, error) {
 	contacts, err := u.repository.GetAll(profileID)
 	if err != nil {

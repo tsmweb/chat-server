@@ -19,7 +19,7 @@ func NewBlockUseCase(r Repository) BlockUseCase {
 	return &blockUseCase{repository: r}
 }
 
-// Execute executes the update use case.
+// Execute perform the block use case.
 func (u *blockUseCase) Execute(profileID, contactID string) error {
 	ok, err := u.repository.ExistsProfile(contactID)
 	if err != nil {

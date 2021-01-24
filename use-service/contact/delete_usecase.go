@@ -14,7 +14,7 @@ func NewDeleteUseCase(r Repository) DeleteUseCase {
 	return &deleteUseCase{repository: r}
 }
 
-// Execute executes the creation use case.
+// Execute performs the delete use case.
 func (u *deleteUseCase) Execute(contact *Contact) error {
 	rows, err := u.repository.Delete(contact)
 	if err != nil {

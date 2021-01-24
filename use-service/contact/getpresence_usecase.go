@@ -15,7 +15,7 @@ func NewGetPresenceUseCase(r Repository) GetPresenceUseCase {
 	return &getPresenceUseCase{repository: r}
 }
 
-// Execute executes the get use case.
+// Execute performs the use case to get presence.
 func (u *getPresenceUseCase) Execute(profileID, contactID string) (PresenceType, error) {
 	presence, err := u.repository.GetPresence(profileID, contactID)
 	if err != nil {

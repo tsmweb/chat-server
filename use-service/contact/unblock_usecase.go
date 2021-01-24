@@ -14,7 +14,7 @@ func NewUnblockUseCase(r Repository) UnblockUseCase {
 	return &unblockUseCase{repository: r}
 }
 
-// Execute executes the update use case.
+// Execute perform the unblock use case.
 func (u *unblockUseCase) Execute(profileID, contactID string) error {
 	ok, err := u.repository.Unblock(profileID, contactID)
 	if err != nil {

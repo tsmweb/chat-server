@@ -14,7 +14,7 @@ func NewUpdateUseCase(r Repository) UpdateUseCase {
 	return &updateUseCase{repository: r}
 }
 
-// Execute executes the update use case.
+// Execute performs the update use case.
 func (u *updateUseCase) Execute(contact *Contact) error {
 	err := contact.Validate()
 	if err != nil {

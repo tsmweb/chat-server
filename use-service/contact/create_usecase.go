@@ -19,7 +19,7 @@ func NewCreateUseCase(r Repository) CreateUseCase {
 	return &createUseCase{repository: r}
 }
 
-// Execute executes the creation use case.
+// Execute performs the creation use case.
 func (u *createUseCase) Execute(ID, name, lastname, profileID string) error {
 	c, err := NewContact(ID, name, lastname, profileID)
 	if err != nil {
