@@ -1,4 +1,4 @@
-package profile
+package user
 
 const (
 	CREATE = iota

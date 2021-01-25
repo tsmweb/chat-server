@@ -1,13 +1,13 @@
-package profile
+package user
 
 import (
 	"errors"
 	"github.com/tsmweb/go-helper-api/cerror"
 )
 
-// GetUseCase returns a Profile by ID, otherwise an error is returned.
+// GetUseCase returns a User by ID, otherwise an error is returned.
 type GetUseCase interface {
-	Execute(ID string) (*Profile, error)
+	Execute(ID string) (*User, error)
 }
 
 type getUseCase struct {
@@ -20,17 +20,17 @@ func NewGetUseCase(repository Repository) GetUseCase {
 }
 
 // Execute executes the get use case.
-func (u *getUseCase) Execute(ID string) (*Profile, error) {
-	profile, err := u.repository.Get(ID)
+func (u *getUseCase) Execute(ID string) (*User, error) {
+	user, err := u.repository.Get(ID)
 	if err != nil {
 		if errors.Is(err, cerror.ErrNotFound) {
-			return nil, ErrProfileNotFound
+			return nil, ErrUserNotFound
 		}
 		return nil, err
 	}
-	if profile == nil {
-		return nil, ErrProfileNotFound
+	if user == nil {
+		return nil, ErrUserNotFound
 	}
 
-	return profile, nil
+	return user, nil
 }

@@ -16,8 +16,8 @@ func main() {
 	setting.Load(workDir)
 
 	router := mux.NewRouter()
-	profileRouter := InitProfileRouter()
-	profileRouter.MakeRouters(router)
+	userRouter := InitUserRouter()
+	userRouter.MakeRouters(router)
 
 	loginRouter := InitLoginRouter()
 	loginRouter.MakeRouters(router)

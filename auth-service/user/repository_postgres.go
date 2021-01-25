@@ -1,4 +1,4 @@
-package profile
+package user
 
 import (
 	"database/sql"
@@ -17,14 +17,14 @@ func NewRepositoryPostgres(db database.Database) Repository {
 	return &repositoryPostgres{dataBase: db}
 }
 
-// Get returns the profile by id.
-func (r *repositoryPostgres) Get(ID string) (*Profile, error) {
-	profile := &Profile{}
+// Get returns the user by id.
+func (r *repositoryPostgres) Get(ID string) (*User, error) {
+	user := &User{}
 
-	err := r.dataBase.DB().QueryRow("SELECT ID, name, lastname FROM profile WHERE ID = $1", ID).Scan(
-		&profile.ID,
-		&profile.Name,
-		&profile.LastName)
+	err := r.dataBase.DB().QueryRow("SELECT ID, name, lastname FROM user WHERE ID = $1", ID).Scan(
+		&user.ID,
+		&user.Name,
+		&user.LastName)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, cerror.ErrNotFound
@@ -33,18 +33,18 @@ func (r *repositoryPostgres) Get(ID string) (*Profile, error) {
 		return nil, err
 	}
 
-	return profile, nil
+	return user, nil
 }
 
-// Create new profile in the data base.
-func (r *repositoryPostgres) Create(profile *Profile) error {
+// Create new user in the data base.
+func (r *repositoryPostgres) Create(user *User) error {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return err
 	}
 
-	_, err = txn.Exec(`INSERT INTO profile(id, name, lastname) VALUES($1, $2, $3)`,
-		profile.ID, profile.Name, profile.LastName)
+	_, err = txn.Exec(`INSERT INTO user(id, name, lastname) VALUES($1, $2, $3)`,
+		user.ID, user.Name, user.LastName)
 	if err != nil {
 		txn.Rollback()
 		//"23505": "unique_violation"
@@ -56,7 +56,7 @@ func (r *repositoryPostgres) Create(profile *Profile) error {
 	}
 
 	_, err = txn.Exec(`INSERT INTO login(client_id, password) VALUES($1, $2)`,
-		profile.ID, profile.Password)
+		user.ID, user.Password)
 	if err != nil {
 		txn.Rollback()
 		return err
@@ -71,18 +71,18 @@ func (r *repositoryPostgres) Create(profile *Profile) error {
 	return nil
 }
 
-// Update profile data in the data base.
-func (r *repositoryPostgres) Update(profile *Profile) (int, error) {
+// Update user data in the data base.
+func (r *repositoryPostgres) Update(user *User) (int, error) {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return -1, err
 	}
 
 	result, err := txn.Exec(`
-		UPDATE profile 
+		UPDATE user 
 		SET name = $1, lastname = $2, update_at = CURRENT_TIMESTAMP 
 		WHERE id = $3`,
-		profile.Name, profile.LastName, profile.ID)
+		user.Name, user.LastName, user.ID)
 	if err != nil {
 		txn.Rollback()
 		return -1, err

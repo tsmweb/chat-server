@@ -1,7 +1,7 @@
 package login
 
 import (
-	"github.com/tsmweb/auth-service/profile"
+	"github.com/tsmweb/auth-service/user"
 	"github.com/tsmweb/go-helper-api/cerror"
 )
 
@@ -38,7 +38,7 @@ func (u *updateUseCase) Execute(login *Login) error {
 		return err
 	}
 	if rows <= 0 {
-		return profile.ErrProfileNotFound
+		return user.ErrUserNotFound
 	}
 
 	return nil

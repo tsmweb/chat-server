@@ -1,13 +1,13 @@
 package login
 
-// ViewModel data.
-type ViewModel struct {
+// Presenter data.
+type Presenter struct {
 	ID       string `json:"id"`
 	Password string `json:"password"`
 }
 
-// ToEntity mapper ViewModel to Entity
-func (p *ViewModel) ToEntity() *Login {
+// ToEntity mapper Presenter to Entity
+func (p *Presenter) ToEntity() *Login {
 	return &Login{
 		ID: p.ID,
 		Password: p.Password,

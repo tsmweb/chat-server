@@ -9,23 +9,24 @@ import (
 	"github.com/tsmweb/auth-service/helper/database"
 	"github.com/tsmweb/auth-service/helper/setting"
 	"github.com/tsmweb/auth-service/login"
-	"github.com/tsmweb/auth-service/profile"
+	"github.com/tsmweb/auth-service/user"
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/middleware"
 )
 
 // Injectors from wire.go:
 
-func InitProfileRouter() *profile.Router {
+func InitUserRouter() *user.Router {
 	jwt := jwtProvider()
 	auth := middleware.NewAuth(jwt)
 	database := dataBaseProvider()
-	repository := profile.NewRepositoryPostgres(database)
-	getUseCase := profile.NewGetUseCase(repository)
-	createUseCase := profile.NewCreateUseCase(repository)
-	updateUseCase := profile.NewUpdateUseCase(repository)
-	controller := profile.NewController(jwt, getUseCase, createUseCase, updateUseCase)
-	router := profile.NewRouter(auth, controller)
+	repository := user.NewRepositoryPostgres(database)
+	getUseCase := user.NewGetUseCase(repository)
+	createUseCase := user.NewCreateUseCase(repository)
+	updateUseCase := user.NewUpdateUseCase(repository)
+	service := user.NewService(getUseCase, createUseCase, updateUseCase)
+	controller := user.NewController(jwt, service)
+	router := user.NewRouter(auth, controller)
 	return router
 }
 
@@ -36,7 +37,8 @@ func InitLoginRouter() *login.Router {
 	repository := login.NewRepositoryPostgres(database)
 	loginUseCase := login.NewLoginUseCase(repository, jwt)
 	updateUseCase := login.NewUpdateUseCase(repository)
-	controller := login.NewController(jwt, loginUseCase, updateUseCase)
+	service := login.NewService(loginUseCase, updateUseCase)
+	controller := login.NewController(jwt, service)
 	router := login.NewRoutes(auth, controller)
 	return router
 }

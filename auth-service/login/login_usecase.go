@@ -3,7 +3,7 @@ package login
 import (
 	"errors"
 	"github.com/tsmweb/auth-service/helper/setting"
-	"github.com/tsmweb/auth-service/profile"
+	"github.com/tsmweb/auth-service/user"
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/cerror"
 )
@@ -34,7 +34,7 @@ func (u *loginUseCase) Execute(ID, password string) (string, error) {
 	ok, err := u.repository.Login(l)
 	if err != nil {
 		if errors.Is(err, cerror.ErrNotFound) {
-			return "", profile.ErrProfileNotFound
+			return "", user.ErrUserNotFound
 		} else {
 			return "", err
 		}

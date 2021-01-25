@@ -1,10 +1,11 @@
-package profile
+package user
 
 import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/tsmweb/go-helper-api/middleware"
 	"github.com/urfave/negroni"
+	"net/http"
 )
 
 const version string = "v1"
@@ -12,16 +13,16 @@ const version string = "v1"
 var resource string
 
 func init() {
-	resource = fmt.Sprintf("/%s/profile", version)
+	resource = fmt.Sprintf("/%s/user", version)
 }
 
-// Router for Profile end points.
+// Router for User end points.
 type Router struct {
 	auth middleware.Auth
 	controller Controller
 }
 
-// // NewRouter creates a router for Profile.
+// // NewRouter creates a router for User.
 func NewRouter(a middleware.Auth, c Controller) *Router {
 	return &Router{
 		auth: a,
@@ -29,20 +30,20 @@ func NewRouter(a middleware.Auth, c Controller) *Router {
 	}
 }
 
-// MakeRouters creates a router for Profile.
+// MakeRouters creates a router for User.
 func (r *Router) MakeRouters(mr *mux.Router) {
-	// GET /profile
+	// user [GET]
 	mr.Handle(resource, negroni.New(
 		negroni.HandlerFunc(r.auth.RequireTokenAuth),
 		negroni.Wrap(r.controller.Get())),
-	).Methods("GET")
+	).Methods(http.MethodGet)
 
-	// POST /profile
-	mr.Handle(resource, r.controller.Create()).Methods("POST")
+	// user [POST]
+	mr.Handle(resource, r.controller.Create()).Methods(http.MethodPost)
 
-	// PUT /profile
+	// user [PUT]
 	mr.Handle(resource, negroni.New(
 		negroni.HandlerFunc(r.auth.RequireTokenAuth),
 		negroni.Wrap(r.controller.Update())),
-	).Methods("PUT")
+	).Methods(http.MethodPut)
 }

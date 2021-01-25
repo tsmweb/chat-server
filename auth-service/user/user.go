@@ -1,20 +1,20 @@
-package profile
+package user
 
 import (
 	"github.com/tsmweb/go-helper-api/util/hashutil"
 )
 
-// Profile data model
-type Profile struct {
+// User data model
+type User struct {
 	ID       string
 	Name     string
 	LastName string
 	Password string
 }
 
-// NewProfile create a new Profile
-func NewProfile(ID, name, lastname, password string) (*Profile, error) {
-	p := &Profile{
+// NewUser create a new User
+func NewUser(ID, name, lastname, password string) (*User, error) {
+	p := &User{
 		ID:       ID,
 		Name:     name,
 		LastName: lastname,
@@ -35,8 +35,8 @@ func NewProfile(ID, name, lastname, password string) (*Profile, error) {
 	return p, nil
 }
 
-// Validate model Profile.
-func (p Profile) Validate(op Operation) error {
+// Validate model User.
+func (p User) Validate(op Operation) error {
 	if p.ID == "" {
 		return ErrIDValidateModel
 	}

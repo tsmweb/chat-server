@@ -1,4 +1,4 @@
-package profile
+package user
 
 import (
 	"errors"
@@ -20,7 +20,7 @@ func TestCreateUseCase_Execute(t *testing.T) {
 		assert.Equal(t, ErrPasswordValidateModel, err)
 	})
 
-	t.Run("when use case fails with ErrProfileAlreadyExists", func(t *testing.T) {
+	t.Run("when use case fails with ErrUserAlreadyExists", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		r.On("Create", mock.Anything).
@@ -30,7 +30,7 @@ func TestCreateUseCase_Execute(t *testing.T) {
 		uc := NewCreateUseCase(r)
 		err := uc.Execute("+5518999999999", "Steve", "Jobs", "123456")
 
-		assert.Equal(t, ErrProfileAlreadyExists, err)
+		assert.Equal(t, ErrUserAlreadyExists, err)
 	})
 
 	t.Run("when use case fails with Error", func(t *testing.T) {

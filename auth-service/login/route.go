@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/tsmweb/go-helper-api/middleware"
 	"github.com/urfave/negroni"
+	"net/http"
 )
 
 const version string = "v1"
@@ -31,12 +32,12 @@ func NewRoutes(a middleware.Auth, c Controller) *Router {
 
 // MakeRouters creates a router for Login.
 func (r *Router) MakeRouters(mr *mux.Router) {
-	// POST /login
-	mr.Handle(resource, r.controller.Login()).Methods("POST")
+	// login [POST]
+	mr.Handle(resource, r.controller.Login()).Methods(http.MethodPost)
 
-	// PUT /login
+	// login [PUT]
 	mr.Handle(resource, negroni.New(
 		negroni.HandlerFunc(r.auth.RequireTokenAuth),
 		negroni.Wrap(r.controller.Update()),
-	)).Methods("PUT")
+	)).Methods(http.MethodPut)
 }

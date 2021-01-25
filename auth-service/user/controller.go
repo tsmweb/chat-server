@@ -1,4 +1,4 @@
-package profile
+package user
 
 import (
 	"encoding/json"
@@ -19,27 +19,21 @@ type Controller interface {
 
 type controller struct {
 	*ctlr.Controller
-	getUseCase GetUseCase
-	createUseCase CreateUseCase
-	updateUseCase UpdateUseCase
+	service Service
 }
 
 // NewController creates a new instance of Controller.
 func NewController(
 	jwt auth.JWT,
-	getUseCase GetUseCase,
-	createUseCase CreateUseCase,
-	updateUseCase UpdateUseCase) Controller {
+	service Service) Controller {
 
 	return &controller{
 		ctlr.NewController(jwt),
-		getUseCase,
-		createUseCase,
-		updateUseCase,
+		service,
 	}
 }
 
-// Get a profile by ID.
+// Get a user by ID.
 func (c *controller) Get() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ID, err := c.ExtractID(r)
@@ -49,11 +43,11 @@ func (c *controller) Get() http.Handler {
 			return
 		}
 
-		p, err := c.getUseCase.Execute(ID)
+		user, err := c.service.Get(ID)
 		if err != nil {
 			log.Println(err.Error())
 
-			if errors.Is(err, ErrProfileNotFound) {
+			if errors.Is(err, ErrUserNotFound) {
 				c.RespondWithError(w, http.StatusNotFound, err.Error())
 				return
 			}
@@ -62,14 +56,14 @@ func (c *controller) Get() http.Handler {
 			return
 		}
 
-		vm := &ViewModel{}
-		vm.FromEntity(p)
+		p := &Presenter{}
+		p.FromEntity(user)
 
-		c.RespondWithJSON(w, http.StatusOK, vm)
+		c.RespondWithJSON(w, http.StatusOK, p)
 	})
 }
 
-// Create a new profile.
+// Create a new user.
 func (c *controller) Create() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !c.HasContentType(r, ctlr.MimeApplicationJSON) {
@@ -77,7 +71,7 @@ func (c *controller) Create() http.Handler {
 			return
 		}
 
-		input := &ViewModel{}
+		input := &Presenter{}
 		err := json.NewDecoder(r.Body).Decode(&input)
 		if err != nil {
 			log.Println(err.Error())
@@ -85,7 +79,7 @@ func (c *controller) Create() http.Handler {
 			return
 		}
 
-		err = c.createUseCase.Execute(input.ID, input.Name, input.LastName, input.Password)
+		err = c.service.Create(input.ID, input.Name, input.LastName, input.Password)
 		if err != nil {
 			log.Println(err.Error())
 
@@ -95,7 +89,7 @@ func (c *controller) Create() http.Handler {
 				return
 			}
 
-			if errors.Is(err, ErrProfileAlreadyExists) {
+			if errors.Is(err, ErrUserAlreadyExists) {
 				c.RespondWithError(w, http.StatusConflict, err.Error())
 				return
 			}
@@ -108,7 +102,7 @@ func (c *controller) Create() http.Handler {
 	})
 }
 
-// Update updates profile data.
+// Update updates user data.
 func (c *controller) Update() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !c.HasContentType(r, ctlr.MimeApplicationJSON) {
@@ -123,7 +117,7 @@ func (c *controller) Update() http.Handler {
 			return
 		}
 
-		input := &ViewModel{}
+		input := &Presenter{}
 		err = json.NewDecoder(r.Body).Decode(&input)
 		if err != nil {
 			log.Println(err.Error())
@@ -137,7 +131,7 @@ func (c *controller) Update() http.Handler {
 			return
 		}
 
-		err = c.updateUseCase.Execute(input.ToEntity())
+		err = c.service.Update(input.ToEntity())
 		if err != nil {
 			log.Println(err.Error())
 
@@ -147,7 +141,7 @@ func (c *controller) Update() http.Handler {
 				return
 			}
 
-			if errors.Is(err, ErrProfileNotFound) {
+			if errors.Is(err, ErrUserNotFound) {
 				c.RespondWithError(w, http.StatusNotFound, err.Error())
 				return
 			}

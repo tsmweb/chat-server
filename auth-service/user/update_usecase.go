@@ -1,8 +1,8 @@
-package profile
+package user
 
-// UpdateUseCase updates a Profile, otherwise an error is returned.
+// UpdateUseCase updates a User, otherwise an error is returned.
 type UpdateUseCase interface {
-	Execute(profile *Profile) error
+	Execute(profile *User) error
 }
 
 type updateUseCase struct {
@@ -15,18 +15,18 @@ func NewUpdateUseCase(repository Repository) UpdateUseCase {
 }
 
 // Execute executes the update use case.
-func (u *updateUseCase) Execute(profile *Profile) error {
-	err := profile.Validate(UPDATE)
+func (u *updateUseCase) Execute(user *User) error {
+	err := user.Validate(UPDATE)
 	if err != nil {
 		return err
 	}
 
-	rows, err := u.repository.Update(profile)
+	rows, err := u.repository.Update(user)
 	if err != nil {
 		return err
 	}
 	if rows <= 0 {
-		return ErrProfileNotFound
+		return ErrUserNotFound
 	}
 
 	return nil

@@ -1,4 +1,4 @@
-package profile
+package user
 
 import "github.com/stretchr/testify/mock"
 
@@ -8,12 +8,12 @@ type mockGetUseCase struct {
 }
 
 // Execute represents the simulated method for the Get feature in the UseCase layer.
-func (m *mockGetUseCase) Execute(ID string) (*Profile, error) {
+func (m *mockGetUseCase) Execute(ID string) (*User, error) {
 	args := m.Called(ID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*Profile), nil
+	return args.Get(0).(*User), nil
 }
 
 // mockCreateUseCase injects mock dependency into Controller layer.
@@ -33,7 +33,7 @@ type mockUpdateUseCase struct {
 }
 
 // Execute represents the simulated method for the Update feature in the UseCase layer.
-func (m *mockUpdateUseCase) Execute(p *Profile) error {
-	args := m.Called(p)
+func (m *mockUpdateUseCase) Execute(u *User) error {
+	args := m.Called(u)
 	return args.Error(0)
 }

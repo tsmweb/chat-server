@@ -1,4 +1,4 @@
-package profile
+package user
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 func TestGetUseCase_Execute(t *testing.T) {
 	//t.Parallel()
 
-	t.Run("when repository fails with ErrProfileNotFound", func(t *testing.T) {
+	t.Run("when repository fails with ErrUserNotFound", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		r.On("Get", mock.Anything).
@@ -21,7 +21,7 @@ func TestGetUseCase_Execute(t *testing.T) {
 		uc := NewGetUseCase(r)
 		_, err := uc.Execute("+5518999999999")
 
-		assert.Equal(t, ErrProfileNotFound, err)
+		assert.Equal(t, ErrUserNotFound, err)
 	})
 
 	t.Run("when use case fails with Error", func(t *testing.T) {
@@ -39,7 +39,7 @@ func TestGetUseCase_Execute(t *testing.T) {
 
 	t.Run("when use case succeeds", func(t *testing.T) {
 		//t.Parallel()
-		profile := &Profile{
+		user := &User{
 			ID:       "+5518999999999",
 			Name:     "Steve",
 			LastName: "Jobs",
@@ -47,13 +47,13 @@ func TestGetUseCase_Execute(t *testing.T) {
 
 		r := new(mockRepository)
 		r.On("Get", "+5518999999999").
-			Return(profile, nil).
+			Return(user, nil).
 			Once()
 
 		uc := NewGetUseCase(r)
 		p, err := uc.Execute("+5518999999999")
 
 		assert.Nil(t, err)
-		assert.Equal(t, profile, p)
+		assert.Equal(t, user, p)
 	})
 }

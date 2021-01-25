@@ -1,4 +1,4 @@
-package profile
+package user
 
 import (
 	"errors"
@@ -12,7 +12,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 
 	t.Run("when use case fails with ErrValidateModel", func(t *testing.T) {
 		//t.Parallel()
-		profile := &Profile{
+		user := &User{
 			ID: "+5518999999999",
 			Name: "",
 			LastName: "Jobs",
@@ -20,19 +20,19 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 
 		r := new(mockRepository)
 		uc := NewUpdateUseCase(r)
-		err := uc.Execute(profile)
+		err := uc.Execute(user)
 
 		assert.Equal(t, ErrNameValidateModel, err)
 	})
 
-	t.Run("when use case fails with ErrProfileNotFound", func(t *testing.T) {
+	t.Run("when use case fails with ErrUserNotFound", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		r.On("Update", mock.Anything).
 			Return(0, nil).
 			Once()
 
-		profile := &Profile{
+		profile := &User{
 			ID: "+5518999999999",
 			Name: "Steve",
 			LastName: "Jobs",
@@ -41,7 +41,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 		uc := NewUpdateUseCase(r)
 		err := uc.Execute(profile)
 
-		assert.Equal(t, ErrProfileNotFound, err)
+		assert.Equal(t, ErrUserNotFound, err)
 	})
 
 	t.Run("when use case fails with Error", func(t *testing.T) {
@@ -51,7 +51,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 			Return(-1, errors.New("error")).
 			Once()
 
-		profile := &Profile{
+		profile := &User{
 			ID: "+5518999999999",
 			Name: "Steve",
 			LastName: "Jobs",
@@ -70,14 +70,14 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 			Return(1, nil).
 			Once()
 
-		profile := &Profile{
+		user := &User{
 			ID: "+5518999999999",
 			Name: "Steve",
 			LastName: "Jobs",
 		}
 
 		uc := NewUpdateUseCase(r)
-		err := uc.Execute(profile)
+		err := uc.Execute(user)
 
 		assert.Nil(t, err)
 	})

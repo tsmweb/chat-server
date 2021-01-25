@@ -1,11 +1,11 @@
-package profile
+package user
 
 import (
 	"errors"
 	"github.com/tsmweb/go-helper-api/cerror"
 )
 
-// CreateUseCase creates a new Profile, otherwise an error is returned.
+// CreateUseCase creates a new User, otherwise an error is returned.
 type CreateUseCase interface {
 	Execute(ID, name, lastname, password string) error
 }
@@ -21,15 +21,15 @@ func NewCreateUseCase(repository Repository) CreateUseCase {
 
 // Execute executes the creation use case.
 func (u *createUseCase) Execute(ID, name, lastname, password string) error {
-	p, err := NewProfile(ID, name, lastname, password)
+	user, err := NewUser(ID, name, lastname, password)
 	if err != nil {
 		return err
 	}
 
-	err = u.repository.Create(p)
+	err = u.repository.Create(user)
 	if err != nil {
 		if errors.Is(err, cerror.ErrRecordAlreadyRegistered) {
-			return ErrProfileAlreadyExists
+			return ErrUserAlreadyExists
 		} else {
 			return err
 		}

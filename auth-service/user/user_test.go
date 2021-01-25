@@ -1,13 +1,13 @@
-package profile
+package user
 
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestNewProfile(t *testing.T) {
+func TestNewUser(t *testing.T) {
 	pwd := "123456"
-	p, err := NewProfile("+5518999999999", "Steve", "Jobs", pwd)
+	p, err := NewUser("+5518999999999", "Steve", "Jobs", pwd)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, p.ID)
@@ -15,7 +15,7 @@ func TestNewProfile(t *testing.T) {
 	assert.NotEqual(t, p.Password, pwd)
 }
 
-func TestProfile_Validate(t *testing.T) {
+func TestUser_Validate(t *testing.T) {
 	type test struct {
 		id string
 		name string
@@ -56,7 +56,7 @@ func TestProfile_Validate(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		_, err := NewProfile(tc.id, tc.name, tc.lastname, tc.password)
+		_, err := NewUser(tc.id, tc.name, tc.lastname, tc.password)
 		assert.Equal(t, err, tc.want)
 	}
 }

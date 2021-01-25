@@ -1,16 +1,16 @@
-package profile
+package user
 
-// ViewModel data
-type ViewModel struct {
+// Presenter data
+type Presenter struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
 	LastName string `json:"lastname"`
 	Password string `json:"password,omitempty"`
 }
 
-// ToEntity mapper ViewModel to Entity
-func (v *ViewModel) ToEntity() *Profile {
-	return &Profile{
+// ToEntity mapper Presenter to Entity
+func (v *Presenter) ToEntity() *User {
+	return &User{
 		ID:       v.ID,
 		Name:     v.Name,
 		LastName: v.LastName,
@@ -18,8 +18,8 @@ func (v *ViewModel) ToEntity() *Profile {
 	}
 }
 
-// FromEntity mapper Entity to ViewModel
-func (v *ViewModel) FromEntity(entity *Profile) {
+// FromEntity mapper Entity to Presenter
+func (v *Presenter) FromEntity(entity *User) {
 	v.ID = entity.ID
 	v.Name = entity.Name
 	v.LastName = entity.LastName

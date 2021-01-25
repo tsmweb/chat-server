@@ -3,7 +3,7 @@ package login
 import (
 	"encoding/json"
 	"errors"
-	"github.com/tsmweb/auth-service/profile"
+	"github.com/tsmweb/auth-service/user"
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/cerror"
 	"log"
@@ -20,19 +20,16 @@ type Controller interface {
 
 type controller struct {
 	*ctlr.Controller
-	loginUseCase LoginUseCase
-	updateUseCase UpdateUseCase
+	service Service
 }
 
 // NewController creates a new instance of Controller.
 func NewController(
 	jwt auth.JWT,
-	loginUseCase LoginUseCase,
-	updateUseCase UpdateUseCase) Controller {
+	service Service) Controller {
 	return &controller{
 		ctlr.NewController(jwt),
-		loginUseCase,
-		updateUseCase,
+		service,
 	}
 }
 
@@ -44,7 +41,7 @@ func (c *controller) Login() http.Handler {
 			return
 		}
 
-		input := ViewModel{}
+		input := Presenter{}
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&input)
 		if err != nil {
@@ -53,7 +50,7 @@ func (c *controller) Login() http.Handler {
 			return
 		}
 
-		token, err := c.loginUseCase.Execute(input.ID, input.Password)
+		token, err := c.service.Login(input.ID, input.Password)
 		if err != nil {
 			log.Println(err.Error())
 			var errValidateModel *cerror.ErrValidateModel
@@ -62,7 +59,7 @@ func (c *controller) Login() http.Handler {
 				return
 			}
 
-			if errors.Is(err, profile.ErrProfileNotFound) {
+			if errors.Is(err, user.ErrUserNotFound) {
 				c.RespondWithError(w, http.StatusNotFound, err.Error())
 				return
 			}
@@ -95,7 +92,7 @@ func (c *controller) Update() http.Handler {
 			return
 		}
 
-		input := ViewModel{}
+		input := Presenter{}
 		decoder := json.NewDecoder(r.Body)
 		err = decoder.Decode(&input)
 		if err != nil {
@@ -110,7 +107,7 @@ func (c *controller) Update() http.Handler {
 			return
 		}
 
-		err = c.updateUseCase.Execute(input.ToEntity())
+		err = c.service.Update(input.ToEntity())
 		if err != nil {
 			log.Println(err.Error())
 			var errValidateModel *cerror.ErrValidateModel
@@ -119,7 +116,7 @@ func (c *controller) Update() http.Handler {
 				return
 			}
 
-			if errors.Is(err, profile.ErrProfileNotFound) {
+			if errors.Is(err, user.ErrUserNotFound) {
 				c.RespondWithError(w, http.StatusNotFound, err.Error())
 				return
 			}

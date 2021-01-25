@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/tsmweb/auth-service/common"
 	"github.com/tsmweb/auth-service/helper/setting"
-	"github.com/tsmweb/auth-service/profile"
+	"github.com/tsmweb/auth-service/user"
 	"github.com/tsmweb/go-helper-api/cerror"
 	"testing"
 )
@@ -24,7 +24,7 @@ func TestLoginUseCase_Execute(t *testing.T) {
 		assert.Equal(t, ErrPasswordValidateModel, err)
 	})
 
-	t.Run("when use case fails with ErrProfileNotFound", func(t *testing.T) {
+	t.Run("when use case fails with ErrUserNotFound", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		r.On("Login", mock.Anything).
@@ -35,7 +35,7 @@ func TestLoginUseCase_Execute(t *testing.T) {
 		uc := NewLoginUseCase(r, j)
 		_, err := uc.Execute("+5518999999999", "123456")
 
-		assert.Equal(t, profile.ErrProfileNotFound, err)
+		assert.Equal(t, user.ErrUserNotFound, err)
 	})
 
 	t.Run("when use case fails with ErrUnauthorized", func(t *testing.T) {

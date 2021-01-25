@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/tsmweb/auth-service/profile"
+	"github.com/tsmweb/auth-service/user"
 	"testing"
 )
 
@@ -25,7 +25,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 		assert.Equal(t, ErrPasswordValidateModel, err)
 	})
 
-	t.Run("when use case fails with ErrProfileNotFound", func(t *testing.T) {
+	t.Run("when use case fails with ErrUserNotFound", func(t *testing.T) {
 		//t.Parallel()
 		l := &Login{
 			ID: "+5518999999999",
@@ -40,7 +40,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 		uc := NewUpdateUseCase(r)
 		err := uc.Execute(l)
 
-		assert.Equal(t, profile.ErrProfileNotFound, err)
+		assert.Equal(t, user.ErrUserNotFound, err)
 	})
 
 	t.Run("when use case fails with Error", func(t *testing.T) {

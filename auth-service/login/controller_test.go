@@ -6,7 +6,7 @@ import (
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/tsmweb/auth-service/common"
-	"github.com/tsmweb/auth-service/profile"
+	"github.com/tsmweb/auth-service/user"
 	"github.com/tsmweb/go-helper-api/cerror"
 	"net/http"
 	"net/http/httptest"
@@ -17,8 +17,7 @@ func TestNewController(t *testing.T) {
 	//t.Parallel()
 	c := NewController(
 		new(common.MockJWT),
-		new(mockLoginUseCase),
-		new(mockUpdateUseCase))
+		new(mockService))
 
 	assert.NotNil(t, c)
 }
@@ -33,10 +32,9 @@ func TestController_Login(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mLogin := new(mockLoginUseCase)
-		mUpdate := new(mockUpdateUseCase)
+		mService := new(mockService)
 
-		ctrl := NewController(mJWT, mLogin, mUpdate)
+		ctrl := NewController(mJWT, mService)
 		ctrl.Login().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnsupportedMediaType, rec.Code)
@@ -49,10 +47,9 @@ func TestController_Login(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mLogin := new(mockLoginUseCase)
-		mUpdate := new(mockUpdateUseCase)
+		mService := new(mockService)
 
-		ctrl := NewController(mJWT, mLogin, mUpdate)
+		ctrl := NewController(mJWT, mService)
 		ctrl.Login().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
@@ -60,7 +57,7 @@ func TestController_Login(t *testing.T) {
 
 	t.Run("when controller return StatusBadRequest", func(t *testing.T) {
 		//t.Parallel()
-		vm := ViewModel{
+		vm := &Presenter{
 			ID: "+5518999999999",
 			Password: "",
 		}
@@ -73,13 +70,12 @@ func TestController_Login(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mLogin := new(mockLoginUseCase)
-		mLogin.On("Execute", vm.ID, vm.Password).
+		mService := new(mockService)
+		mService.On("Login", vm.ID, vm.Password).
 			Return("", ErrPasswordValidateModel).
 			Once()
-		mUpdate := new(mockUpdateUseCase)
 
-		ctrl := NewController(mJWT, mLogin, mUpdate)
+		ctrl := NewController(mJWT, mService)
 		ctrl.Login().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
@@ -87,7 +83,7 @@ func TestController_Login(t *testing.T) {
 
 	t.Run("when controller return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
-		vm := ViewModel{
+		vm := &Presenter{
 			ID: "+5518999999999",
 			Password: "123456",
 		}
@@ -100,13 +96,12 @@ func TestController_Login(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mLogin := new(mockLoginUseCase)
-		mLogin.On("Execute", vm.ID, vm.Password).
-			Return("", profile.ErrProfileNotFound).
+		mService := new(mockService)
+		mService.On("Login", vm.ID, vm.Password).
+			Return("", user.ErrUserNotFound).
 			Once()
-		mUpdate := new(mockUpdateUseCase)
 
-		ctrl := NewController(mJWT, mLogin, mUpdate)
+		ctrl := NewController(mJWT, mService)
 		ctrl.Login().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
@@ -114,7 +109,7 @@ func TestController_Login(t *testing.T) {
 
 	t.Run("when controller return StatusUnauthorized", func(t *testing.T) {
 		//t.Parallel()
-		vm := ViewModel{
+		vm := &Presenter{
 			ID: "+5518999999999",
 			Password: "123456",
 		}
@@ -127,13 +122,12 @@ func TestController_Login(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mLogin := new(mockLoginUseCase)
-		mLogin.On("Execute", vm.ID, vm.Password).
+		mService := new(mockService)
+		mService.On("Login", vm.ID, vm.Password).
 			Return("", cerror.ErrUnauthorized).
 			Once()
-		mUpdate := new(mockUpdateUseCase)
 
-		ctrl := NewController(mJWT, mLogin, mUpdate)
+		ctrl := NewController(mJWT, mService)
 		ctrl.Login().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
@@ -141,7 +135,7 @@ func TestController_Login(t *testing.T) {
 
 	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		vm := ViewModel{
+		vm := &Presenter{
 			ID: "+5518999999999",
 			Password: "123456",
 		}
@@ -154,13 +148,12 @@ func TestController_Login(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mLogin := new(mockLoginUseCase)
-		mLogin.On("Execute", vm.ID, vm.Password).
+		mService := new(mockService)
+		mService.On("Login", vm.ID, vm.Password).
 			Return("", errors.New("error")).
 			Once()
-		mUpdate := new(mockUpdateUseCase)
 
-		ctrl := NewController(mJWT, mLogin, mUpdate)
+		ctrl := NewController(mJWT, mService)
 		ctrl.Login().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
@@ -168,7 +161,7 @@ func TestController_Login(t *testing.T) {
 
 	t.Run("when controller return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		vm := ViewModel{
+		vm := &Presenter{
 			ID: "+5518999999999",
 			Password: "123456",
 		}
@@ -188,13 +181,12 @@ func TestController_Login(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mLogin := new(mockLoginUseCase)
-		mLogin.On("Execute", vm.ID, vm.Password).
+		mService := new(mockService)
+		mService.On("Login", vm.ID, vm.Password).
 			Return("A1B2C3D4E5F6", nil).
 			Once()
-		mUpdate := new(mockUpdateUseCase)
 
-		ctrl := NewController(mJWT, mLogin, mUpdate)
+		ctrl := NewController(mJWT, mService)
 		ctrl.Login().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)
@@ -214,10 +206,9 @@ func TestController_Update(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mLogin := new(mockLoginUseCase)
-		mUpdate := new(mockUpdateUseCase)
+		mService := new(mockService)
 
-		ctrl := NewController(mJWT, mLogin, mUpdate)
+		ctrl := NewController(mJWT, mService)
 		ctrl.Update().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnsupportedMediaType, rec.Code)
@@ -233,10 +224,9 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", req, "id").
 			Return(nil, errors.New("jwt error")).
 			Once()
-		mLogin := new(mockLoginUseCase)
-		mUpdate := new(mockUpdateUseCase)
+		mService := new(mockService)
 
-		ctrl := NewController(mJWT, mLogin, mUpdate)
+		ctrl := NewController(mJWT, mService)
 		ctrl.Update().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
@@ -252,10 +242,9 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", req, "id").
 			Return("+5518999999999", nil).
 			Once()
-		mLogin := new(mockLoginUseCase)
-		mUpdate := new(mockUpdateUseCase)
+		mService := new(mockService)
 
-		ctrl := NewController(mJWT, mLogin, mUpdate)
+		ctrl := NewController(mJWT, mService)
 		ctrl.Update().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
@@ -263,7 +252,7 @@ func TestController_Update(t *testing.T) {
 
 	t.Run("when controller return StatusUnauthorized", func(t *testing.T) {
 		//t.Parallel()
-		vm := ViewModel{
+		vm := &Presenter{
 			ID: "+5518977777777",
 			Password: "123456",
 		}
@@ -279,10 +268,9 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", req, "id").
 			Return("+5518999999999", nil).
 			Once()
-		mLogin := new(mockLoginUseCase)
-		mUpdate := new(mockUpdateUseCase)
+		mService := new(mockService)
 
-		ctrl := NewController(mJWT, mLogin, mUpdate)
+		ctrl := NewController(mJWT, mService)
 		ctrl.Update().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
@@ -290,7 +278,7 @@ func TestController_Update(t *testing.T) {
 
 	t.Run("when controller return StatusBadRequest", func(t *testing.T) {
 		//t.Parallel()
-		vm := ViewModel{
+		vm := &Presenter{
 			ID: "+5518999999999",
 			Password: "",
 		}
@@ -306,13 +294,12 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", req, "id").
 			Return("+5518999999999", nil).
 			Once()
-		mLogin := new(mockLoginUseCase)
-		mUpdate := new(mockUpdateUseCase)
-		mUpdate.On("Execute", vm.ToEntity()).
+		mService := new(mockService)
+		mService.On("Update", vm.ToEntity()).
 			Return(ErrPasswordValidateModel).
 			Once()
 
-		ctrl := NewController(mJWT, mLogin, mUpdate)
+		ctrl := NewController(mJWT, mService)
 		ctrl.Update().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
@@ -320,7 +307,7 @@ func TestController_Update(t *testing.T) {
 
 	t.Run("when controller return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
-		vm := ViewModel{
+		vm := &Presenter{
 			ID: "+5518999999999",
 			Password: "123456",
 		}
@@ -336,13 +323,12 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", req, "id").
 			Return("+5518999999999", nil).
 			Once()
-		mLogin := new(mockLoginUseCase)
-		mUpdate := new(mockUpdateUseCase)
-		mUpdate.On("Execute", vm.ToEntity()).
-			Return(profile.ErrProfileNotFound).
+		mService := new(mockService)
+		mService.On("Update", vm.ToEntity()).
+			Return(user.ErrUserNotFound).
 			Once()
 
-		ctrl := NewController(mJWT, mLogin, mUpdate)
+		ctrl := NewController(mJWT, mService)
 		ctrl.Update().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
@@ -350,7 +336,7 @@ func TestController_Update(t *testing.T) {
 
 	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		vm := ViewModel{
+		vm := &Presenter{
 			ID: "+5518999999999",
 			Password: "123456",
 		}
@@ -366,13 +352,12 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", req, "id").
 			Return("+5518999999999", nil).
 			Once()
-		mLogin := new(mockLoginUseCase)
-		mUpdate := new(mockUpdateUseCase)
-		mUpdate.On("Execute", vm.ToEntity()).
+		mService := new(mockService)
+		mService.On("Update", vm.ToEntity()).
 			Return(errors.New("error")).
 			Once()
 
-		ctrl := NewController(mJWT, mLogin, mUpdate)
+		ctrl := NewController(mJWT, mService)
 		ctrl.Update().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
@@ -380,7 +365,7 @@ func TestController_Update(t *testing.T) {
 
 	t.Run("when controller return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		vm := ViewModel{
+		vm := &Presenter{
 			ID: "+5518999999999",
 			Password: "123456",
 		}
@@ -396,13 +381,12 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", req, "id").
 			Return("+5518999999999", nil).
 			Once()
-		mLogin := new(mockLoginUseCase)
-		mUpdate := new(mockUpdateUseCase)
-		mUpdate.On("Execute", vm.ToEntity()).
+		mService := new(mockService)
+		mService.On("Update", vm.ToEntity()).
 			Return(nil).
 			Once()
 
-		ctrl := NewController(mJWT, mLogin, mUpdate)
+		ctrl := NewController(mJWT, mService)
 		ctrl.Update().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)

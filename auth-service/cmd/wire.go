@@ -7,24 +7,25 @@ import (
 	"github.com/tsmweb/auth-service/helper/database"
 	"github.com/tsmweb/auth-service/helper/setting"
 	"github.com/tsmweb/auth-service/login"
-	"github.com/tsmweb/auth-service/profile"
+	"github.com/tsmweb/auth-service/user"
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/middleware"
 )
 
-func InitProfileRouter() *profile.Router {
+func InitUserRouter() *user.Router {
 	wire.Build(
-		profile.NewRouter,
+		user.NewRouter,
 		middleware.NewAuth,
-		profile.NewController,
-		profile.NewGetUseCase,
-		profile.NewCreateUseCase,
-		profile.NewUpdateUseCase,
-		profile.NewRepositoryPostgres,
+		user.NewController,
+		user.NewService,
+		user.NewGetUseCase,
+		user.NewCreateUseCase,
+		user.NewUpdateUseCase,
+		user.NewRepositoryPostgres,
 		jwtProvider,
 		dataBaseProvider)
 
-	return &profile.Router{}
+	return &user.Router{}
 }
 
 func InitLoginRouter() *login.Router {
@@ -32,6 +33,7 @@ func InitLoginRouter() *login.Router {
 		login.NewRoutes,
 		middleware.NewAuth,
 		login.NewController,
+		login.NewService,
 		login.NewLoginUseCase,
 		login.NewUpdateUseCase,
 		login.NewRepositoryPostgres,
