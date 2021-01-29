@@ -13,17 +13,11 @@ func TestDeleteUseCase_Execute(t *testing.T) {
 	t.Run("when use case fails with ErrContactNotFound", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("Delete", mock.Anything).
+		r.On("Delete", mock.Anything, mock.Anything).
 			Return(0, nil).
 			Once()
-
-		contact := &Contact{
-			ID: "+5518977777777",
-			ProfileID: "+5518999999999",
-		}
-
 		uc := NewDeleteUseCase(r)
-		err := uc.Execute(contact)
+		err := uc.Execute("+5518999999999", "+5518977777777")
 
 		assert.Equal(t, ErrContactNotFound, err)
 	})
@@ -31,17 +25,11 @@ func TestDeleteUseCase_Execute(t *testing.T) {
 	t.Run("when use case fails with Error", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("Delete", mock.Anything).
+		r.On("Delete", mock.Anything, mock.Anything).
 			Return(0, errors.New("error")).
 			Once()
-
-		contact := &Contact{
-			ID: "+5518977777777",
-			ProfileID: "+5518999999999",
-		}
-
 		uc := NewDeleteUseCase(r)
-		err := uc.Execute(contact)
+		err := uc.Execute("+5518999999999", "+5518977777777")
 
 		assert.NotNil(t, err)
 	})
@@ -49,17 +37,11 @@ func TestDeleteUseCase_Execute(t *testing.T) {
 	t.Run("when use case succeeds", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("Delete", mock.Anything).
+		r.On("Delete", mock.Anything, mock.Anything).
 			Return(1, nil).
 			Once()
-
-		contact := &Contact{
-			ID: "+5518977777777",
-			ProfileID: "+5518999999999",
-		}
-
 		uc := NewDeleteUseCase(r)
-		err := uc.Execute(contact)
+		err := uc.Execute("+5518999999999", "+5518977777777")
 
 		assert.Nil(t, err)
 	})

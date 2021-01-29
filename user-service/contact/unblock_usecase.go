@@ -2,7 +2,7 @@ package contact
 
 // UnblockUseCase unblocks a contact, otherwise an error is returned.
 type UnblockUseCase interface {
-	Execute(profileID, contactID string) error
+	Execute(userID, contactID string) error
 }
 
 type unblockUseCase struct {
@@ -15,8 +15,8 @@ func NewUnblockUseCase(r Repository) UnblockUseCase {
 }
 
 // Execute perform the unblock use case.
-func (u *unblockUseCase) Execute(profileID, contactID string) error {
-	ok, err := u.repository.Unblock(profileID, contactID)
+func (u *unblockUseCase) Execute(userID, contactID string) error {
+	ok, err := u.repository.Unblock(userID, contactID)
 	if err != nil {
 		return err
 	}

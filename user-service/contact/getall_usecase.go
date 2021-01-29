@@ -1,8 +1,8 @@
 package contact
 
-// GetAllUseCase returns a list of contacts by profileID, otherwise an error is returned.
+// GetAllUseCase returns a list of contacts by userID, otherwise an error is returned.
 type GetAllUseCase interface {
-	Execute(profileID string) ([]*Contact, error)
+	Execute(userID string) ([]*Contact, error)
 }
 
 type getAllUseCase struct {
@@ -15,8 +15,8 @@ func NewGetAllUseCase(r Repository) GetAllUseCase {
 }
 
 // Execute performs the use case to get all.
-func (u *getAllUseCase) Execute(profileID string) ([]*Contact, error) {
-	contacts, err := u.repository.GetAll(profileID)
+func (u *getAllUseCase) Execute(userID string) ([]*Contact, error) {
+	contacts, err := u.repository.GetAll(userID)
 	if err != nil {
 		return nil, err
 	}

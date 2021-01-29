@@ -1,6 +1,6 @@
 package contact
 
-// GetPresenceUseCase returns a presence (online or offline) of the Contact by profileID and contactID,
+// GetPresenceUseCase returns a presence (online or offline) of the Contact by userID and contactID,
 // otherwise an error is returned.
 type GetPresenceUseCase interface {
 	Execute(profileID, contactID string) (PresenceType, error)
@@ -16,8 +16,8 @@ func NewGetPresenceUseCase(r Repository) GetPresenceUseCase {
 }
 
 // Execute performs the use case to get presence.
-func (u *getPresenceUseCase) Execute(profileID, contactID string) (PresenceType, error) {
-	presence, err := u.repository.GetPresence(profileID, contactID)
+func (u *getPresenceUseCase) Execute(userID, contactID string) (PresenceType, error) {
+	presence, err := u.repository.GetPresence(userID, contactID)
 	if err != nil {
 		return presence, err
 	}

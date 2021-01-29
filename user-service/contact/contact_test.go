@@ -17,39 +17,39 @@ func TestNewContact(t *testing.T) {
 func TestContact_Validate(t *testing.T) {
 	//t.Parallel()
 	type test struct {
-		id string
-		name string
+		id       string
+		name     string
 		lastname string
-		profileID string
-		want error
+		userID   string
+		want     error
 	}
 
 	tests := []test{
 		{
-			id: "+5518977777777",
-			name: "Bill",
+			id:       "+5518977777777",
+			name:     "Bill",
 			lastname: "Gates",
-			profileID: "+5518999999999",
-			want: nil,
+			userID:   "+5518999999999",
+			want:     nil,
 		},
 		{
-			id: "",
-			name: "Bill",
+			id:       "",
+			name:     "Bill",
 			lastname: "Gates",
-			profileID: "+5518999999999",
-			want: ErrIDValidateModel,
+			userID:   "+5518999999999",
+			want:     ErrIDValidateModel,
 		},
 		{
-			id: "+5518977777777",
-			name: "Bill",
+			id:       "+5518977777777",
+			name:     "Bill",
 			lastname: "Gates",
-			profileID: "",
-			want: ErrProfileIDValidateModel,
+			userID:   "",
+			want:     ErrUserIDValidateModel,
 		},
 	}
 
 	for _, tc := range tests {
-		_, err := NewContact(tc.id, tc.name, tc.lastname, tc.profileID)
+		_, err := NewContact(tc.id, tc.name, tc.lastname, tc.userID)
 		assert.Equal(t, err, tc.want)
 	}
 }

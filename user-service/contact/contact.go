@@ -2,19 +2,19 @@ package contact
 
 // Contact data model
 type Contact struct {
-	ID string
-	Name string
+	ID       string
+	Name     string
 	LastName string
-	ProfileID string
+	UserID   string
 }
 
 // NewContact create a new Contact
-func NewContact(ID string, name string, lastname string, profileID string) (*Contact, error) {
+func NewContact(ID string, name string, lastname string, userID string) (*Contact, error) {
 	c := &Contact{
-		ID: ID,
-		Name: name,
+		ID:       ID,
+		Name:     name,
 		LastName: lastname,
-		ProfileID: profileID,
+		UserID:   userID,
 	}
 
 	err := c.Validate()
@@ -30,8 +30,8 @@ func (c Contact) Validate() error {
 	if c.ID == "" {
 		return ErrIDValidateModel
 	}
-	if c.ProfileID == "" {
-		return ErrProfileIDValidateModel
+	if c.UserID == "" {
+		return ErrUserIDValidateModel
 	}
 
 	return nil

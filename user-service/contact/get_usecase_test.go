@@ -39,10 +39,10 @@ func TestGetUseCase_Execute(t *testing.T) {
 	t.Run("when use case succeeds", func(t *testing.T) {
 		//t.Parallel()
 		contact := &Contact{
-			ID: "+5518977777777",
-			Name: "Bill",
+			ID:       "+5518977777777",
+			Name:     "Bill",
 			LastName: "Gates",
-			ProfileID: "+5518999999999",
+			UserID:   "+5518999999999",
 		}
 
 		r := new(mockRepository)

@@ -40,16 +40,16 @@ func TestGetAllUseCase_Execute(t *testing.T) {
 		//t.Parallel()
 		contacts := []*Contact{
 			{
-				ID: "+5518977777777",
-				Name: "Bill",
+				ID:       "+5518977777777",
+				Name:     "Bill",
 				LastName: "Gates",
-				ProfileID: "+5518999999999",
+				UserID:   "+5518999999999",
 			},
 			{
-				ID: "+5518966666666",
-				Name: "Elon",
+				ID:       "+5518966666666",
+				Name:     "Elon",
 				LastName: "Musk",
-				ProfileID: "+5518999999999",
+				UserID:   "+5518999999999",
 			},
 		}
 

@@ -8,8 +8,8 @@ type mockService struct {
 }
 
 // Get represents the simulated method for the Get feature in the Service layer.
-func (m *mockService) Get(profileID, contactID string) (*Contact, error) {
-	args := m.Called(profileID, contactID)
+func (m *mockService) Get(userID, contactID string) (*Contact, error) {
+	args := m.Called(userID, contactID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -17,8 +17,8 @@ func (m *mockService) Get(profileID, contactID string) (*Contact, error) {
 }
 
 // GetAll represents the simulated method for the GetAll feature in the Service layer.
-func (m *mockService) GetAll(profileID string) ([]*Contact, error) {
-	args := m.Called(profileID)
+func (m *mockService) GetAll(userID string) ([]*Contact, error) {
+	args := m.Called(userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -26,8 +26,8 @@ func (m *mockService) GetAll(profileID string) ([]*Contact, error) {
 }
 
 // GetPresence represents the simulated method for the GetPresence feature in the Service layer.
-func (m *mockService) GetPresence(profileID, contactID string) (PresenceType, error) {
-	args := m.Called(profileID, contactID)
+func (m *mockService) GetPresence(userID, contactID string) (PresenceType, error) {
+	args := m.Called(userID, contactID)
 	if args.Error(1) != nil {
 		return NotFound, args.Error(1)
 	}
@@ -47,19 +47,19 @@ func (m *mockService) Update(contact *Contact) error {
 }
 
 // Delete represents the simulated method for the Delete feature in the Service layer.
-func (m *mockService) Delete(contact *Contact) error {
-	args := m.Called(contact)
+func (m *mockService) Delete(userID, contactID string) error {
+	args := m.Called(userID, contactID)
 	return args.Error(0)
 }
 
 // Block represents the simulated method for the Block feature in the Service layer.
-func (m *mockService) Block(profileID, contactID string) error {
-	args := m.Called(profileID, contactID)
+func (m *mockService) Block(userID, contactID string) error {
+	args := m.Called(userID, contactID)
 	return args.Error(0)
 }
 
 // Unblock represents the simulated method for the Unblock feature in the Service layer.
-func (m *mockService) Unblock(profileID, contactID string) error {
-	args := m.Called(profileID, contactID)
+func (m *mockService) Unblock(userID, contactID string) error {
+	args := m.Called(userID, contactID)
 	return args.Error(0)
 }

@@ -2,7 +2,7 @@ package contact
 
 // DeleteUseCase delete a Contact, otherwise an error is returned.
 type DeleteUseCase interface {
-	Execute(contact *Contact) error
+	Execute(userID, contactID string) error
 }
 
 type deleteUseCase struct {
@@ -15,8 +15,8 @@ func NewDeleteUseCase(r Repository) DeleteUseCase {
 }
 
 // Execute performs the delete use case.
-func (u *deleteUseCase) Execute(contact *Contact) error {
-	rows, err := u.repository.Delete(contact)
+func (u *deleteUseCase) Execute(userID, contactID string) error {
+	rows, err := u.repository.Delete(userID, contactID)
 	if err != nil {
 		return err
 	}

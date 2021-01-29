@@ -12,23 +12,23 @@ func NewRepositoryPostgres(db database.Database) Repository {
 	return &repositoryPostgres{dataBase: db}
 }
 
-// Get returns the contact by profileID and contactID.
-func (r *repositoryPostgres) Get(profileID, contactID string) (*Contact, error) {
+// Get returns the contact by userID and contactID.
+func (r *repositoryPostgres) Get(userID, contactID string) (*Contact, error) {
 	return nil, nil
 }
 
-// GetAll returns all contacts by profileID.
-func (r *repositoryPostgres) GetAll(profileID string) ([]*Contact, error) {
+// GetAll returns all contacts by userID.
+func (r *repositoryPostgres) GetAll(userID string) ([]*Contact, error) {
 	return nil, nil
 }
 
-// ExistsProfile checks if the contact exists in the database.
-func (r *repositoryPostgres) ExistsProfile(ID string) (bool, error) {
+// ExistsUser checks if the contact exists in the database.
+func (r *repositoryPostgres) ExistsUser(ID string) (bool, error) {
 	return false, nil
 }
 
 // GetPresence returns the presence status of the contact.
-func (r *repositoryPostgres) GetPresence(profileID, contactID string) (PresenceType, error) {
+func (r *repositoryPostgres) GetPresence(userID, contactID string) (PresenceType, error) {
 	return NotFound, nil
 }
 
@@ -43,16 +43,16 @@ func (r *repositoryPostgres) Update(contact *Contact) (int, error) {
 }
 
 // Delete deletes a contact from the database.
-func (r *repositoryPostgres) Delete(contact *Contact) (int, error) {
+func (r *repositoryPostgres) Delete(userID, contactID string) (int, error) {
 	return 0, nil
 }
 
 // Block adds a contact to the blocked contacts database.
-func (r *repositoryPostgres) Block(profileID, contactID string) (bool, error) {
+func (r *repositoryPostgres) Block(userID, contactID string) (bool, error) {
 	return false, nil
 }
 
 // Unblock removes a contact from the blocked contacts database.
-func (r *repositoryPostgres) Unblock(profileID, contactID string) (bool, error) {
+func (r *repositoryPostgres) Unblock(userID, contactID string) (bool, error) {
 	return false, nil
 }

@@ -62,8 +62,8 @@ func (r *Router) MakeRouters(mr *mux.Router) {
 		negroni.Wrap(r.controller.Update())),
 	).Methods(http.MethodPut)
 
-	// contact [DELETE]
-	mr.Handle(resource, negroni.New(
+	// contact/{id} [DELETE]
+	mr.Handle(fmt.Sprintf("%s/{id}", resource), negroni.New(
 		negroni.HandlerFunc(r.auth.RequireTokenAuth),
 		negroni.Wrap(r.controller.Delete())),
 	).Methods(http.MethodDelete)
@@ -74,8 +74,8 @@ func (r *Router) MakeRouters(mr *mux.Router) {
 		negroni.Wrap(r.controller.Block())),
 	).Methods(http.MethodPost)
 
-	// contact/block [DELETE]
-	mr.Handle(fmt.Sprintf("%s/block", resource), negroni.New(
+	// contact/block/{id} [DELETE]
+	mr.Handle(fmt.Sprintf("%s/block/{id}", resource), negroni.New(
 		negroni.HandlerFunc(r.auth.RequireTokenAuth),
 		negroni.Wrap(r.controller.Unblock())),
 	).Methods(http.MethodDelete)

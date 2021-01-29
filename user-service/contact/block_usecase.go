@@ -7,7 +7,7 @@ import (
 
 // BlockUseCase blocks a contact, otherwise an error is returned.
 type BlockUseCase interface {
-	Execute(profileID, contactID string) error
+	Execute(userID, contactID string) error
 }
 
 type blockUseCase struct {
@@ -20,16 +20,16 @@ func NewBlockUseCase(r Repository) BlockUseCase {
 }
 
 // Execute perform the block use case.
-func (u *blockUseCase) Execute(profileID, contactID string) error {
-	ok, err := u.repository.ExistsProfile(contactID)
+func (u *blockUseCase) Execute(userID, contactID string) error {
+	ok, err := u.repository.ExistsUser(contactID)
 	if err != nil {
 		return err
 	}
 	if !ok {
-		return ErrProfileNotFound
+		return ErrUserNotFound
 	}
 
-	_, err = u.repository.Block(profileID, contactID)
+	_, err = u.repository.Block(userID, contactID)
 	if err != nil {
 		if errors.Is(err, cerror.ErrRecordAlreadyRegistered) {
 			return ErrContactAlreadyBlocked

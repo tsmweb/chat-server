@@ -7,7 +7,7 @@ import (
 
 // CreateUseCase creates a new Contact, otherwise an error is returned.
 type CreateUseCase interface {
-	Execute(ID, name, lastname, profileID string) error
+	Execute(ID, name, lastname, userID string) error
 }
 
 type createUseCase struct {
@@ -20,18 +20,18 @@ func NewCreateUseCase(r Repository) CreateUseCase {
 }
 
 // Execute performs the creation use case.
-func (u *createUseCase) Execute(ID, name, lastname, profileID string) error {
-	c, err := NewContact(ID, name, lastname, profileID)
+func (u *createUseCase) Execute(ID, name, lastname, userID string) error {
+	c, err := NewContact(ID, name, lastname, userID)
 	if err != nil {
 		return err
 	}
 
-	ok, err := u.repository.ExistsProfile(ID)
+	ok, err := u.repository.ExistsUser(ID)
 	if err != nil {
 		return err
 	}
 	if !ok {
-		return ErrProfileNotFound
+		return ErrUserNotFound
 	}
 
 	err = u.repository.Create(c)

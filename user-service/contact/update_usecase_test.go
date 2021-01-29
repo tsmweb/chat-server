@@ -13,17 +13,17 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 	t.Run("when use case fails with ErrValidateModel", func(t *testing.T) {
 		//t.Parallel()
 		contact := &Contact{
-			ID: "+5518977777777",
-			Name: "Bill",
+			ID:       "+5518977777777",
+			Name:     "Bill",
 			LastName: "Gates",
-			ProfileID: "",
+			UserID:   "",
 		}
 
 		r := new(mockRepository)
 		uc := NewUpdateUseCase(r)
 		err := uc.Execute(contact)
 
-		assert.Equal(t, ErrProfileIDValidateModel, err)
+		assert.Equal(t, ErrUserIDValidateModel, err)
 	})
 
 	t.Run("when use case fails with ErrContactNotFound", func(t *testing.T) {
@@ -34,10 +34,10 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 			Once()
 
 		contact := &Contact{
-			ID: "+5518977777777",
-			Name: "Bill",
+			ID:       "+5518977777777",
+			Name:     "Bill",
 			LastName: "Gates",
-			ProfileID: "+5518999999999",
+			UserID:   "+5518999999999",
 		}
 
 		uc := NewUpdateUseCase(r)
@@ -54,10 +54,10 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 			Once()
 
 		contact := &Contact{
-			ID: "+5518977777777",
-			Name: "Bill",
+			ID:       "+5518977777777",
+			Name:     "Bill",
 			LastName: "Gates",
-			ProfileID: "+5518999999999",
+			UserID:   "+5518999999999",
 		}
 
 		uc := NewUpdateUseCase(r)
@@ -74,10 +74,10 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 			Once()
 
 		contact := &Contact{
-			ID: "+5518977777777",
-			Name: "Bill",
+			ID:       "+5518977777777",
+			Name:     "Bill",
 			LastName: "Gates",
-			ProfileID: "+5518999999999",
+			UserID:   "+5518999999999",
 		}
 
 		uc := NewUpdateUseCase(r)

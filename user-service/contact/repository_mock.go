@@ -25,8 +25,8 @@ func (m *mockRepository) GetAll(profileID string) ([]*Contact, error) {
 	return args.Get(0).([]*Contact), nil
 }
 
-// ExistsProfile represents the simulated method for the ExistsProfile feature in the Repository layer.
-func (m *mockRepository) ExistsProfile(ID string) (bool, error) {
+// ExistsUser represents the simulated method for the ExistsUser feature in the Repository layer.
+func (m *mockRepository) ExistsUser(ID string) (bool, error) {
 	args := m.Called(ID)
 	if args.Error(1) != nil {
 		return false, args.Error(1)
@@ -59,8 +59,8 @@ func (m *mockRepository) Update(c *Contact) (int, error) {
 }
 
 // Delete represents the simulated method for the Delete feature in the Repository layer.
-func (m *mockRepository) Delete(c *Contact) (int, error) {
-	args := m.Called(c)
+func (m *mockRepository) Delete(userID, contactID string) (int, error) {
+	args := m.Called(userID, contactID)
 	if args.Error(1) != nil {
 		return 0, args.Error(1)
 	}

@@ -2,14 +2,14 @@ package contact
 
 // Service service is a façade for use cases.
 type Service interface {
-	Get(profileID, contactID string) (*Contact, error)
-	GetAll(profileID string) ([]*Contact, error)
-	GetPresence(profileID, contactID string) (PresenceType, error)
+	Get(userID, contactID string) (*Contact, error)
+	GetAll(userID string) ([]*Contact, error)
+	GetPresence(userID, contactID string) (PresenceType, error)
 	Create(ID, name, lastname, profileID string) error
 	Update(contact *Contact) error
-	Delete(contact *Contact) error
-	Block(profileID, contactID string) error
-	Unblock(profileID, contactID string) error
+	Delete(userID, contactID string) error
+	Block(userID, contactID string) error
+	Unblock(userID, contactID string) error
 }
 
 type service struct {
@@ -46,18 +46,18 @@ func NewService(
 }
 
 // Get performs the get use case.
-func (s *service) Get(profileID, contactID string) (*Contact, error) {
-	return s.getUC.Execute(profileID, contactID)
+func (s *service) Get(userID, contactID string) (*Contact, error) {
+	return s.getUC.Execute(userID, contactID)
 }
 
 // GetAll performs the use case to get all.
-func (s *service) GetAll(profileID string) ([]*Contact, error) {
-	return s.getAllUC.Execute(profileID)
+func (s *service) GetAll(userID string) ([]*Contact, error) {
+	return s.getAllUC.Execute(userID)
 }
 
 // GetPresence performs the use case to get presence.
-func (s *service) GetPresence(profileID, contactID string) (PresenceType, error) {
-	return s.getPresenceUC.Execute(profileID, contactID)
+func (s *service) GetPresence(userID, contactID string) (PresenceType, error) {
+	return s.getPresenceUC.Execute(userID, contactID)
 }
 
 // Create performs the creation use case.
@@ -71,16 +71,16 @@ func (s *service) Update(contact *Contact) error {
 }
 
 // Delete performs the delete use case.
-func (s *service) Delete(contact *Contact) error {
-	return s.deleteUC.Execute(contact)
+func (s *service) Delete(userID, contactID string) error {
+	return s.deleteUC.Execute(userID, contactID)
 }
 
 // Block perform the block use case.
-func (s *service) Block(profileID, contactID string) error {
-	return s.blockUC.Execute(profileID, contactID)
+func (s *service) Block(userID, contactID string) error {
+	return s.blockUC.Execute(userID, contactID)
 }
 
 // Unblock perform the unblock use case.
-func (s *service) Unblock(profileID, contactID string) error {
-	return s.unblockUC.Execute(profileID, contactID)
+func (s *service) Unblock(userID, contactID string) error {
+	return s.unblockUC.Execute(userID, contactID)
 }

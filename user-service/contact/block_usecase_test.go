@@ -11,23 +11,23 @@ import (
 func TestBlockUseCase_Execute(t *testing.T) {
 	//t.Parallel()
 
-	t.Run("when use case fails with ErrProfileNotFound", func(t *testing.T) {
+	t.Run("when use case fails with ErrUserNotFound", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("ExistsProfile", mock.Anything).
+		r.On("ExistsUser", mock.Anything).
 			Return(false, nil).
 			Once()
 
 		uc := NewBlockUseCase(r)
 		err := uc.Execute("+5518999999999", "+5518977777777")
 
-		assert.Equal(t, ErrProfileNotFound, err)
+		assert.Equal(t, ErrUserNotFound, err)
 	})
 
 	t.Run("when use case fails with ErrContactAlreadyBlocked", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("ExistsProfile", mock.Anything).
+		r.On("ExistsUser", mock.Anything).
 			Return(true, nil).
 			Once()
 		r.On("Block", mock.Anything, mock.Anything).
@@ -43,7 +43,7 @@ func TestBlockUseCase_Execute(t *testing.T) {
 	t.Run("when use case fails with Error", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("ExistsProfile", mock.Anything).
+		r.On("ExistsUser", mock.Anything).
 			Return(false, errors.New("error")).
 			Once()
 
@@ -52,7 +52,7 @@ func TestBlockUseCase_Execute(t *testing.T) {
 
 		assert.NotNil(t, err)
 
-		r.On("ExistsProfile", mock.Anything).
+		r.On("ExistsUser", mock.Anything).
 			Return(true, nil).
 			Once()
 		r.On("Block", mock.Anything, mock.Anything).
@@ -67,7 +67,7 @@ func TestBlockUseCase_Execute(t *testing.T) {
 	t.Run("when use case succeeds", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("ExistsProfile", mock.Anything).
+		r.On("ExistsUser", mock.Anything).
 			Return(true, nil).
 			Once()
 		r.On("Block", mock.Anything, mock.Anything).
