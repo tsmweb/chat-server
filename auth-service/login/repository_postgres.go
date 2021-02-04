@@ -3,7 +3,6 @@ package login
 import (
 	"database/sql"
 	"github.com/tsmweb/auth-service/helper/database"
-	"github.com/tsmweb/go-helper-api/cerror"
 )
 
 // repositoryPostgres implementation for Repository interface.
@@ -18,19 +17,16 @@ func NewRepositoryPostgres(db database.Database) Repository {
 
 // Login returns if ID and password are valid.
 func (r *repositoryPostgres) Login(login *Login) (bool, error) {
+	ok := false
 	err := r.dataBase.DB().
-		QueryRow(`SELECT 1 FROM login WHERE client_id = $1 AND password = $2`, login.ID, login.Password).
-		Err()
+		QueryRow(`SELECT true FROM login WHERE user_id = $1 AND password = $2`, login.ID, login.Password).
+		Scan(&ok)
 
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return false, cerror.ErrNotFound
-		}
-
+	if err != nil && err != sql.ErrNoRows {
 		return false, err
 	}
 
-	return true, nil
+	return ok, nil
 }
 
 // Update login data in the data base.
@@ -43,7 +39,7 @@ func (r *repositoryPostgres) Update(login *Login) (int, error) {
 	result, err := txn.Exec(`
 		UPDATE login 
 		SET password = $1, update_at = CURRENT_TIMESTAMP
-		WHERE client_id = $2`,
+		WHERE user_id = $2`,
 		login.Password, login.ID)
 	if err != nil {
 		txn.Rollback()

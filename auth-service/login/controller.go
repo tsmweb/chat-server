@@ -59,11 +59,6 @@ func (c *controller) Login() http.Handler {
 				return
 			}
 
-			if errors.Is(err, user.ErrUserNotFound) {
-				c.RespondWithError(w, http.StatusNotFound, err.Error())
-				return
-			}
-
 			if errors.Is(err, cerror.ErrUnauthorized) {
 				c.RespondWithError(w, http.StatusUnauthorized, err.Error())
 				return

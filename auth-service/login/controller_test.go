@@ -81,32 +81,6 @@ func TestController_Login(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
-		//t.Parallel()
-		vm := &Presenter{
-			ID: "+5518999999999",
-			Password: "123456",
-		}
-
-		vmj, err := json.Marshal(vm)
-		assert.Nil(t, err)
-
-		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader(vmj))
-		req.Header.Set("Content-Type", "application/json")
-		rec := httptest.NewRecorder()
-
-		mJWT := new(common.MockJWT)
-		mService := new(mockService)
-		mService.On("Login", vm.ID, vm.Password).
-			Return("", user.ErrUserNotFound).
-			Once()
-
-		ctrl := NewController(mJWT, mService)
-		ctrl.Login().ServeHTTP(rec, req)
-
-		assert.Equal(t, http.StatusNotFound, rec.Code)
-	})
-
 	t.Run("when controller return StatusUnauthorized", func(t *testing.T) {
 		//t.Parallel()
 		vm := &Presenter{

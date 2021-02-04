@@ -21,7 +21,7 @@ func NewRepositoryPostgres(db database.Database) Repository {
 func (r *repositoryPostgres) Get(ID string) (*User, error) {
 	user := &User{}
 
-	err := r.dataBase.DB().QueryRow("SELECT ID, name, lastname FROM user WHERE ID = $1", ID).Scan(
+	err := r.dataBase.DB().QueryRow(`SELECT ID, name, lastname FROM "user" WHERE ID = $1`, ID).Scan(
 		&user.ID,
 		&user.Name,
 		&user.LastName)
@@ -43,7 +43,7 @@ func (r *repositoryPostgres) Create(user *User) error {
 		return err
 	}
 
-	_, err = txn.Exec(`INSERT INTO user(id, name, lastname) VALUES($1, $2, $3)`,
+	_, err = txn.Exec(`INSERT INTO "user"(id, name, lastname) VALUES($1, $2, $3)`,
 		user.ID, user.Name, user.LastName)
 	if err != nil {
 		txn.Rollback()
@@ -55,7 +55,7 @@ func (r *repositoryPostgres) Create(user *User) error {
 		return err
 	}
 
-	_, err = txn.Exec(`INSERT INTO login(client_id, password) VALUES($1, $2)`,
+	_, err = txn.Exec(`INSERT INTO login(user_id, password) VALUES($1, $2)`,
 		user.ID, user.Password)
 	if err != nil {
 		txn.Rollback()
@@ -79,7 +79,7 @@ func (r *repositoryPostgres) Update(user *User) (int, error) {
 	}
 
 	result, err := txn.Exec(`
-		UPDATE user 
+		UPDATE "user" 
 		SET name = $1, lastname = $2, update_at = CURRENT_TIMESTAMP 
 		WHERE id = $3`,
 		user.Name, user.LastName, user.ID)
