@@ -10,7 +10,7 @@ import (
 func TestUnblockUseCase_Execute(t *testing.T) {
 	//t.Parallel()
 
-	t.Run("when use case fails with ErrContactNotFound", func(t *testing.T) {
+	t.Run("when use case fails with ErrUserNotFound", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		r.On("Unblock", mock.Anything, mock.Anything).
@@ -20,7 +20,7 @@ func TestUnblockUseCase_Execute(t *testing.T) {
 		uc := NewUnblockUseCase(r)
 		err := uc.Execute("+5518999999999", "+5518977777777")
 
-		assert.Equal(t, ErrContactNotFound, err)
+		assert.Equal(t, ErrUserNotFound, err)
 	})
 
 	t.Run("when use case fails with Error", func(t *testing.T) {

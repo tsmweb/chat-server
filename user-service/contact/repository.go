@@ -13,8 +13,8 @@ type Writer interface {
 	Create(contact *Contact) error
 	Update(contact *Contact) (int, error)
 	Delete(userID, contactID string) (int, error)
-	Block(userID, contactID string) (bool, error)
-	Unblock(userID, contactID string) (bool, error)
+	Block(userID, blockedUserID string) error
+	Unblock(userID, blockedUserID string) (bool, error)
 }
 
 // Repository interface for contact data source.

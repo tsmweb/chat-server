@@ -987,7 +987,7 @@ func TestController_Unblock(t *testing.T) {
 			Once()
 		mService := new(mockService)
 		mService.On("Unblock", mock.Anything, mock.Anything).
-			Return(ErrContactNotFound).
+			Return(ErrUserNotFound).
 			Once()
 		ctrl := NewController(mJWT, mService)
 

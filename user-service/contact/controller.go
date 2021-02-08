@@ -290,7 +290,7 @@ func (c *controller) Block() http.Handler {
 			return
 		}
 
-		err = c.service.Block(input.ID, userID)
+		err = c.service.Block(userID, input.ID)
 		if err != nil {
 			log.Println(err.Error())
 
@@ -323,13 +323,13 @@ func (c *controller) Unblock() http.Handler {
 		}
 
 		vars := mux.Vars(r)
-		contactID := vars["id"]
+		blockedUserID := vars["id"]
 
-		err = c.service.Unblock(userID, contactID)
+		err = c.service.Unblock(userID, blockedUserID)
 		if err != nil {
 			log.Println(err.Error())
 
-			if errors.Is(err, ErrContactNotFound) {
+			if errors.Is(err, ErrUserNotFound) {
 				c.RespondWithError(w, http.StatusNotFound, err.Error())
 				return
 			}

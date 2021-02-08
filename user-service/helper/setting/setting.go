@@ -40,7 +40,7 @@ func Load(workDir string) {
 	privateKey = workDir + "/helper/setting/keys/private-key"
 	publicKey = workDir + "/helper/setting/keys/public-key.pub"
 
-	expireToken = 1 //hour
+	expireToken = 24 //hour
 }
 
 func PathPrivateKey() string {

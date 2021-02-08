@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/tsmweb/go-helper-api/cerror"
 	"testing"
 )
 
@@ -14,7 +15,7 @@ func TestGetAllUseCase_Execute(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		r.On("GetAll", mock.Anything).
-			Return(nil, nil).
+			Return(nil, cerror.ErrNotFound).
 			Once()
 
 		uc := NewGetAllUseCase(r)

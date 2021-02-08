@@ -31,7 +31,7 @@ func TestBlockUseCase_Execute(t *testing.T) {
 			Return(true, nil).
 			Once()
 		r.On("Block", mock.Anything, mock.Anything).
-			Return(false, cerror.ErrRecordAlreadyRegistered).
+			Return(cerror.ErrRecordAlreadyRegistered).
 			Once()
 
 		uc := NewBlockUseCase(r)
@@ -56,7 +56,7 @@ func TestBlockUseCase_Execute(t *testing.T) {
 			Return(true, nil).
 			Once()
 		r.On("Block", mock.Anything, mock.Anything).
-			Return(false, errors.New("error")).
+			Return(errors.New("error")).
 			Once()
 
 		err = uc.Execute("+5518999999999", "+5518977777777")
@@ -71,7 +71,7 @@ func TestBlockUseCase_Execute(t *testing.T) {
 			Return(true, nil).
 			Once()
 		r.On("Block", mock.Anything, mock.Anything).
-			Return(true, nil).
+			Return(nil).
 			Once()
 
 		uc := NewBlockUseCase(r)

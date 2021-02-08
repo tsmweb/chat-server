@@ -1,5 +1,10 @@
 package contact
 
+import (
+	"errors"
+	"github.com/tsmweb/go-helper-api/cerror"
+)
+
 // GetAllUseCase returns a list of contacts by userID, otherwise an error is returned.
 type GetAllUseCase interface {
 	Execute(userID string) ([]*Contact, error)
@@ -18,6 +23,9 @@ func NewGetAllUseCase(r Repository) GetAllUseCase {
 func (u *getAllUseCase) Execute(userID string) ([]*Contact, error) {
 	contacts, err := u.repository.GetAll(userID)
 	if err != nil {
+		if errors.Is(err, cerror.ErrNotFound) {
+			return nil, ErrContactNotFound
+		}
 		return nil, err
 	}
 	if contacts == nil || len(contacts) == 0 {

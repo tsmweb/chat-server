@@ -68,17 +68,14 @@ func (m *mockRepository) Delete(userID, contactID string) (int, error) {
 }
 
 // Block represents the simulated method for the Block feature in the Repository layer.
-func (m *mockRepository) Block(profileID, contactID string) (bool, error) {
-	args := m.Called(profileID, contactID)
-	if args.Error(1) != nil {
-		return false, args.Error(1)
-	}
-	return args.Get(0).(bool), nil
+func (m *mockRepository) Block(profileID, blockedUserID string) error {
+	args := m.Called(profileID, blockedUserID)
+	return args.Error(0)
 }
 
 // Unblock represents the simulated method for the Unblock feature in the Repository layer.
-func (m *mockRepository) Unblock(profileID, contactID string) (bool, error) {
-	args := m.Called(profileID, contactID)
+func (m *mockRepository) Unblock(profileID, blockedUserID string) (bool, error) {
+	args := m.Called(profileID, blockedUserID)
 	if args.Error(1) != nil {
 		return false, args.Error(1)
 	}
