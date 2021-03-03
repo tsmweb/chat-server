@@ -1,5 +1,7 @@
 package contact
 
+import "time"
+
 // UpdateUseCase updates a Contact, otherwise an error is returned.
 type UpdateUseCase interface {
 	Execute(contact *Contact) error
@@ -20,6 +22,8 @@ func (u *updateUseCase) Execute(contact *Contact) error {
 	if err != nil {
 		return err
 	}
+
+	contact.UpdatedAt = time.Now()
 
 	rows, err := u.repository.Update(contact)
 	if err != nil {

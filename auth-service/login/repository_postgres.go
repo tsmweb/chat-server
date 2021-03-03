@@ -18,10 +18,13 @@ func NewRepositoryPostgres(db database.Database) Repository {
 // Login returns if ID and password are valid.
 func (r *repositoryPostgres) Login(login *Login) (bool, error) {
 	ok := false
-	err := r.dataBase.DB().
-		QueryRow(`SELECT true FROM login WHERE user_id = $1 AND password = $2`, login.ID, login.Password).
-		Scan(&ok)
 
+	stmt, err := r.dataBase.DB().Prepare(`SELECT true FROM login WHERE user_id = $1 AND password = $2`)
+	if err != nil {
+		return ok, err
+	}
+
+	err = stmt.QueryRow(login.ID, login.Password).Scan(&ok)
 	if err != nil && err != sql.ErrNoRows {
 		return false, err
 	}
@@ -38,9 +41,9 @@ func (r *repositoryPostgres) Update(login *Login) (int, error) {
 
 	result, err := txn.Exec(`
 		UPDATE login 
-		SET password = $1, update_at = CURRENT_TIMESTAMP
-		WHERE user_id = $2`,
-		login.Password, login.ID)
+		SET password = $1, updated_at = $2
+		WHERE user_id = $3`,
+		login.Password, login.UpdatedAt, login.ID)
 	if err != nil {
 		txn.Rollback()
 		return -1, err

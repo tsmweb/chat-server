@@ -1,6 +1,9 @@
 package contact
 
-import "github.com/stretchr/testify/mock"
+import (
+	"github.com/stretchr/testify/mock"
+	"time"
+)
 
 // mockRepository injects mock dependency into UserCase layer.
 type mockRepository struct {
@@ -68,8 +71,8 @@ func (m *mockRepository) Delete(userID, contactID string) (int, error) {
 }
 
 // Block represents the simulated method for the Block feature in the Repository layer.
-func (m *mockRepository) Block(profileID, blockedUserID string) error {
-	args := m.Called(profileID, blockedUserID)
+func (m *mockRepository) Block(profileID, blockedUserID string, createdAt time.Time) error {
+	args := m.Called(profileID, blockedUserID, createdAt)
 	return args.Error(0)
 }
 

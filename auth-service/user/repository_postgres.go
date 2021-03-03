@@ -19,12 +19,19 @@ func NewRepositoryPostgres(db database.Database) Repository {
 
 // Get returns the user by id.
 func (r *repositoryPostgres) Get(ID string) (*User, error) {
-	user := &User{}
+	stmt, err := r.dataBase.DB().Prepare(`
+		SELECT ID, name, lastname, created_at, updated_at FROM "user" WHERE ID = $1`)
+	if err != nil {
+		return nil, err
+	}
 
-	err := r.dataBase.DB().QueryRow(`SELECT ID, name, lastname FROM "user" WHERE ID = $1`, ID).Scan(
+	var user User
+	err = stmt.QueryRow(ID).Scan(
 		&user.ID,
 		&user.Name,
-		&user.LastName)
+		&user.LastName,
+		&user.CreatedAt,
+		&user.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, cerror.ErrNotFound
@@ -33,7 +40,7 @@ func (r *repositoryPostgres) Get(ID string) (*User, error) {
 		return nil, err
 	}
 
-	return user, nil
+	return &user, nil
 }
 
 // Create new user in the data base.
@@ -43,8 +50,8 @@ func (r *repositoryPostgres) Create(user *User) error {
 		return err
 	}
 
-	_, err = txn.Exec(`INSERT INTO "user"(id, name, lastname) VALUES($1, $2, $3)`,
-		user.ID, user.Name, user.LastName)
+	_, err = txn.Exec(`INSERT INTO "user"(id, name, lastname, created_at) VALUES($1, $2, $3, $4)`,
+		user.ID, user.Name, user.LastName, user.CreatedAt)
 	if err != nil {
 		txn.Rollback()
 		//"23505": "unique_violation"
@@ -55,8 +62,8 @@ func (r *repositoryPostgres) Create(user *User) error {
 		return err
 	}
 
-	_, err = txn.Exec(`INSERT INTO login(user_id, password) VALUES($1, $2)`,
-		user.ID, user.Password)
+	_, err = txn.Exec(`INSERT INTO login(user_id, password, created_at) VALUES($1, $2, $3)`,
+		user.ID, user.Password, user.CreatedAt)
 	if err != nil {
 		txn.Rollback()
 		return err
@@ -80,9 +87,9 @@ func (r *repositoryPostgres) Update(user *User) (int, error) {
 
 	result, err := txn.Exec(`
 		UPDATE "user" 
-		SET name = $1, lastname = $2, update_at = CURRENT_TIMESTAMP 
-		WHERE id = $3`,
-		user.Name, user.LastName, user.ID)
+		SET name = $1, lastname = $2, updated_at = $3
+		WHERE id = $4`,
+		user.Name, user.LastName, user.UpdatedAt, user.ID)
 	if err != nil {
 		txn.Rollback()
 		return -1, err

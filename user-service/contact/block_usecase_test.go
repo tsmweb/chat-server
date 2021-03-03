@@ -30,7 +30,7 @@ func TestBlockUseCase_Execute(t *testing.T) {
 		r.On("ExistsUser", mock.Anything).
 			Return(true, nil).
 			Once()
-		r.On("Block", mock.Anything, mock.Anything).
+		r.On("Block", mock.Anything, mock.Anything, mock.Anything).
 			Return(cerror.ErrRecordAlreadyRegistered).
 			Once()
 
@@ -55,7 +55,7 @@ func TestBlockUseCase_Execute(t *testing.T) {
 		r.On("ExistsUser", mock.Anything).
 			Return(true, nil).
 			Once()
-		r.On("Block", mock.Anything, mock.Anything).
+		r.On("Block", mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
 
@@ -70,7 +70,7 @@ func TestBlockUseCase_Execute(t *testing.T) {
 		r.On("ExistsUser", mock.Anything).
 			Return(true, nil).
 			Once()
-		r.On("Block", mock.Anything, mock.Anything).
+		r.On("Block", mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
 

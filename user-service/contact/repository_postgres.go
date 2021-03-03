@@ -5,6 +5,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/tsmweb/go-helper-api/cerror"
 	"github.com/tsmweb/use-service/helper/database"
+	"time"
 )
 
 // repositoryPostgres implementation for Repository interface.
@@ -19,18 +20,23 @@ func NewRepositoryPostgres(db database.Database) Repository {
 
 // Get returns the contact by userID and contactID.
 func (r *repositoryPostgres) Get(userID, contactID string) (*Contact, error) {
-	contact := &Contact{}
-
-	err := r.dataBase.DB().
-		QueryRow(`
-			SELECT user_id, contact_id, name, lastname 
+	stmt, err := r.dataBase.DB().Prepare(`
+			SELECT user_id, contact_id, name, lastname, created_at, updated_at 
 			FROM contact 
 			WHERE user_id = $1 
-			  AND contact_id = $2`, userID, contactID).
+			  AND contact_id = $2`)
+	if err != nil {
+		return nil, err
+	}
+
+	var contact Contact
+	err = stmt.QueryRow(userID, contactID).
 		Scan(&contact.UserID,
 			&contact.ID,
 			&contact.Name,
-			&contact.LastName)
+			&contact.LastName,
+			&contact.CreatedAt,
+			&contact.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, cerror.ErrNotFound
@@ -38,30 +44,36 @@ func (r *repositoryPostgres) Get(userID, contactID string) (*Contact, error) {
 		return nil, err
 	}
 
-	return contact, nil
+	return &contact, nil
 }
 
 // GetAll returns all contacts by userID.
 func (r *repositoryPostgres) GetAll(userID string) ([]*Contact, error) {
+	stmt, err := r.dataBase.DB().Prepare(`
+			SELECT user_id, contact_id, name, lastname, created_at, updated_at 
+			FROM contact 
+			WHERE user_id = $1`)
+	if err != nil {
+		return nil, err
+	}
+
 	contacts := make([]*Contact, 0)
 
-	rows, err := r.dataBase.DB().
-		Query(`
-			SELECT user_id, contact_id, name, lastname 
-			FROM contact 
-			WHERE user_id = $1`, userID)
+	rows, err := stmt.Query(userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		contact := &Contact{}
+		var contact Contact
 		err = rows.Scan(
 			&contact.UserID,
 			&contact.ID,
 			&contact.Name,
-			&contact.LastName)
+			&contact.LastName,
+			&contact.CreatedAt,
+			&contact.UpdatedAt)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				return nil, cerror.ErrNotFound
@@ -69,7 +81,7 @@ func (r *repositoryPostgres) GetAll(userID string) ([]*Contact, error) {
 			return nil, err
 		}
 
-		contacts = append(contacts, contact)
+		contacts = append(contacts, &contact)
 	}
 
 	if rows.Err() != nil {
@@ -81,10 +93,13 @@ func (r *repositoryPostgres) GetAll(userID string) ([]*Contact, error) {
 
 // ExistsUser checks if the contact exists in the database.
 func (r *repositoryPostgres) ExistsUser(ID string) (bool, error) {
-	var userID string
+	stmt, err := r.dataBase.DB().Prepare(`SELECT id FROM "user" WHERE id = $1`)
+	if err != nil {
+		return false, err
+	}
 
-	err := r.dataBase.DB().QueryRow(`SELECT id FROM "user" WHERE id = $1`, ID).
-		Scan(&userID)
+	var userID string
+	err = stmt.QueryRow(ID).Scan(&userID)
 	if (err != nil) && (err != sql.ErrNoRows) {
 		return false, err
 	}
@@ -94,9 +109,7 @@ func (r *repositoryPostgres) ExistsUser(ID string) (bool, error) {
 
 // GetPresence returns the presence status of the contact.
 func (r *repositoryPostgres) GetPresence(userID, contactID string) (PresenceType, error) {
-	online := "N"
-	err := r.dataBase.DB().
-		QueryRow(`
+	stmt, err := r.dataBase.DB().Prepare(`
 			SELECT CASE WHEN o.user_id IS NULL THEN 'F' ELSE 'T' END as status
 			FROM contact c
 			LEFT JOIN online_user o ON c.contact_id = o.user_id
@@ -106,8 +119,13 @@ func (r *repositoryPostgres) GetPresence(userID, contactID string) (PresenceType
         		SELECT 1 FROM blocked_user b
         		WHERE c.user_id = b.blocked_user_id
           		  AND c.contact_id = b.user_id
-    		  )`, userID, contactID).
-		Scan(&online)
+    		  )`)
+	if err != nil {
+		return NotFound, err
+	}
+
+	online := "N"
+	err = stmt.QueryRow(userID, contactID).Scan(&online)
 	if (err != nil) && (err != sql.ErrNoRows) {
 		return NotFound, err
 	}
@@ -128,8 +146,10 @@ func (r *repositoryPostgres) Create(contact *Contact) error {
 		return err
 	}
 
-	_, err = txn.Exec(`INSERT INTO contact(user_id, contact_id, name, lastname) VALUES($1, $2, $3, $4)`,
-		contact.UserID, contact.ID, contact.Name, contact.LastName)
+	_, err = txn.Exec(`
+		INSERT INTO contact(user_id, contact_id, name, lastname, created_at) 
+		VALUES($1, $2, $3, $4, $5)`,
+		contact.UserID, contact.ID, contact.Name, contact.LastName, contact.CreatedAt)
 	if err != nil {
 		txn.Rollback()
 		// "23505": "unique_violation"
@@ -160,10 +180,10 @@ func (r *repositoryPostgres) Update(contact *Contact) (int, error) {
 		UPDATE contact 
 		SET name = $1, 
 		    lastname = $2, 
-		    update_at = CURRENT_TIMESTAMP 
-		WHERE user_id = $3
-		  AND contact_id = $4`,
-		  contact.Name, contact.LastName, contact.UserID, contact.ID)
+		    updated_at = $3
+		WHERE user_id = $4
+		  AND contact_id = $5`,
+		  contact.Name, contact.LastName, contact.UpdatedAt, contact.UserID, contact.ID)
 	if err != nil {
 		txn.Rollback()
 		return -1, err
@@ -217,16 +237,16 @@ func (r *repositoryPostgres) Delete(userID, contactID string) (int, error) {
 }
 
 // Block adds a contact to the blocked contacts database.
-func (r *repositoryPostgres) Block(userID, blockedUserID string) error {
+func (r *repositoryPostgres) Block(userID, blockedUserID string, createdAt time.Time) error {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return err
 	}
 
 	_, err = txn.Exec(`
-		INSERT INTO blocked_user(user_id, blocked_user_id) 
-		VALUES($1, $2)`,
-		userID, blockedUserID)
+		INSERT INTO blocked_user(user_id, blocked_user_id, created_at) 
+		VALUES($1, $2, $3)`,
+		userID, blockedUserID, createdAt)
 	if err != nil {
 		txn.Rollback()
 		// "23505": "unique_violation"

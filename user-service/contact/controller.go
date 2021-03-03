@@ -31,7 +31,7 @@ type controller struct {
 // NewController creates a new instance of Controller.
 func NewController(jwt auth.JWT, service Service) Controller {
 	return &controller {
-		ctlr.NewController(jwt),
+		ctlr.New(jwt),
 		service,
 	}
 }

@@ -1,5 +1,7 @@
 package user
 
+import "time"
+
 // UpdateUseCase updates a User, otherwise an error is returned.
 type UpdateUseCase interface {
 	Execute(profile *User) error
@@ -20,6 +22,8 @@ func (u *updateUseCase) Execute(user *User) error {
 	if err != nil {
 		return err
 	}
+
+	user.UpdatedAt = time.Now()
 
 	rows, err := u.repository.Update(user)
 	if err != nil {

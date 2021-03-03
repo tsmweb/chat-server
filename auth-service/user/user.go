@@ -2,6 +2,7 @@ package user
 
 import (
 	"github.com/tsmweb/go-helper-api/util/hashutil"
+	"time"
 )
 
 // User data model
@@ -10,6 +11,8 @@ type User struct {
 	Name     string
 	LastName string
 	Password string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 // NewUser create a new User
@@ -19,6 +22,7 @@ func NewUser(ID, name, lastname, password string) (*User, error) {
 		Name:     name,
 		LastName: lastname,
 		Password: password,
+		CreatedAt: time.Now(),
 	}
 
 	err := p.Validate(CREATE)

@@ -1,11 +1,16 @@
 package login
 
-import "github.com/tsmweb/go-helper-api/util/hashutil"
+import (
+	"github.com/tsmweb/go-helper-api/util/hashutil"
+	"time"
+)
 
 // Login data model.
 type Login struct {
 	ID       string
 	Password string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 // NewLogin create a new Login.
@@ -13,6 +18,7 @@ func NewLogin(ID, password string) (*Login, error) {
 	l := &Login{
 		ID: ID,
 		Password: password,
+		CreatedAt: time.Now(),
 	}
 
 	err := l.Validate()

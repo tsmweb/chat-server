@@ -1,5 +1,7 @@
 package contact
 
+import "time"
+
 // Reader interface
 type Reader interface {
 	Get(userID, contactID string) (*Contact, error)
@@ -13,7 +15,7 @@ type Writer interface {
 	Create(contact *Contact) error
 	Update(contact *Contact) (int, error)
 	Delete(userID, contactID string) (int, error)
-	Block(userID, blockedUserID string) error
+	Block(userID, blockedUserID string, createdAt time.Time) error
 	Unblock(userID, blockedUserID string) (bool, error)
 }
 

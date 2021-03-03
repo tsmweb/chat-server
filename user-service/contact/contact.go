@@ -1,20 +1,25 @@
 package contact
 
+import "time"
+
 // Contact data model
 type Contact struct {
-	ID       string
-	Name     string
-	LastName string
-	UserID   string
+	ID        string
+	Name      string
+	LastName  string
+	UserID    string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 // NewContact create a new Contact
-func NewContact(ID string, name string, lastname string, userID string) (*Contact, error) {
+func NewContact(ID, name, lastname, userID string) (*Contact, error) {
 	c := &Contact{
-		ID:       ID,
-		Name:     name,
-		LastName: lastname,
-		UserID:   userID,
+		ID:        ID,
+		Name:      name,
+		LastName:  lastname,
+		UserID:    userID,
+		CreatedAt: time.Now(),
 	}
 
 	err := c.Validate()

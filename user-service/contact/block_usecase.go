@@ -3,6 +3,7 @@ package contact
 import (
 	"errors"
 	"github.com/tsmweb/go-helper-api/cerror"
+	"time"
 )
 
 // BlockUseCase blocks a contact, otherwise an error is returned.
@@ -29,7 +30,7 @@ func (u *blockUseCase) Execute(userID, blockedUserID string) error {
 		return ErrUserNotFound
 	}
 
-	err = u.repository.Block(userID, blockedUserID)
+	err = u.repository.Block(userID, blockedUserID, time.Now())
 	if err != nil {
 		if errors.Is(err, cerror.ErrRecordAlreadyRegistered) {
 			return ErrContactAlreadyBlocked

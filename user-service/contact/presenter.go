@@ -1,29 +1,35 @@
 package contact
 
+import "time"
+
 // Presenter data
 type Presenter struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	LastName string `json:"lastname"`
-	UserID   string `json:"user_id,omitempty"`
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	LastName  string    `json:"lastname"`
+	UserID    string    `json:"user_id,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // ToEntity mapper Presenter to Entity
-func (v *Presenter) ToEntity() *Contact {
+func (p *Presenter) ToEntity() *Contact {
 	return &Contact{
-		ID:       v.ID,
-		Name:     v.Name,
-		LastName: v.LastName,
-		UserID:   v.UserID,
+		ID:       p.ID,
+		Name:     p.Name,
+		LastName: p.LastName,
+		UserID:   p.UserID,
 	}
 }
 
 // FromEntity mapper Entity to Presenter
-func (v *Presenter) FromEntity(entity *Contact) {
-	v.ID = entity.ID
-	v.Name = entity.Name
-	v.LastName = entity.LastName
-	v.UserID = entity.UserID
+func (p *Presenter) FromEntity(entity *Contact) {
+	p.ID = entity.ID
+	p.Name = entity.Name
+	p.LastName = entity.LastName
+	p.UserID = entity.UserID
+	p.CreatedAt = entity.CreatedAt
+	p.UpdatedAt = entity.UpdatedAt
 }
 
 // Presence data

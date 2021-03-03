@@ -1,26 +1,32 @@
 package user
 
+import "time"
+
 // Presenter data
 type Presenter struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
 	LastName string `json:"lastname"`
 	Password string `json:"password,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // ToEntity mapper Presenter to Entity
-func (v *Presenter) ToEntity() *User {
+func (p *Presenter) ToEntity() *User {
 	return &User{
-		ID:       v.ID,
-		Name:     v.Name,
-		LastName: v.LastName,
-		Password: v.Password,
+		ID:        p.ID,
+		Name:      p.Name,
+		LastName:  p.LastName,
+		Password:  p.Password,
 	}
 }
 
 // FromEntity mapper Entity to Presenter
-func (v *Presenter) FromEntity(entity *User) {
-	v.ID = entity.ID
-	v.Name = entity.Name
-	v.LastName = entity.LastName
+func (p *Presenter) FromEntity(entity *User) {
+	p.ID = entity.ID
+	p.Name = entity.Name
+	p.LastName = entity.LastName
+	p.CreatedAt = entity.CreatedAt
+	p.UpdatedAt = entity.UpdatedAt
 }

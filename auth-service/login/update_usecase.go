@@ -3,6 +3,7 @@ package login
 import (
 	"github.com/tsmweb/auth-service/user"
 	"github.com/tsmweb/go-helper-api/cerror"
+	"time"
 )
 
 // UpdateUseCase updates the login password, otherwise an error will be returned.
@@ -27,6 +28,8 @@ func (u *updateUseCase) Execute(login *Login) error {
 	if err != nil {
 		return err
 	}
+
+	login.UpdatedAt = time.Now()
 
 	err = login.ApplyHashPassword()
 	if err != nil {
