@@ -1,6 +1,10 @@
 package group
 
-import "time"
+import (
+	"github.com/tsmweb/go-helper-api/util/hashutil"
+	"strconv"
+	"time"
+)
 
 // Group data model
 type Group struct {
@@ -9,12 +13,18 @@ type Group struct {
 	Description string
 	Owner       string
 	Members     []*Member
+	UpdatedBy	string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
 
 // NewGroup create a new Group
-func NewGroup(ID, name, description, owner string) (*Group, error) {
+func NewGroup(name, description, owner string) (*Group, error) {
+	ID, err := hashutil.HashSHA1(owner + strconv.FormatInt(time.Now().Unix(), 10))
+	if err != nil {
+		return nil, err
+	}
+
 	g := &Group{
 		ID:          ID,
 		Name:        name,
@@ -23,7 +33,7 @@ func NewGroup(ID, name, description, owner string) (*Group, error) {
 		CreatedAt:   time.Now(),
 	}
 
-	err := g.Validate()
+	err = g.Validate()
 	if err != nil {
 		return nil, err
 	}

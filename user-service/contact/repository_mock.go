@@ -56,7 +56,7 @@ func (m *mockRepository) Create(c *Contact) error {
 func (m *mockRepository) Update(c *Contact) (int, error) {
 	args := m.Called(c)
 	if args.Error(1) != nil {
-		return 0, args.Error(1)
+		return -1, args.Error(1)
 	}
 	return args.Get(0).(int), nil
 }
@@ -65,7 +65,7 @@ func (m *mockRepository) Update(c *Contact) (int, error) {
 func (m *mockRepository) Delete(userID, contactID string) (int, error) {
 	args := m.Called(userID, contactID)
 	if args.Error(1) != nil {
-		return 0, args.Error(1)
+		return -1, args.Error(1)
 	}
 	return args.Get(0).(int), nil
 }

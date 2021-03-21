@@ -49,7 +49,7 @@ func TestCreateUseCase_Execute(t *testing.T) {
 		assert.Equal(t, ErrContactAlreadyExists, err)
 	})
 
-	t.Run("when use case fails with ErrInternalServer", func(t *testing.T) {
+	t.Run("when use case fails with Error", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		r.On("ExistsUser", mock.Anything).

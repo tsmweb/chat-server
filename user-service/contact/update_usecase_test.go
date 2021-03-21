@@ -30,7 +30,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		r.On("Update", mock.Anything).
-			Return(0, nil).
+			Return(-1, nil).
 			Once()
 
 		contact := &Contact{
@@ -50,7 +50,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		r.On("Update", mock.Anything).
-			Return(0, errors.New("error")).
+			Return(-1, errors.New("error")).
 			Once()
 
 		contact := &Contact{

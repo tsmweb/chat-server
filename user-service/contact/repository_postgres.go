@@ -28,6 +28,7 @@ func (r *repositoryPostgres) Get(userID, contactID string) (*Contact, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer stmt.Close()
 
 	var contact Contact
 	err = stmt.QueryRow(userID, contactID).
@@ -56,6 +57,7 @@ func (r *repositoryPostgres) GetAll(userID string) ([]*Contact, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer stmt.Close()
 
 	contacts := make([]*Contact, 0)
 
@@ -97,6 +99,7 @@ func (r *repositoryPostgres) ExistsUser(ID string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	defer stmt.Close()
 
 	var userID string
 	err = stmt.QueryRow(ID).Scan(&userID)
@@ -123,6 +126,7 @@ func (r *repositoryPostgres) GetPresence(userID, contactID string) (PresenceType
 	if err != nil {
 		return NotFound, err
 	}
+	defer stmt.Close()
 
 	online := "N"
 	err = stmt.QueryRow(userID, contactID).Scan(&online)

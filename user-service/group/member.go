@@ -7,6 +7,7 @@ type Member struct {
 	GroupID   string
 	UserID    string
 	Admin     bool
+	UpdatedBy string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -14,9 +15,9 @@ type Member struct {
 // NewMember create a new Member
 func NewMember(groupID, userID string, admin bool) (*Member, error) {
 	m := &Member{
-		GroupID: groupID,
-		UserID:  userID,
-		Admin:   admin,
+		GroupID:   groupID,
+		UserID:    userID,
+		Admin:     admin,
 		CreatedAt: time.Now(),
 	}
 

@@ -26,7 +26,7 @@ func TestDeleteUseCase_Execute(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		r.On("Delete", mock.Anything, mock.Anything).
-			Return(0, errors.New("error")).
+			Return(-1, errors.New("error")).
 			Once()
 		uc := NewDeleteUseCase(r)
 		err := uc.Execute("+5518999999999", "+5518977777777")

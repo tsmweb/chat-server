@@ -25,7 +25,7 @@ func (p PresenceType) String() string {
 	return presenceTypeText[p]
 }
 
-// PresenceType return the name of the PresenceType.
+// PresenceTypeText return the name of the PresenceType.
 func PresenceTypeText(code PresenceType) string {
 	return code.String()
 }
