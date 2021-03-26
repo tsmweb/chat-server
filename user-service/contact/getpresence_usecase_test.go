@@ -1,6 +1,7 @@
 package contact
 
 import (
+	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -9,18 +10,19 @@ import (
 
 func TestGetPresenceUseCase_Execute(t *testing.T) {
 	//t.Parallel()
+	ctx := context.Background()
 
 	t.Run("when use case fails with ErrContactNotFound", func(t *testing.T) {
 		//t.Parallel()
 		var presence PresenceType = NotFound
 
 		r := new(mockRepository)
-		r.On("GetPresence", mock.Anything, mock.Anything).
+		r.On("GetPresence", mock.Anything, mock.Anything, mock.Anything).
 			Return(presence, nil).
 			Once()
 
 		uc := NewGetPresenceUseCase(r)
-		_, err := uc.Execute("+5518999999999", "+5518977777777")
+		_, err := uc.Execute(ctx, "+5518999999999", "+5518977777777")
 
 		assert.Equal(t, ErrContactNotFound, err)
 	})
@@ -28,12 +30,12 @@ func TestGetPresenceUseCase_Execute(t *testing.T) {
 	t.Run("when use case fails with Error", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("GetPresence", mock.Anything, mock.Anything).
+		r.On("GetPresence", mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
 
 		uc := NewGetPresenceUseCase(r)
-		_, err := uc.Execute("+5518999999999", "+5518977777777")
+		_, err := uc.Execute(ctx, "+5518999999999", "+5518977777777")
 
 		assert.NotNil(t, err)
 	})
@@ -43,12 +45,12 @@ func TestGetPresenceUseCase_Execute(t *testing.T) {
 		var presence PresenceType = Online
 
 		r := new(mockRepository)
-		r.On("GetPresence", mock.Anything, mock.Anything).
+		r.On("GetPresence", mock.Anything, mock.Anything, mock.Anything).
 			Return(presence, nil).
 			Once()
 
 		uc := NewGetPresenceUseCase(r)
-		p, err := uc.Execute("+5518999999999", "+5518977777777")
+		p, err := uc.Execute(ctx, "+5518999999999", "+5518977777777")
 
 		assert.Nil(t, err)
 		assert.Equal(t, presence, p)

@@ -1,6 +1,7 @@
 package contact
 
 import (
+	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -10,12 +11,13 @@ import (
 
 func TestCreateUseCase_Execute(t *testing.T) {
 	//t.Parallel()
+	ctx := context.Background()
 
 	t.Run("when use case fails with ErrValidateModel", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		uc := NewCreateUseCase(r)
-		err := uc.Execute("+5518977777777", "Bill", "Gates", "")
+		err := uc.Execute(ctx, "+5518977777777", "Bill", "Gates", "")
 
 		assert.Equal(t, ErrUserIDValidateModel, err)
 	})
@@ -23,12 +25,12 @@ func TestCreateUseCase_Execute(t *testing.T) {
 	t.Run("when use case fails with ErrUserNotFound", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("ExistsUser", mock.Anything).
+		r.On("ExistsUser", mock.Anything, mock.Anything).
 			Return(false, nil).
 			Once()
 
 		uc := NewCreateUseCase(r)
-		err := uc.Execute("+5518977777777", "Bill", "Gates", "+5518999999999")
+		err := uc.Execute(ctx, "+5518977777777", "Bill", "Gates", "+5518999999999")
 
 		assert.Equal(t, ErrUserNotFound, err)
 	})
@@ -36,15 +38,15 @@ func TestCreateUseCase_Execute(t *testing.T) {
 	t.Run("when use case fails with ErrContactAlreadyExists", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("ExistsUser", mock.Anything).
+		r.On("ExistsUser", mock.Anything, mock.Anything).
 			Return(true, nil).
 			Once()
-		r.On("Create", mock.Anything).
+		r.On("Create", mock.Anything, mock.Anything).
 			Return(cerror.ErrRecordAlreadyRegistered).
 			Once()
 
 		uc := NewCreateUseCase(r)
-		err := uc.Execute("+5518977777777", "Bill", "Gates", "+5518999999999")
+		err := uc.Execute(ctx, "+5518977777777", "Bill", "Gates", "+5518999999999")
 
 		assert.Equal(t, ErrContactAlreadyExists, err)
 	})
@@ -52,23 +54,23 @@ func TestCreateUseCase_Execute(t *testing.T) {
 	t.Run("when use case fails with Error", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("ExistsUser", mock.Anything).
+		r.On("ExistsUser", mock.Anything, mock.Anything).
 			Return(false, errors.New("error")).
 			Once()
 
 		uc := NewCreateUseCase(r)
-		err := uc.Execute("+5518977777777", "Bill", "Gates", "+5518999999999")
+		err := uc.Execute(ctx, "+5518977777777", "Bill", "Gates", "+5518999999999")
 
 		assert.NotNil(t, err)
 
-		r.On("ExistsUser", mock.Anything).
+		r.On("ExistsUser", mock.Anything, mock.Anything).
 			Return(true, nil).
 			Once()
-		r.On("Create", mock.Anything).
+		r.On("Create", mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
 
-		err = uc.Execute("+5518977777777", "Bill", "Gates", "+5518999999999")
+		err = uc.Execute(ctx, "+5518977777777", "Bill", "Gates", "+5518999999999")
 
 		assert.NotNil(t, err)
 	})
@@ -76,15 +78,15 @@ func TestCreateUseCase_Execute(t *testing.T) {
 	t.Run("when use case succeeds", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("ExistsUser", mock.Anything).
+		r.On("ExistsUser", mock.Anything, mock.Anything).
 			Return(true, nil).
 			Once()
-		r.On("Create", mock.Anything).
+		r.On("Create", mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
 
 		uc := NewCreateUseCase(r)
-		err := uc.Execute("+5518977777777", "Bill", "Gates", "+5518999999999")
+		err := uc.Execute(ctx, "+5518977777777", "Bill", "Gates", "+5518999999999")
 
 		assert.Nil(t, err)
 	})

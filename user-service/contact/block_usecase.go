@@ -1,6 +1,7 @@
 package contact
 
 import (
+	"context"
 	"errors"
 	"github.com/tsmweb/go-helper-api/cerror"
 	"time"
@@ -8,7 +9,7 @@ import (
 
 // BlockUseCase blocks a contact, otherwise an error is returned.
 type BlockUseCase interface {
-	Execute(userID, blockedUserID string) error
+	Execute(ctx context.Context, userID, blockedUserID string) error
 }
 
 type blockUseCase struct {
@@ -21,8 +22,8 @@ func NewBlockUseCase(r Repository) BlockUseCase {
 }
 
 // Execute perform the block use case.
-func (u *blockUseCase) Execute(userID, blockedUserID string) error {
-	ok, err := u.repository.ExistsUser(blockedUserID)
+func (u *blockUseCase) Execute(ctx context.Context, userID, blockedUserID string) error {
+	ok, err := u.repository.ExistsUser(ctx, blockedUserID)
 	if err != nil {
 		return err
 	}
@@ -30,7 +31,7 @@ func (u *blockUseCase) Execute(userID, blockedUserID string) error {
 		return ErrUserNotFound
 	}
 
-	err = u.repository.Block(userID, blockedUserID, time.Now())
+	err = u.repository.Block(ctx, userID, blockedUserID, time.Now())
 	if err != nil {
 		if errors.Is(err, cerror.ErrRecordAlreadyRegistered) {
 			return ErrContactAlreadyBlocked

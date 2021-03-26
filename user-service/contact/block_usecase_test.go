@@ -1,6 +1,7 @@
 package contact
 
 import (
+	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -10,16 +11,17 @@ import (
 
 func TestBlockUseCase_Execute(t *testing.T) {
 	//t.Parallel()
+	ctx := context.Background()
 
 	t.Run("when use case fails with ErrUserNotFound", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("ExistsUser", mock.Anything).
+		r.On("ExistsUser", mock.Anything, mock.Anything).
 			Return(false, nil).
 			Once()
 
 		uc := NewBlockUseCase(r)
-		err := uc.Execute("+5518999999999", "+5518977777777")
+		err := uc.Execute(ctx, "+5518999999999", "+5518977777777")
 
 		assert.Equal(t, ErrUserNotFound, err)
 	})
@@ -27,15 +29,15 @@ func TestBlockUseCase_Execute(t *testing.T) {
 	t.Run("when use case fails with ErrContactAlreadyBlocked", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("ExistsUser", mock.Anything).
+		r.On("ExistsUser", mock.Anything, mock.Anything).
 			Return(true, nil).
 			Once()
-		r.On("Block", mock.Anything, mock.Anything, mock.Anything).
+		r.On("Block", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(cerror.ErrRecordAlreadyRegistered).
 			Once()
 
 		uc := NewBlockUseCase(r)
-		err := uc.Execute("+5518999999999", "+5518977777777")
+		err := uc.Execute(ctx, "+5518999999999", "+5518977777777")
 
 		assert.Equal(t, ErrContactAlreadyBlocked, err)
 	})
@@ -43,23 +45,23 @@ func TestBlockUseCase_Execute(t *testing.T) {
 	t.Run("when use case fails with Error", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("ExistsUser", mock.Anything).
+		r.On("ExistsUser", mock.Anything, mock.Anything).
 			Return(false, errors.New("error")).
 			Once()
 
 		uc := NewBlockUseCase(r)
-		err := uc.Execute("+5518999999999", "+5518977777777")
+		err := uc.Execute(ctx, "+5518999999999", "+5518977777777")
 
 		assert.NotNil(t, err)
 
-		r.On("ExistsUser", mock.Anything).
+		r.On("ExistsUser", mock.Anything, mock.Anything).
 			Return(true, nil).
 			Once()
-		r.On("Block", mock.Anything, mock.Anything, mock.Anything).
+		r.On("Block", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
 
-		err = uc.Execute("+5518999999999", "+5518977777777")
+		err = uc.Execute(ctx, "+5518999999999", "+5518977777777")
 
 		assert.NotNil(t, err)
 	})
@@ -67,15 +69,15 @@ func TestBlockUseCase_Execute(t *testing.T) {
 	t.Run("when use case succeeds", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("ExistsUser", mock.Anything).
+		r.On("ExistsUser", mock.Anything, mock.Anything).
 			Return(true, nil).
 			Once()
-		r.On("Block", mock.Anything, mock.Anything, mock.Anything).
+		r.On("Block", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
 
 		uc := NewBlockUseCase(r)
-		err := uc.Execute("+5518999999999", "+5518977777777")
+		err := uc.Execute(ctx, "+5518999999999", "+5518977777777")
 
 		assert.Nil(t, err)
 	})

@@ -52,7 +52,7 @@ func TestController_Get(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Get", mock.Anything, mock.Anything).
+		mService.On("Get", mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, ErrContactNotFound).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -74,7 +74,7 @@ func TestController_Get(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Get", mock.Anything, mock.Anything).
+		mService.On("Get", mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -108,7 +108,7 @@ func TestController_Get(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Get", mock.Anything, mock.Anything).
+		mService.On("Get", mock.Anything, mock.Anything, mock.Anything).
 			Return(contact, nil).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -135,7 +135,7 @@ func TestController_GetAll(t *testing.T) {
 			Return(nil, errors.New("error")).
 			Once()
 		mService := new(mockService)
-		mService.On("GetAll", mock.Anything).
+		mService.On("GetAll", mock.Anything, mock.Anything).
 			Return([]Contact{}, nil).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -154,7 +154,7 @@ func TestController_GetAll(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("GetAll", mock.Anything).
+		mService.On("GetAll", mock.Anything, mock.Anything).
 			Return(nil, ErrContactNotFound).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -173,7 +173,7 @@ func TestController_GetAll(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("GetAll", mock.Anything).
+		mService.On("GetAll", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -215,7 +215,7 @@ func TestController_GetAll(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("GetAll", mock.Anything).
+		mService.On("GetAll", mock.Anything, mock.Anything).
 			Return(contacts, nil).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -260,7 +260,7 @@ func TestController_GetPresence(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("GetPresence", mock.Anything, mock.Anything).
+		mService.On("GetPresence", mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, ErrContactNotFound).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -283,7 +283,7 @@ func TestController_GetPresence(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("GetPresence", mock.Anything, mock.Anything).
+		mService.On("GetPresence", mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -315,7 +315,7 @@ func TestController_GetPresence(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("GetPresence", mock.Anything, mock.Anything).
+		mService.On("GetPresence", mock.Anything, mock.Anything, mock.Anything).
 			Return(presence, nil).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -402,7 +402,7 @@ func TestController_Create(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(ErrIDValidateModel).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -431,7 +431,7 @@ func TestController_Create(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(ErrUserNotFound).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -460,7 +460,7 @@ func TestController_Create(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(ErrContactAlreadyExists).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -489,7 +489,7 @@ func TestController_Create(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -518,7 +518,7 @@ func TestController_Create(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -599,7 +599,7 @@ func TestController_Update(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Update", mock.Anything).
+		mService.On("Update", mock.Anything, mock.Anything).
 			Return(ErrIDValidateModel).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -628,7 +628,7 @@ func TestController_Update(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Update", mock.Anything).
+		mService.On("Update", mock.Anything, mock.Anything).
 			Return(ErrContactNotFound).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -657,7 +657,7 @@ func TestController_Update(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Update", mock.Anything).
+		mService.On("Update", mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -686,7 +686,7 @@ func TestController_Update(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Update", mock.Anything).
+		mService.On("Update", mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -728,7 +728,7 @@ func TestController_Delete(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Delete", mock.Anything, mock.Anything).
+		mService.On("Delete", mock.Anything, mock.Anything, mock.Anything).
 			Return(ErrContactNotFound).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -750,7 +750,7 @@ func TestController_Delete(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Delete", mock.Anything, mock.Anything).
+		mService.On("Delete", mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -772,7 +772,7 @@ func TestController_Delete(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Delete", mock.Anything, mock.Anything).
+		mService.On("Delete", mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -858,7 +858,7 @@ func TestController_Block(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Block", mock.Anything, mock.Anything).
+		mService.On("Block", mock.Anything, mock.Anything, mock.Anything).
 			Return(ErrUserNotFound).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -886,7 +886,7 @@ func TestController_Block(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Block", mock.Anything, mock.Anything).
+		mService.On("Block", mock.Anything, mock.Anything, mock.Anything).
 			Return(ErrContactAlreadyBlocked).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -914,7 +914,7 @@ func TestController_Block(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Block", mock.Anything, mock.Anything).
+		mService.On("Block", mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -942,7 +942,7 @@ func TestController_Block(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Block", mock.Anything, mock.Anything).
+		mService.On("Block", mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -986,7 +986,7 @@ func TestController_Unblock(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Unblock", mock.Anything, mock.Anything).
+		mService.On("Unblock", mock.Anything, mock.Anything, mock.Anything).
 			Return(ErrUserNotFound).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -1009,7 +1009,7 @@ func TestController_Unblock(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Unblock", mock.Anything, mock.Anything).
+		mService.On("Unblock", mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -1032,7 +1032,7 @@ func TestController_Unblock(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Unblock", mock.Anything, mock.Anything).
+		mService.On("Unblock", mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
 		ctrl := NewController(mJWT, mService)

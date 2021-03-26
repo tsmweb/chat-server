@@ -1,10 +1,13 @@
 package contact
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // UpdateUseCase updates a Contact, otherwise an error is returned.
 type UpdateUseCase interface {
-	Execute(contact *Contact) error
+	Execute(ctx context.Context, contact *Contact) error
 }
 
 type updateUseCase struct {
@@ -17,7 +20,7 @@ func NewUpdateUseCase(r Repository) UpdateUseCase {
 }
 
 // Execute performs the update use case.
-func (u *updateUseCase) Execute(contact *Contact) error {
+func (u *updateUseCase) Execute(ctx context.Context, contact *Contact) error {
 	err := contact.Validate()
 	if err != nil {
 		return err
@@ -25,11 +28,11 @@ func (u *updateUseCase) Execute(contact *Contact) error {
 
 	contact.UpdatedAt = time.Now()
 
-	rows, err := u.repository.Update(contact)
+	ok, err := u.repository.Update(ctx, contact)
 	if err != nil {
 		return err
 	}
-	if rows <= 0 {
+	if !ok {
 		return ErrContactNotFound
 	}
 

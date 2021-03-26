@@ -49,7 +49,7 @@ func (c *controller) Get() http.Handler {
 		vars := mux.Vars(r)
 		contactID := vars["id"]
 
-		contact, err := c.service.Get(userID, contactID)
+		contact, err := c.service.Get(r.Context(), userID, contactID)
 		if err != nil {
 			log.Println(err.Error())
 
@@ -79,7 +79,7 @@ func (c *controller) GetAll() http.Handler {
 			return
 		}
 
-		contacts, err := c.service.GetAll(userID)
+		contacts, err := c.service.GetAll(r.Context(), userID)
 		if err != nil {
 			log.Println(err.Error())
 
@@ -117,7 +117,7 @@ func (c *controller) GetPresence() http.Handler {
 		vars := mux.Vars(r)
 		contactID := vars["id"]
 
-		presence, err := c.service.GetPresence(userID, contactID)
+		presence, err := c.service.GetPresence(r.Context(), userID, contactID)
 		if err != nil {
 			log.Println(err.Error())
 
@@ -162,7 +162,7 @@ func (c *controller) Create() http.Handler {
 			return
 		}
 
-		err = c.service.Create(input.ID, input.Name, input.LastName, userID)
+		err = c.service.Create(r.Context(), input.ID, input.Name, input.LastName, userID)
 		if err != nil {
 			log.Println(err.Error())
 
@@ -214,7 +214,7 @@ func (c *controller) Update() http.Handler {
 		}
 		input.UserID = userID
 
-		err = c.service.Update(input.ToEntity())
+		err = c.service.Update(r.Context(), input.ToEntity())
 		if err != nil {
 			log.Println(err.Error())
 
@@ -250,7 +250,7 @@ func (c *controller) Delete() http.Handler {
 		vars := mux.Vars(r)
 		contactID := vars["id"]
 
-		err = c.service.Delete(userID, contactID)
+		err = c.service.Delete(r.Context(), userID, contactID)
 		if err != nil {
 			log.Println(err.Error())
 
@@ -290,7 +290,7 @@ func (c *controller) Block() http.Handler {
 			return
 		}
 
-		err = c.service.Block(userID, input.ID)
+		err = c.service.Block(r.Context(), userID, input.ID)
 		if err != nil {
 			log.Println(err.Error())
 
@@ -325,7 +325,7 @@ func (c *controller) Unblock() http.Handler {
 		vars := mux.Vars(r)
 		blockedUserID := vars["id"]
 
-		err = c.service.Unblock(userID, blockedUserID)
+		err = c.service.Unblock(r.Context(), userID, blockedUserID)
 		if err != nil {
 			log.Println(err.Error())
 

@@ -1,6 +1,7 @@
 package contact
 
 import (
+	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -10,16 +11,17 @@ import (
 
 func TestGetAllUseCase_Execute(t *testing.T) {
 	//t.Parallel()
+	ctx := context.Background()
 
 	t.Run("when use case fails with ErrContactNotFound", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("GetAll", mock.Anything).
+		r.On("GetAll", mock.Anything, mock.Anything).
 			Return(nil, cerror.ErrNotFound).
 			Once()
 
 		uc := NewGetAllUseCase(r)
-		_, err := uc.Execute("+5518999999999")
+		_, err := uc.Execute(ctx, "+5518999999999")
 
 		assert.Equal(t, ErrContactNotFound, err)
 	})
@@ -27,12 +29,12 @@ func TestGetAllUseCase_Execute(t *testing.T) {
 	t.Run("when use case fails with Error", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("GetAll", mock.Anything).
+		r.On("GetAll", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
 
 		uc := NewGetAllUseCase(r)
-		_, err := uc.Execute("+5518999999999")
+		_, err := uc.Execute(ctx, "+5518999999999")
 
 		assert.NotNil(t, err)
 	})
@@ -55,12 +57,12 @@ func TestGetAllUseCase_Execute(t *testing.T) {
 		}
 
 		r := new(mockRepository)
-		r.On("GetAll", mock.Anything).
+		r.On("GetAll", mock.Anything, mock.Anything).
 			Return(contacts, nil).
 			Once()
 
 		uc := NewGetAllUseCase(r)
-		cs, err := uc.Execute("+5518999999999")
+		cs, err := uc.Execute(ctx, "+5518999999999")
 
 		assert.Nil(t, err)
 		assert.Equal(t, contacts, cs)

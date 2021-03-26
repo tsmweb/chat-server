@@ -1,6 +1,7 @@
 package contact
 
 import (
+	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -9,6 +10,7 @@ import (
 
 func TestUpdateUseCase_Execute(t *testing.T) {
 	//t.Parallel()
+	ctx := context.Background()
 
 	t.Run("when use case fails with ErrValidateModel", func(t *testing.T) {
 		//t.Parallel()
@@ -21,7 +23,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 
 		r := new(mockRepository)
 		uc := NewUpdateUseCase(r)
-		err := uc.Execute(contact)
+		err := uc.Execute(ctx, contact)
 
 		assert.Equal(t, ErrUserIDValidateModel, err)
 	})
@@ -29,8 +31,8 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 	t.Run("when use case fails with ErrContactNotFound", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("Update", mock.Anything).
-			Return(-1, nil).
+		r.On("Update", mock.Anything, mock.Anything).
+			Return(false, nil).
 			Once()
 
 		contact := &Contact{
@@ -41,7 +43,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 		}
 
 		uc := NewUpdateUseCase(r)
-		err := uc.Execute(contact)
+		err := uc.Execute(ctx, contact)
 
 		assert.Equal(t, ErrContactNotFound, err)
 	})
@@ -49,8 +51,8 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 	t.Run("when use case fails with Error", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("Update", mock.Anything).
-			Return(-1, errors.New("error")).
+		r.On("Update", mock.Anything, mock.Anything).
+			Return(false, errors.New("error")).
 			Once()
 
 		contact := &Contact{
@@ -61,7 +63,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 		}
 
 		uc := NewUpdateUseCase(r)
-		err := uc.Execute(contact)
+		err := uc.Execute(ctx, contact)
 
 		assert.NotNil(t, err)
 	})
@@ -69,8 +71,8 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 	t.Run("when use case succeeds", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("Update", mock.Anything).
-			Return(1, nil).
+		r.On("Update", mock.Anything, mock.Anything).
+			Return(true, nil).
 			Once()
 
 		contact := &Contact{
@@ -81,7 +83,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 		}
 
 		uc := NewUpdateUseCase(r)
-		err := uc.Execute(contact)
+		err := uc.Execute(ctx, contact)
 
 		assert.Nil(t, err)
 	})
