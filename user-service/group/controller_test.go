@@ -1,4 +1,4 @@
-package contact
+package group
 
 import (
 	"bytes"
@@ -25,7 +25,7 @@ func TestController_Get(t *testing.T) {
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", resource), nil)
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", resource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
@@ -44,7 +44,7 @@ func TestController_Get(t *testing.T) {
 
 	t.Run("when controller return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", resource), nil)
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", resource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
@@ -52,8 +52,8 @@ func TestController_Get(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Get", mock.Anything, mock.Anything, mock.Anything).
-			Return(nil, ErrContactNotFound).
+		mService.On("Get", mock.Anything, mock.Anything).
+			Return(nil, ErrGroupNotFound).
 			Once()
 		ctrl := NewController(mJWT, mService)
 
@@ -66,7 +66,7 @@ func TestController_Get(t *testing.T) {
 
 	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", resource), nil)
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", resource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
@@ -74,7 +74,7 @@ func TestController_Get(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Get", mock.Anything, mock.Anything, mock.Anything).
+		mService.On("Get", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -88,19 +88,37 @@ func TestController_Get(t *testing.T) {
 
 	t.Run("when controller return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		contact := &Contact{
-			ID: "+5518977777777",
-			Name: "Bill",
-			LastName: "Gates",
+		group := &Group{
+			ID: "be49afd2ee890805c21ddd55879db1387aec9751",
+			Name: "Churrasco na Piscina",
+			Description: "Amigos do churrasco.",
+			Owner: "+5518999999999",
+			Members: []*Member{
+				{
+					GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+					UserID: "+5518999999999",
+					Admin: true,
+				},
+				{
+					GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+					UserID: "+5518988888888",
+					Admin: false,
+				},
+				{
+					GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+					UserID: "+5518977777777",
+					Admin: false,
+				},
+			},
 		}
 
 		p := Presenter{}
-		p.FromEntity(contact)
+		p.FromEntity(group)
 
-		cj, err := json.Marshal(p)
+		gj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", resource), nil)
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", resource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
@@ -108,8 +126,8 @@ func TestController_Get(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Get", mock.Anything, mock.Anything, mock.Anything).
-			Return(contact, nil).
+		mService.On("Get", mock.Anything, mock.Anything).
+			Return(group, nil).
 			Once()
 		ctrl := NewController(mJWT, mService)
 
@@ -118,8 +136,10 @@ func TestController_Get(t *testing.T) {
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Equal(t, string(cj), rec.Body.String())
+		assert.Equal(t, string(gj), rec.Body.String())
+		t.Log(string(gj))
 	})
+
 }
 
 func TestController_GetAll(t *testing.T) {
@@ -152,7 +172,7 @@ func TestController_GetAll(t *testing.T) {
 			Once()
 		mService := new(mockService)
 		mService.On("GetAll", mock.Anything, mock.Anything).
-			Return(nil, ErrContactNotFound).
+			Return(nil, ErrGroupNotFound).
 			Once()
 		ctrl := NewController(mJWT, mService)
 		ctrl.GetAll().ServeHTTP(rec, req)
@@ -181,21 +201,52 @@ func TestController_GetAll(t *testing.T) {
 
 	t.Run("when controller return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		contacts := []*Contact {
+		groups := []*Group{
 			{
-				ID: "+5518977777777",
-				Name: "Bill",
-				LastName: "Gates",
+				ID:          "be49afd2ee890805c21ddd55879db1387aec9751",
+				Name:        "Churrasco na Piscina",
+				Description: "Amigos do churrasco.",
+				Owner:       "+5518999999999",
+				Members: []*Member{
+					{
+						GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+						UserID:  "+5518999999999",
+						Admin:   true,
+					},
+					{
+						GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+						UserID:  "+5518988888888",
+						Admin:   false,
+					},
+					{
+						GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+						UserID:  "+5518977777777",
+						Admin:   false,
+					},
+				},
 			},
 			{
-				ID: "+5518966666666",
-				Name: "Elon",
-				LastName: "Musk",
+				ID:          "be49afd2ee890805c21ddd55879db1387aec9752",
+				Name:        "Grupo de Trabalho",
+				Description: "Grupo de Trabalho (Exemplo)",
+				Owner:       "+5518999999999",
+				Members: []*Member{
+					{
+						GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+						UserID:  "+5518999999999",
+						Admin:   true,
+					},
+					{
+						GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+						UserID:  "+5518977777777",
+						Admin:   false,
+					},
+				},
 			},
 		}
 
-		p := EntityToPresenters(contacts...)
-		cj, err := json.Marshal(p)
+		p := EntityToPresenters(groups...)
+		gj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
 		req := httptest.NewRequest(http.MethodGet, resource, nil)
@@ -207,126 +258,21 @@ func TestController_GetAll(t *testing.T) {
 			Once()
 		mService := new(mockService)
 		mService.On("GetAll", mock.Anything, mock.Anything).
-			Return(contacts, nil).
+			Return(groups, nil).
 			Once()
 		ctrl := NewController(mJWT, mService)
 		ctrl.GetAll().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Equal(t, string(cj), rec.Body.String())
-	})
-}
-
-func TestController_GetPresence(t *testing.T) {
-	//t.Parallel()
-
-	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
-		//t.Parallel()
-		path := fmt.Sprintf("%s/presence", resource)
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", path), nil)
-		rec := httptest.NewRecorder()
-
-		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
-			Return(nil, errors.New("error")).
-			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-
-		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", path), ctrl.GetPresence()).Methods(http.MethodGet)
-		router.ServeHTTP(rec, req)
-
-		assert.Equal(t, http.StatusInternalServerError, rec.Code)
-	})
-
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
-		//t.Parallel()
-		path := fmt.Sprintf("%s/presence", resource)
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", path), nil)
-		rec := httptest.NewRecorder()
-
-		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
-			Return("+5518999999999", nil).
-			Once()
-		mService := new(mockService)
-		mService.On("GetPresence", mock.Anything, mock.Anything, mock.Anything).
-			Return(nil, ErrContactNotFound).
-			Once()
-		ctrl := NewController(mJWT, mService)
-
-		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", path), ctrl.GetPresence()).Methods(http.MethodGet)
-		router.ServeHTTP(rec, req)
-
-		assert.Equal(t, http.StatusNotFound, rec.Code)
-	})
-
-	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
-		//t.Parallel()
-		path := fmt.Sprintf("%s/presence", resource)
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", path), nil)
-		rec := httptest.NewRecorder()
-
-		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
-			Return("+5518999999999", nil).
-			Once()
-		mService := new(mockService)
-		mService.On("GetPresence", mock.Anything, mock.Anything, mock.Anything).
-			Return(nil, errors.New("error")).
-			Once()
-		ctrl := NewController(mJWT, mService)
-
-		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", path), ctrl.GetPresence()).Methods(http.MethodGet)
-		router.ServeHTTP(rec, req)
-
-		assert.Equal(t, http.StatusInternalServerError, rec.Code)
-	})
-
-	t.Run("when controller return StatusOK", func(t *testing.T) {
-		//t.Parallel()
-		var presence PresenceType = Online
-		p := &Presence{
-			ID: "+5518977777777",
-			Presence: "online",
-		}
-
-		pj, err := json.Marshal(p)
-		assert.Nil(t, err)
-
-		path := fmt.Sprintf("%s/presence", resource)
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", path), nil)
-		rec := httptest.NewRecorder()
-
-		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
-			Return("+5518999999999", nil).
-			Once()
-		mService := new(mockService)
-		mService.On("GetPresence", mock.Anything, mock.Anything, mock.Anything).
-			Return(presence, nil).
-			Once()
-		ctrl := NewController(mJWT, mService)
-
-		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", path), ctrl.GetPresence()).Methods(http.MethodGet)
-		router.ServeHTTP(rec, req)
-
-		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Equal(t, string(pj), rec.Body.String())
+		assert.Equal(t, string(gj), rec.Body.String())
 		//t.Log(rec.Body.String())
 	})
-
 }
 
 func TestController_Create(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
-		//t.Parallel()
 		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader([]byte("{}")))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
@@ -376,9 +322,8 @@ func TestController_Create(t *testing.T) {
 	t.Run("when controller return StatusBadRequest", func(t *testing.T) {
 		//t.Parallel()
 		p := &Presenter{
-			ID: "",
-			Name: "Bill",
-			LastName: "Gates",
+			Name: "",
+			Description: "Exemplo de Grupo",
 		}
 
 		pj, err := json.Marshal(p)
@@ -393,8 +338,8 @@ func TestController_Create(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrIDValidateModel).
+		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return("", ErrNameValidateModel).
 			Once()
 		ctrl := NewController(mJWT, mService)
 		ctrl.Create().ServeHTTP(rec, req)
@@ -402,70 +347,11 @@ func TestController_Create(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
-		//t.Parallel()
-		p := &Presenter{
-			ID: "+5518977777777",
-			Name: "Bill",
-			LastName: "Gates",
-		}
-
-		pj, err := json.Marshal(p)
-		assert.Nil(t, err)
-
-		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader(pj))
-		req.Header.Set("Content-Type", "application/json")
-		rec := httptest.NewRecorder()
-
-		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
-			Return("+5518999999999", nil).
-			Once()
-		mService := new(mockService)
-		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrUserNotFound).
-			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Create().ServeHTTP(rec, req)
-
-		assert.Equal(t, http.StatusNotFound, rec.Code)
-	})
-
-	t.Run("when controller return StatusConflict", func(t *testing.T) {
-		//t.Parallel()
-		p := &Presenter{
-			ID: "+5518977777777",
-			Name: "Bill",
-			LastName: "Gates",
-		}
-
-		pj, err := json.Marshal(p)
-		assert.Nil(t, err)
-
-		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader(pj))
-		req.Header.Set("Content-Type", "application/json")
-		rec := httptest.NewRecorder()
-
-		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
-			Return("+5518999999999", nil).
-			Once()
-		mService := new(mockService)
-		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrContactAlreadyExists).
-			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Create().ServeHTTP(rec, req)
-
-		assert.Equal(t, http.StatusConflict, rec.Code)
-	})
-
 	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
 		p := &Presenter{
-			ID: "+5518977777777",
-			Name: "Bill",
-			LastName: "Gates",
+			Name: "Grupo Teste",
+			Description: "Exemplo de Grupo",
 		}
 
 		pj, err := json.Marshal(p)
@@ -480,8 +366,8 @@ func TestController_Create(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(errors.New("error")).
+		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return("", errors.New("error")).
 			Once()
 		ctrl := NewController(mJWT, mService)
 		ctrl.Create().ServeHTTP(rec, req)
@@ -491,10 +377,12 @@ func TestController_Create(t *testing.T) {
 
 	t.Run("when controller return StatusCreated", func(t *testing.T) {
 		//t.Parallel()
+		groupID := "be49afd2ee890805c21ddd55879db1387aec9751"
+		location := fmt.Sprintf("%s/%s", resource, groupID)
+
 		p := &Presenter{
-			ID: "+5518977777777",
-			Name: "Bill",
-			LastName: "Gates",
+			Name: "Grupo Teste",
+			Description: "Exemplo de Grupo",
 		}
 
 		pj, err := json.Marshal(p)
@@ -509,13 +397,15 @@ func TestController_Create(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(nil).
+		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(groupID, nil).
 			Once()
 		ctrl := NewController(mJWT, mService)
 		ctrl.Create().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusCreated, rec.Code)
+		assert.Equal(t, location, rec.Header().Get("Location"))
+		t.Log(rec.Header().Get("Location"))
 	})
 }
 
@@ -573,9 +463,9 @@ func TestController_Update(t *testing.T) {
 	t.Run("when controller return StatusBadRequest", func(t *testing.T) {
 		//t.Parallel()
 		p := &Presenter{
-			ID: "",
-			Name: "Bill",
-			LastName: "Gates",
+			ID: "be49afd2ee890805c21ddd55879db1387aec9751",
+			Name: "Grupo Teste",
+			Description: "Exemplo de Grupo",
 		}
 
 		pj, err := json.Marshal(p)
@@ -599,12 +489,12 @@ func TestController_Update(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when controller return StatusUnauthorized", func(t *testing.T) {
 		//t.Parallel()
 		p := &Presenter{
-			ID: "+5518977777777",
-			Name: "Bill",
-			LastName: "Gates",
+			ID: "be49afd2ee890805c21ddd55879db1387aec9751",
+			Name: "Grupo Teste",
+			Description: "Exemplo de Grupo",
 		}
 
 		pj, err := json.Marshal(p)
@@ -620,7 +510,36 @@ func TestController_Update(t *testing.T) {
 			Once()
 		mService := new(mockService)
 		mService.On("Update", mock.Anything, mock.Anything).
-			Return(ErrContactNotFound).
+			Return(ErrOperationNotAllowed).
+			Once()
+		ctrl := NewController(mJWT, mService)
+		ctrl.Update().ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+	})
+
+	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+		//t.Parallel()
+		p := &Presenter{
+			ID: "be49afd2ee890805c21ddd55879db1387aec9751",
+			Name: "Grupo Teste",
+			Description: "Exemplo de Grupo",
+		}
+
+		pj, err := json.Marshal(p)
+		assert.Nil(t, err)
+
+		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader(pj))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		mJWT := new(common.MockJWT)
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
+			Return("+5518999999999", nil).
+			Once()
+		mService := new(mockService)
+		mService.On("Update", mock.Anything, mock.Anything).
+			Return(ErrGroupNotFound).
 			Once()
 		ctrl := NewController(mJWT, mService)
 		ctrl.Update().ServeHTTP(rec, req)
@@ -631,9 +550,9 @@ func TestController_Update(t *testing.T) {
 	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
 		p := &Presenter{
-			ID: "+5518977777777",
-			Name: "Bill",
-			LastName: "Gates",
+			ID: "be49afd2ee890805c21ddd55879db1387aec9751",
+			Name: "Grupo Teste",
+			Description: "Exemplo de Grupo",
 		}
 
 		pj, err := json.Marshal(p)
@@ -660,9 +579,9 @@ func TestController_Update(t *testing.T) {
 	t.Run("when controller return StatusOK", func(t *testing.T) {
 		//t.Parallel()
 		p := &Presenter{
-			ID: "+5518977777777",
-			Name: "Bill",
-			LastName: "Gates",
+			ID: "be49afd2ee890805c21ddd55879db1387aec9751",
+			Name: "Grupo Teste",
+			Description: "Exemplo de Grupo",
 		}
 
 		pj, err := json.Marshal(p)
@@ -692,7 +611,7 @@ func TestController_Delete(t *testing.T) {
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", resource), nil)
+		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", resource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
@@ -709,9 +628,9 @@ func TestController_Delete(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when controller return StatusUnauthorized", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", resource), nil)
+		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", resource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
@@ -719,8 +638,30 @@ func TestController_Delete(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Delete", mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrContactNotFound).
+		mService.On("Delete", mock.Anything, mock.Anything).
+			Return(ErrOperationNotAllowed).
+			Once()
+		ctrl := NewController(mJWT, mService)
+
+		router := mux.NewRouter()
+		router.Handle(fmt.Sprintf("%s/{id}", resource), ctrl.Delete()).Methods(http.MethodDelete)
+		router.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+	})
+
+	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+		//t.Parallel()
+		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", resource), nil)
+		rec := httptest.NewRecorder()
+
+		mJWT := new(common.MockJWT)
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
+			Return("+5518999999999", nil).
+			Once()
+		mService := new(mockService)
+		mService.On("Delete", mock.Anything, mock.Anything).
+			Return(ErrGroupNotFound).
 			Once()
 		ctrl := NewController(mJWT, mService)
 
@@ -733,7 +674,7 @@ func TestController_Delete(t *testing.T) {
 
 	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", resource), nil)
+		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", resource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
@@ -741,7 +682,7 @@ func TestController_Delete(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Delete", mock.Anything, mock.Anything, mock.Anything).
+		mService.On("Delete", mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -755,7 +696,7 @@ func TestController_Delete(t *testing.T) {
 
 	t.Run("when controller return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", resource), nil)
+		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", resource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
@@ -763,7 +704,7 @@ func TestController_Delete(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Delete", mock.Anything, mock.Anything, mock.Anything).
+		mService.On("Delete", mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
 		ctrl := NewController(mJWT, mService)
@@ -776,13 +717,11 @@ func TestController_Delete(t *testing.T) {
 	})
 }
 
-func TestController_Block(t *testing.T) {
+func TestController_AddMember(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
-		//t.Parallel()
-		path := fmt.Sprintf("%s/block", resource)
-		req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader([]byte("{}")))
+		req := httptest.NewRequest(http.MethodPost, resourceMember, bytes.NewReader([]byte("{}")))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -792,30 +731,28 @@ func TestController_Block(t *testing.T) {
 			Once()
 		mService := new(mockService)
 		ctrl := NewController(mJWT, mService)
-		ctrl.Block().ServeHTTP(rec, req)
+		ctrl.AddMember().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
 	t.Run("when controller return StatusUnsupportedMediaType", func(t *testing.T) {
 		//t.Parallel()
-		path := fmt.Sprintf("%s/block", resource)
-		req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader([]byte("{}")))
+		req := httptest.NewRequest(http.MethodPost, resourceMember, bytes.NewReader([]byte("{}")))
 		req.Header.Set("Content-Type", "text/plain")
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mService := new(mockService)
 		ctrl := NewController(mJWT, mService)
-		ctrl.Block().ServeHTTP(rec, req)
+		ctrl.AddMember().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnsupportedMediaType, rec.Code)
 	})
 
 	t.Run("when controller return StatusUnprocessableEntity", func(t *testing.T) {
 		//t.Parallel()
-		path := fmt.Sprintf("%s/block", resource)
-		req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader([]byte("{[}")))
+		req := httptest.NewRequest(http.MethodPost, resourceMember, bytes.NewReader([]byte("{[}")))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -825,22 +762,23 @@ func TestController_Block(t *testing.T) {
 			Once()
 		mService := new(mockService)
 		ctrl := NewController(mJWT, mService)
-		ctrl.Block().ServeHTTP(rec, req)
+		ctrl.AddMember().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when controller return StatusUnauthorized", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
-			ID: "+5518977777777",
+		p := &MemberPresenter{
+			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+			UserID: "+5518988888888",
+			Admin: false,
 		}
 
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		path := fmt.Sprintf("%s/block", resource)
-		req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPost, resourceMember, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -849,26 +787,85 @@ func TestController_Block(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Block", mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrUserNotFound).
+		mService.On("AddMember", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(ErrOperationNotAllowed).
 			Once()
 		ctrl := NewController(mJWT, mService)
-		ctrl.Block().ServeHTTP(rec, req)
+		ctrl.AddMember().ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+	})
+
+	t.Run("when controller return StatusBadRequest", func(t *testing.T) {
+		//t.Parallel()
+		p := &MemberPresenter{
+			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+			UserID: "",
+			Admin: false,
+		}
+
+		pj, err := json.Marshal(p)
+		assert.Nil(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, resourceMember, bytes.NewReader(pj))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		mJWT := new(common.MockJWT)
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
+			Return("+5518999999999", nil).
+			Once()
+		mService := new(mockService)
+		mService.On("AddMember", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(ErrUserIDValidateModel).
+			Once()
+		ctrl := NewController(mJWT, mService)
+		ctrl.AddMember().ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+
+	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+		//t.Parallel()
+		p := &MemberPresenter{
+			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+			UserID: "+5518988888888",
+			Admin: false,
+		}
+
+		pj, err := json.Marshal(p)
+		assert.Nil(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, resourceMember, bytes.NewReader(pj))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		mJWT := new(common.MockJWT)
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
+			Return("+5518999999999", nil).
+			Once()
+		mService := new(mockService)
+		mService.On("AddMember", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(ErrGroupNotFound).
+			Once()
+		ctrl := NewController(mJWT, mService)
+		ctrl.AddMember().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
 	t.Run("when controller return StatusConflict", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
-			ID: "+5518977777777",
+		p := &MemberPresenter{
+			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+			UserID: "+5518988888888",
+			Admin: false,
 		}
 
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		path := fmt.Sprintf("%s/block", resource)
-		req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPost, resourceMember, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -877,26 +874,27 @@ func TestController_Block(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Block", mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrContactAlreadyBlocked).
+		mService.On("AddMember", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(ErrMemberAlreadyExists).
 			Once()
 		ctrl := NewController(mJWT, mService)
-		ctrl.Block().ServeHTTP(rec, req)
+		ctrl.AddMember().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusConflict, rec.Code)
 	})
 
 	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
-			ID: "+5518977777777",
+		p := &MemberPresenter{
+			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+			UserID: "+5518988888888",
+			Admin: false,
 		}
 
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		path := fmt.Sprintf("%s/block", resource)
-		req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPost, resourceMember, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -905,26 +903,27 @@ func TestController_Block(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Block", mock.Anything, mock.Anything, mock.Anything).
+		mService.On("AddMember", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
 		ctrl := NewController(mJWT, mService)
-		ctrl.Block().ServeHTTP(rec, req)
+		ctrl.AddMember().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusOK", func(t *testing.T) {
+	t.Run("when controller return StatusCreated", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
-			ID: "+5518977777777",
+		p := &MemberPresenter{
+			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+			UserID: "+5518988888888",
+			Admin: false,
 		}
 
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		path := fmt.Sprintf("%s/block", resource)
-		req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPost, resourceMember, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -933,23 +932,24 @@ func TestController_Block(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Block", mock.Anything, mock.Anything, mock.Anything).
+		mService.On("AddMember", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
 		ctrl := NewController(mJWT, mService)
-		ctrl.Block().ServeHTTP(rec, req)
+		ctrl.AddMember().ServeHTTP(rec, req)
 
-		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, http.StatusCreated, rec.Code)
 	})
 }
 
-func TestController_Unblock(t *testing.T) {
+func TestController_RemoveMember(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
-		path := fmt.Sprintf("%s/block", resource)
-		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", path), nil)
+		req := httptest.NewRequest(http.MethodDelete,
+			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751/+5518988888888",
+				resourceMember), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
@@ -960,16 +960,18 @@ func TestController_Unblock(t *testing.T) {
 		ctrl := NewController(mJWT, mService)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", path), ctrl.Unblock()).Methods(http.MethodDelete)
+		router.Handle(fmt.Sprintf("%s/{group}/{user}", resourceMember), ctrl.RemoveMember()).
+			Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when controller return StatusUnauthorized", func(t *testing.T) {
 		//t.Parallel()
-		path := fmt.Sprintf("%s/block", resource)
-		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", path), nil)
+		req := httptest.NewRequest(http.MethodDelete,
+			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751/+5518988888888",
+				resourceMember), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
@@ -977,13 +979,39 @@ func TestController_Unblock(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Unblock", mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrUserNotFound).
+		mService.On("RemoveMember", mock.Anything, mock.Anything, mock.Anything).
+			Return(ErrGroupOwnerCannotRemoved).
 			Once()
 		ctrl := NewController(mJWT, mService)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", path), ctrl.Unblock()).Methods(http.MethodDelete)
+		router.Handle(fmt.Sprintf("%s/{group}/{user}", resourceMember), ctrl.RemoveMember()).
+			Methods(http.MethodDelete)
+		router.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+	})
+
+	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+		//t.Parallel()
+		req := httptest.NewRequest(http.MethodDelete,
+			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751/+5518988888888",
+				resourceMember), nil)
+		rec := httptest.NewRecorder()
+
+		mJWT := new(common.MockJWT)
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
+			Return("+5518999999999", nil).
+			Once()
+		mService := new(mockService)
+		mService.On("RemoveMember", mock.Anything, mock.Anything, mock.Anything).
+			Return(ErrMemberNotFound).
+			Once()
+		ctrl := NewController(mJWT, mService)
+
+		router := mux.NewRouter()
+		router.Handle(fmt.Sprintf("%s/{group}/{user}", resourceMember), ctrl.RemoveMember()).
+			Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
@@ -991,8 +1019,9 @@ func TestController_Unblock(t *testing.T) {
 
 	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		path := fmt.Sprintf("%s/block", resource)
-		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", path), nil)
+		req := httptest.NewRequest(http.MethodDelete,
+			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751/+5518988888888",
+				resourceMember), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
@@ -1000,13 +1029,14 @@ func TestController_Unblock(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Unblock", mock.Anything, mock.Anything, mock.Anything).
+		mService.On("RemoveMember", mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
 		ctrl := NewController(mJWT, mService)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", path), ctrl.Unblock()).Methods(http.MethodDelete)
+		router.Handle(fmt.Sprintf("%s/{group}/{user}", resourceMember), ctrl.RemoveMember()).
+			Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
@@ -1014,8 +1044,9 @@ func TestController_Unblock(t *testing.T) {
 
 	t.Run("when controller return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		path := fmt.Sprintf("%s/block", resource)
-		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", path), nil)
+		req := httptest.NewRequest(http.MethodDelete,
+			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751/+5518988888888",
+				resourceMember), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
@@ -1023,14 +1054,212 @@ func TestController_Unblock(t *testing.T) {
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Unblock", mock.Anything, mock.Anything, mock.Anything).
+		mService.On("RemoveMember", mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
 		ctrl := NewController(mJWT, mService)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", path), ctrl.Unblock()).Methods(http.MethodDelete)
+		router.Handle(fmt.Sprintf("%s/{group}/{user}", resourceMember), ctrl.RemoveMember()).
+			Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+	})
+}
+
+func TestController_SetAdmin(t *testing.T) {
+	//t.Parallel()
+
+	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
+		//t.Parallel()
+		req := httptest.NewRequest(http.MethodPut, resourceMember, bytes.NewReader([]byte("{}")))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		mJWT := new(common.MockJWT)
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
+			Return(nil, errors.New("error")).
+			Once()
+		mService := new(mockService)
+		ctrl := NewController(mJWT, mService)
+		ctrl.SetAdmin().ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	})
+
+	t.Run("when controller return StatusUnsupportedMediaType", func(t *testing.T) {
+		//t.Parallel()
+		req := httptest.NewRequest(http.MethodPut, resourceMember, bytes.NewReader([]byte("{}")))
+		req.Header.Set("Content-Type", "text/plain")
+		rec := httptest.NewRecorder()
+
+		mJWT := new(common.MockJWT)
+		mService := new(mockService)
+		ctrl := NewController(mJWT, mService)
+		ctrl.SetAdmin().ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusUnsupportedMediaType, rec.Code)
+	})
+
+	t.Run("when controller return StatusUnprocessableEntity", func(t *testing.T) {
+		//t.Parallel()
+		req := httptest.NewRequest(http.MethodPut, resourceMember, bytes.NewReader([]byte("{[}")))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		mJWT := new(common.MockJWT)
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
+			Return("+5518999999999", nil).
+			Once()
+		mService := new(mockService)
+		ctrl := NewController(mJWT, mService)
+		ctrl.SetAdmin().ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
+	})
+
+	t.Run("when controller return StatusBadRequest", func(t *testing.T) {
+		//t.Parallel()
+		p := &MemberPresenter{
+			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+			UserID: "",
+			Admin: true,
+		}
+
+		pj, err := json.Marshal(p)
+		assert.Nil(t, err)
+
+		req := httptest.NewRequest(http.MethodPut, resourceMember, bytes.NewReader(pj))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		mJWT := new(common.MockJWT)
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
+			Return("+5518999999999", nil).
+			Once()
+		mService := new(mockService)
+		mService.On("SetAdmin", mock.Anything, mock.Anything).
+			Return(ErrUserIDValidateModel).
+			Once()
+		ctrl := NewController(mJWT, mService)
+		ctrl.SetAdmin().ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+
+	t.Run("when controller return StatusUnauthorized", func(t *testing.T) {
+		//t.Parallel()
+		p := &MemberPresenter{
+			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+			UserID: "+5518977777777",
+			Admin: true,
+		}
+
+		pj, err := json.Marshal(p)
+		assert.Nil(t, err)
+
+		req := httptest.NewRequest(http.MethodPut, resourceMember, bytes.NewReader(pj))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		mJWT := new(common.MockJWT)
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
+			Return("+5518999999999", nil).
+			Once()
+		mService := new(mockService)
+		mService.On("SetAdmin", mock.Anything, mock.Anything).
+			Return(ErrOperationNotAllowed).
+			Once()
+		ctrl := NewController(mJWT, mService)
+		ctrl.SetAdmin().ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+	})
+
+	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+		//t.Parallel()
+		p := &MemberPresenter{
+			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+			UserID: "+5518977777777",
+			Admin: true,
+		}
+
+		pj, err := json.Marshal(p)
+		assert.Nil(t, err)
+
+		req := httptest.NewRequest(http.MethodPut, resourceMember, bytes.NewReader(pj))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		mJWT := new(common.MockJWT)
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
+			Return("+5518999999999", nil).
+			Once()
+		mService := new(mockService)
+		mService.On("SetAdmin", mock.Anything, mock.Anything).
+			Return(ErrMemberNotFound).
+			Once()
+		ctrl := NewController(mJWT, mService)
+		ctrl.SetAdmin().ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusNotFound, rec.Code)
+	})
+
+	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
+		//t.Parallel()
+		p := &MemberPresenter{
+			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+			UserID: "+5518977777777",
+			Admin: true,
+		}
+
+		pj, err := json.Marshal(p)
+		assert.Nil(t, err)
+
+		req := httptest.NewRequest(http.MethodPut, resourceMember, bytes.NewReader(pj))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		mJWT := new(common.MockJWT)
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
+			Return("+5518999999999", nil).
+			Once()
+		mService := new(mockService)
+		mService.On("SetAdmin", mock.Anything, mock.Anything).
+			Return(errors.New("error")).
+			Once()
+		ctrl := NewController(mJWT, mService)
+		ctrl.SetAdmin().ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	})
+
+	t.Run("when controller return StatusOK", func(t *testing.T) {
+		//t.Parallel()
+		p := &MemberPresenter{
+			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
+			UserID: "+5518977777777",
+			Admin: true,
+		}
+
+		pj, err := json.Marshal(p)
+		assert.Nil(t, err)
+
+		req := httptest.NewRequest(http.MethodPut, resourceMember, bytes.NewReader(pj))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		mJWT := new(common.MockJWT)
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
+			Return("+5518999999999", nil).
+			Once()
+		mService := new(mockService)
+		mService.On("SetAdmin", mock.Anything, mock.Anything).
+			Return(nil).
+			Once()
+		ctrl := NewController(mJWT, mService)
+		ctrl.SetAdmin().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)
 	})

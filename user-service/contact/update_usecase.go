@@ -26,7 +26,7 @@ func (u *updateUseCase) Execute(ctx context.Context, contact *Contact) error {
 		return err
 	}
 
-	contact.UpdatedAt = time.Now()
+	contact.UpdatedAt = time.Now().UTC()
 
 	ok, err := u.repository.Update(ctx, contact)
 	if err != nil {

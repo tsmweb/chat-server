@@ -33,7 +33,7 @@ func (u *updateUseCase) Execute(ctx context.Context, group *Group) error {
 	}
 
 	group.UpdatedBy = authID
-	group.UpdatedAt = time.Now()
+	group.UpdatedAt = time.Now().UTC()
 
 	ok, err := u.repository.Update(ctx, group)
 	if err != nil {

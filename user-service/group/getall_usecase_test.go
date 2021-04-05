@@ -22,7 +22,7 @@ func TestGetAllUseCase_Execute(t *testing.T) {
 			Once()
 
 		uc := NewGetAllUseCase(r)
-		_, err := uc.Execute(ctx)
+		_, err := uc.Execute(ctx, "+5518999999999")
 		assert.Equal(t, ErrGroupNotFound, err)
 	})
 
@@ -34,7 +34,7 @@ func TestGetAllUseCase_Execute(t *testing.T) {
 			Once()
 
 		uc := NewGetAllUseCase(r)
-		_, err := uc.Execute(ctx)
+		_, err := uc.Execute(ctx, "+5518999999999")
 		assert.NotNil(t, err)
 	})
 
@@ -85,7 +85,7 @@ func TestGetAllUseCase_Execute(t *testing.T) {
 			Once()
 
 		uc := NewGetAllUseCase(r)
-		gs, err := uc.Execute(ctx)
+		gs, err := uc.Execute(ctx, "+5518999999999")
 		assert.Nil(t, err)
 		assert.Equal(t, groups, gs)
 	})

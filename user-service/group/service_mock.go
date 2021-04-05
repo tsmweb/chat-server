@@ -20,8 +20,8 @@ func (m *mockService) Get(ctx context.Context, groupID string) (*Group, error) {
 }
 
 // GetAll represents the simulated method for the GetAll feature in the Service layer.
-func (m *mockService) GetAll(ctx context.Context) ([]*Group, error) {
-	args := m.Called(ctx)
+func (m *mockService) GetAll(ctx context.Context, userID string) ([]*Group, error) {
+	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

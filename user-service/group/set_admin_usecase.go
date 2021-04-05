@@ -33,7 +33,7 @@ func (u *setAdminUseCase) Execute(ctx context.Context, member *Member) error {
 	}
 
 	member.UpdatedBy = authID
-	member.UpdatedAt = time.Now()
+	member.UpdatedAt = time.Now().UTC()
 
 	ok, err := u.repository.SetAdmin(ctx, member)
 	if err != nil {

@@ -13,7 +13,7 @@ type Group struct {
 	Description string
 	Owner       string
 	Members     []*Member
-	UpdatedBy	string
+	UpdatedBy   string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -30,7 +30,8 @@ func NewGroup(name, description, owner string) (*Group, error) {
 		Name:        name,
 		Description: description,
 		Owner:       owner,
-		CreatedAt:   time.Now(),
+		CreatedAt:   time.Now().UTC(),
+		UpdatedAt:   time.Now().UTC(),
 	}
 
 	err = g.Validate()

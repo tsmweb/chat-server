@@ -22,7 +22,12 @@ func NewRepositoryPostgres(db database.Database) Repository {
 // Get returns the contact by userID and contactID.
 func (r *repositoryPostgres) Get(ctx context.Context, userID, contactID string) (*Contact, error) {
 	stmt, err := r.dataBase.DB().PrepareContext(ctx,`
-			SELECT user_id, contact_id, name, lastname, created_at, updated_at 
+			SELECT user_id, 
+				contact_id, 
+				name, 
+				lastname, 
+				created_at, 
+				updated_at 
 			FROM contact 
 			WHERE user_id = $1 
 			  AND contact_id = $2`)

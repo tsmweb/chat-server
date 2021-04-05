@@ -5,7 +5,7 @@ import "context"
 // Service service is a façade for use cases.
 type Service interface {
 	Get(ctx context.Context, groupID string) (*Group, error)
-	GetAll(ctx context.Context) ([]*Group, error)
+	GetAll(ctx context.Context, userID string) ([]*Group, error)
 	Create(ctx context.Context, name, description, owner string) (string, error)
 	Update(ctx context.Context, group *Group) error
 	Delete(ctx context.Context, groupID string) error
@@ -53,8 +53,8 @@ func (s *service) Get(ctx context.Context, groupID string) (*Group, error) {
 }
 
 // GetAll performs the GetAllUseCase.
-func (s *service) GetAll(ctx context.Context) ([]*Group, error) {
-	return s.getAllUC.Execute(ctx)
+func (s *service) GetAll(ctx context.Context, userID string) ([]*Group, error) {
+	return s.getAllUC.Execute(ctx, userID)
 }
 
 // Create performs the CreateUseCase.

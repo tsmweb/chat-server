@@ -18,7 +18,8 @@ func NewMember(groupID, userID string, admin bool) (*Member, error) {
 		GroupID:   groupID,
 		UserID:    userID,
 		Admin:     admin,
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
 	}
 
 	err := m.Validate()

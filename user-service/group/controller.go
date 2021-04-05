@@ -1,12 +1,15 @@
-package contact
+package group
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/cerror"
 	ctlr "github.com/tsmweb/go-helper-api/controller"
+	"github.com/tsmweb/use-service/common"
 	"log"
 	"net/http"
 )
@@ -15,12 +18,12 @@ import (
 type Controller interface {
 	Get() http.Handler
 	GetAll() http.Handler
-	GetPresence() http.Handler
 	Create() http.Handler
 	Update() http.Handler
 	Delete() http.Handler
-	Block() http.Handler
-	Unblock() http.Handler
+	AddMember() http.Handler
+	RemoveMember() http.Handler
+	SetAdmin() http.Handler
 }
 
 type controller struct {
@@ -30,13 +33,13 @@ type controller struct {
 
 // NewController creates a new instance of Controller.
 func NewController(jwt auth.JWT, service Service) Controller {
-	return &controller {
+	return &controller{
 		ctlr.New(jwt),
 		service,
 	}
 }
 
-// Get get a contact by contactID.
+// Get get a group by groupID.
 func (c *controller) Get() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, err := c.ExtractID(r)
@@ -45,15 +48,16 @@ func (c *controller) Get() http.Handler {
 			c.RespondWithError(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 			return
 		}
+		ctx := context.WithValue(r.Context(), common.AuthContextKey, userID)
 
 		vars := mux.Vars(r)
-		contactID := vars["id"]
+		groupID := vars["id"]
 
-		contact, err := c.service.Get(r.Context(), userID, contactID)
+		group, err := c.service.Get(ctx, groupID)
 		if err != nil {
 			log.Println(err.Error())
 
-			if errors.Is(err, ErrContactNotFound) {
+			if errors.Is(err, ErrGroupNotFound) {
 				c.RespondWithError(w, http.StatusNotFound, err.Error())
 				return
 			}
@@ -63,13 +67,13 @@ func (c *controller) Get() http.Handler {
 		}
 
 		vm := &Presenter{}
-		vm.FromEntity(contact)
+		vm.FromEntity(group)
 
 		c.RespondWithJSON(w, http.StatusOK, vm)
 	})
 }
 
-// GetAll get all contacts from the profile.
+// GetAll get all the groups that the user is a member of.
 func (c *controller) GetAll() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, err := c.ExtractID(r)
@@ -78,12 +82,13 @@ func (c *controller) GetAll() http.Handler {
 			c.RespondWithError(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 			return
 		}
+		ctx := context.WithValue(r.Context(), common.AuthContextKey, userID)
 
-		contacts, err := c.service.GetAll(r.Context(), userID)
+		groups, err := c.service.GetAll(ctx, userID)
 		if err != nil {
 			log.Println(err.Error())
 
-			if errors.Is(err, ErrContactNotFound) {
+			if errors.Is(err, ErrGroupNotFound) {
 				c.RespondWithError(w, http.StatusNotFound, err.Error())
 				return
 			}
@@ -92,47 +97,12 @@ func (c *controller) GetAll() http.Handler {
 			return
 		}
 
-		vms := EntityToPresenters(contacts...)
+		vms := EntityToPresenters(groups...)
 		c.RespondWithJSON(w, http.StatusOK, vms)
 	})
 }
 
-// GetPresence obtain the presence of the contact by contactID.
-func (c *controller) GetPresence() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID, err := c.ExtractID(r)
-		if err != nil {
-			log.Println(err.Error())
-			c.RespondWithError(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
-			return
-		}
-
-		vars := mux.Vars(r)
-		contactID := vars["id"]
-
-		presence, err := c.service.GetPresence(r.Context(), userID, contactID)
-		if err != nil {
-			log.Println(err.Error())
-
-			if errors.Is(err, ErrContactNotFound) {
-				c.RespondWithError(w, http.StatusNotFound, err.Error())
-				return
-			}
-
-			c.RespondWithError(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		p := &Presence{
-			ID: contactID,
-			Presence: PresenceTypeText(presence),
-		}
-
-		c.RespondWithJSON(w, http.StatusOK, p)
-	})
-}
-
-// Create creates a new contact.
+// Create creates a new group.
 func (c *controller) Create() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !c.HasContentType(r, ctlr.MimeApplicationJSON) {
@@ -146,6 +116,7 @@ func (c *controller) Create() http.Handler {
 			c.RespondWithError(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 			return
 		}
+		ctx := context.WithValue(r.Context(), common.AuthContextKey, userID)
 
 		input := &Presenter{}
 		err = json.NewDecoder(r.Body).Decode(&input)
@@ -155,7 +126,7 @@ func (c *controller) Create() http.Handler {
 			return
 		}
 
-		err = c.service.Create(r.Context(), input.ID, input.Name, input.LastName, userID)
+		groupID, err := c.service.Create(ctx, input.Name, input.Description, userID)
 		if err != nil {
 			log.Println(err.Error())
 
@@ -165,25 +136,17 @@ func (c *controller) Create() http.Handler {
 				return
 			}
 
-			if errors.Is(err, ErrUserNotFound) {
-				c.RespondWithError(w, http.StatusNotFound, err.Error())
-				return
-			}
-
-			if errors.Is(err, ErrContactAlreadyExists) {
-				c.RespondWithError(w, http.StatusConflict, err.Error())
-				return
-			}
-
 			c.RespondWithError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		w.WriteHeader(http.StatusCreated)
+		headers := ctlr.Headers{}
+		headers["Location"] = fmt.Sprintf("%s/%s", resource, groupID)
+		c.RespondWithHeader(w, http.StatusCreated, headers)
 	})
 }
 
-// Update updates contact data.
+// Update updates group data.
 func (c *controller) Update() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !c.HasContentType(r, ctlr.MimeApplicationJSON) {
@@ -197,6 +160,7 @@ func (c *controller) Update() http.Handler {
 			c.RespondWithError(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 			return
 		}
+		ctx := context.WithValue(r.Context(), common.AuthContextKey, userID)
 
 		input := &Presenter{}
 		err = json.NewDecoder(r.Body).Decode(&input)
@@ -205,9 +169,8 @@ func (c *controller) Update() http.Handler {
 			c.RespondWithError(w, http.StatusUnprocessableEntity, "Malformed JSON")
 			return
 		}
-		input.UserID = userID
 
-		err = c.service.Update(r.Context(), input.ToEntity())
+		err = c.service.Update(ctx, input.ToEntity())
 		if err != nil {
 			log.Println(err.Error())
 
@@ -217,7 +180,12 @@ func (c *controller) Update() http.Handler {
 				return
 			}
 
-			if errors.Is(err, ErrContactNotFound) {
+			if errors.Is(err, ErrOperationNotAllowed) {
+				c.RespondWithError(w, http.StatusUnauthorized, err.Error())
+				return
+			}
+
+			if errors.Is(err, ErrGroupNotFound) {
 				c.RespondWithError(w, http.StatusNotFound, err.Error())
 				return
 			}
@@ -230,7 +198,7 @@ func (c *controller) Update() http.Handler {
 	})
 }
 
-// Delete deletes a contact by contactID.
+// Delete deletes a group by groupID.
 func (c *controller) Delete() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, err := c.ExtractID(r)
@@ -239,15 +207,21 @@ func (c *controller) Delete() http.Handler {
 			c.RespondWithError(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 			return
 		}
+		ctx := context.WithValue(r.Context(), common.AuthContextKey, userID)
 
 		vars := mux.Vars(r)
-		contactID := vars["id"]
+		groupID := vars["id"]
 
-		err = c.service.Delete(r.Context(), userID, contactID)
+		err = c.service.Delete(ctx, groupID)
 		if err != nil {
 			log.Println(err.Error())
 
-			if errors.Is(err, ErrContactNotFound) {
+			if errors.Is(err, ErrOperationNotAllowed) {
+				c.RespondWithError(w, http.StatusUnauthorized, err.Error())
+				return
+			}
+
+			if errors.Is(err, ErrGroupNotFound) {
 				c.RespondWithError(w, http.StatusNotFound, err.Error())
 				return
 			}
@@ -260,8 +234,7 @@ func (c *controller) Delete() http.Handler {
 	})
 }
 
-// Block blocks a profile from receiving a message.
-func (c *controller) Block() http.Handler {
+func (c *controller) AddMember() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !c.HasContentType(r, ctlr.MimeApplicationJSON) {
 			c.RespondWithError(w, http.StatusUnsupportedMediaType, http.StatusText(http.StatusUnsupportedMediaType))
@@ -274,8 +247,9 @@ func (c *controller) Block() http.Handler {
 			c.RespondWithError(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 			return
 		}
+		ctx := context.WithValue(r.Context(), common.AuthContextKey, userID)
 
-		input := &Presenter{}
+		input := &MemberPresenter{}
 		err = json.NewDecoder(r.Body).Decode(&input)
 		if err != nil {
 			log.Println(err.Error())
@@ -283,17 +257,64 @@ func (c *controller) Block() http.Handler {
 			return
 		}
 
-		err = c.service.Block(r.Context(), userID, input.ID)
+		err = c.service.AddMember(ctx, input.GroupID, input.UserID, input.Admin)
 		if err != nil {
 			log.Println(err.Error())
 
-			if errors.Is(err, ErrUserNotFound) {
+			if errors.Is(err, ErrOperationNotAllowed) {
+				c.RespondWithError(w, http.StatusUnauthorized, err.Error())
+				return
+			}
+
+			var errValidateModel *cerror.ErrValidateModel
+			if errors.As(err, &errValidateModel) {
+				c.RespondWithError(w, http.StatusBadRequest, err.Error())
+				return
+			}
+
+			if errors.Is(err, ErrGroupNotFound) || errors.Is(err, ErrUserNotFound) {
 				c.RespondWithError(w, http.StatusNotFound, err.Error())
 				return
 			}
 
-			if errors.Is(err, ErrContactAlreadyBlocked) {
+			if errors.Is(err, ErrMemberAlreadyExists) {
 				c.RespondWithError(w, http.StatusConflict, err.Error())
+				return
+			}
+
+			c.RespondWithError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+	})
+}
+
+func (c *controller) RemoveMember() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userID, err := c.ExtractID(r)
+		if err != nil {
+			log.Println(err.Error())
+			c.RespondWithError(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+			return
+		}
+		ctx := context.WithValue(r.Context(), common.AuthContextKey, userID)
+
+		vars := mux.Vars(r)
+		groupID := vars["group"]
+		memberID := vars["user"]
+
+		err = c.service.RemoveMember(ctx, groupID, memberID)
+		if err != nil {
+			log.Println(err.Error())
+
+			if errors.Is(err, ErrOperationNotAllowed) || errors.Is(err, ErrGroupOwnerCannotRemoved) {
+				c.RespondWithError(w, http.StatusUnauthorized, err.Error())
+				return
+			}
+
+			if errors.Is(err, ErrMemberNotFound) {
+				c.RespondWithError(w, http.StatusNotFound, err.Error())
 				return
 			}
 
@@ -305,24 +326,45 @@ func (c *controller) Block() http.Handler {
 	})
 }
 
-// Unblock unblock a profile to receive message.
-func (c *controller) Unblock() http.Handler {
+func (c *controller) SetAdmin() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !c.HasContentType(r, ctlr.MimeApplicationJSON) {
+			c.RespondWithError(w, http.StatusUnsupportedMediaType, http.StatusText(http.StatusUnsupportedMediaType))
+			return
+		}
+
 		userID, err := c.ExtractID(r)
 		if err != nil {
 			log.Println(err.Error())
 			c.RespondWithError(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 			return
 		}
+		ctx := context.WithValue(r.Context(), common.AuthContextKey, userID)
 
-		vars := mux.Vars(r)
-		blockedUserID := vars["id"]
+		input := &MemberPresenter{}
+		err = json.NewDecoder(r.Body).Decode(&input)
+		if err != nil {
+			log.Println(err.Error())
+			c.RespondWithError(w, http.StatusUnprocessableEntity, "Malformed JSON")
+			return
+		}
 
-		err = c.service.Unblock(r.Context(), userID, blockedUserID)
+		err = c.service.SetAdmin(ctx, input.ToEntity())
 		if err != nil {
 			log.Println(err.Error())
 
-			if errors.Is(err, ErrUserNotFound) {
+			var errValidateModel *cerror.ErrValidateModel
+			if errors.As(err, &errValidateModel) {
+				c.RespondWithError(w, http.StatusBadRequest, err.Error())
+				return
+			}
+
+			if errors.Is(err, ErrOperationNotAllowed) || errors.Is(err, ErrGroupOwnerCannotChanged) {
+				c.RespondWithError(w, http.StatusUnauthorized, err.Error())
+				return
+			}
+
+			if errors.Is(err, ErrMemberNotFound) {
 				c.RespondWithError(w, http.StatusNotFound, err.Error())
 				return
 			}

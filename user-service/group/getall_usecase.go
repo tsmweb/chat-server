@@ -4,12 +4,11 @@ import (
 	"context"
 	"errors"
 	"github.com/tsmweb/go-helper-api/cerror"
-	"github.com/tsmweb/use-service/common"
 )
 
 // GetAllUseCase returns a list of groups by userID, otherwise an error is returned.
 type GetAllUseCase interface {
-	Execute(ctx context.Context) ([]*Group, error)
+	Execute(ctx context.Context, userID string) ([]*Group, error)
 }
 
 type getAllUseCase struct {
@@ -22,10 +21,8 @@ func NewGetAllUseCase(r Repository) GetAllUseCase {
 }
 
 // Execute performs the use case to get all.
-func (u *getAllUseCase) Execute(ctx context.Context) ([]*Group, error) {
-	authID := ctx.Value(common.AuthContextKey).(string)
-
-	groups, err := u.repository.GetAll(ctx, authID)
+func (u *getAllUseCase) Execute(ctx context.Context, userID string) ([]*Group, error) {
+	groups, err := u.repository.GetAll(ctx, userID)
 	if err != nil {
 		if errors.Is(err, cerror.ErrNotFound) {
 			return nil, ErrGroupNotFound

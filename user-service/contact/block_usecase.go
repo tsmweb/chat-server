@@ -31,7 +31,7 @@ func (u *blockUseCase) Execute(ctx context.Context, userID, blockedUserID string
 		return ErrUserNotFound
 	}
 
-	err = u.repository.Block(ctx, userID, blockedUserID, time.Now())
+	err = u.repository.Block(ctx, userID, blockedUserID, time.Now().UTC())
 	if err != nil {
 		if errors.Is(err, cerror.ErrRecordAlreadyRegistered) {
 			return ErrContactAlreadyBlocked

@@ -37,3 +37,16 @@ type Presence struct {
 	ID       string `json:"id"`
 	Presence string `json:"presence"`
 }
+
+// EntityToPresenters mapper Entities to Presenters
+func EntityToPresenters(entities ...*Contact) []*Presenter {
+	var vms []*Presenter
+
+	for _, contact := range entities {
+		vm := &Presenter{}
+		vm.FromEntity(contact)
+		vms = append(vms, vm)
+	}
+
+	return vms
+}

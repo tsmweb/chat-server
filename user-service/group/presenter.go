@@ -35,6 +35,16 @@ func (p *Presenter) FromEntity(entity *Group) {
 	p.UpdatedBy = entity.UpdatedBy
 	p.CreatedAt = entity.CreatedAt
 	p.UpdatedAt = entity.UpdatedAt
+
+	var members []*MemberPresenter
+
+	for _, member := range entity.Members {
+		vm := &MemberPresenter{}
+		vm.FromEntity(member)
+		members = append(members, vm)
+	}
+
+	p.Members = members
 }
 
 // MemberPresenter data
@@ -64,4 +74,17 @@ func (p *MemberPresenter) FromEntity(entity *Member) {
 	p.UpdatedBy = entity.UpdatedBy
 	p.CreatedAt = entity.CreatedAt
 	p.UpdatedAt = entity.UpdatedAt
+}
+
+// EntityToPresenters mapper Entities to Presenters
+func EntityToPresenters(entities ...*Group) []*Presenter {
+	var vms []*Presenter
+
+	for _, group := range entities {
+		vm := &Presenter{}
+		vm.FromEntity(group)
+		vms = append(vms, vm)
+	}
+
+	return vms
 }
