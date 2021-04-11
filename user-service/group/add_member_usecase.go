@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/tsmweb/go-helper-api/cerror"
-	"github.com/tsmweb/use-service/common"
+	"github.com/tsmweb/user-service/common"
 )
 
 // AddMemberUseCase adds member to a Group, otherwise an error is returned.

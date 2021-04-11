@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/tsmweb/go-helper-api/cerror"
-	"github.com/tsmweb/use-service/common"
+	"github.com/tsmweb/user-service/common"
 	"testing"
 )
 

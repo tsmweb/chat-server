@@ -6,9 +6,10 @@ import (
 	"github.com/google/wire"
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/middleware"
-	"github.com/tsmweb/use-service/contact"
-	"github.com/tsmweb/use-service/helper/database"
-	"github.com/tsmweb/use-service/helper/setting"
+	"github.com/tsmweb/user-service/contact"
+	"github.com/tsmweb/user-service/group"
+	"github.com/tsmweb/user-service/helper/database"
+	"github.com/tsmweb/user-service/helper/setting"
 )
 
 func InitContactRouter() *contact.Router {
@@ -32,6 +33,26 @@ func InitContactRouter() *contact.Router {
 	return &contact.Router{}
 }
 
+func InitGroupRouter() *group.Router {
+	wire.Build(
+		group.NewRouter,
+		middleware.NewAuth,
+		group.NewController,
+		group.NewService,
+		group.NewGetUseCase,
+		group.NewGetAllUseCase,
+		group.NewCreateUseCase,
+		group.NewUpdateUseCase,
+		group.NewDeleteUseCase,
+		group.NewAddMemberUseCase,
+		group.NewRemoveMemberUseCase,
+		group.NewSetAdminUseCase,
+		group.NewRepositoryPostgres,
+		jwtProvider,
+		dataBaseProvider)
+
+	return &group.Router{}
+}
 
 /*
  * PROVIDERS

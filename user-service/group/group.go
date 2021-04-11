@@ -31,7 +31,6 @@ func NewGroup(name, description, owner string) (*Group, error) {
 		Description: description,
 		Owner:       owner,
 		CreatedAt:   time.Now().UTC(),
-		UpdatedAt:   time.Now().UTC(),
 	}
 
 	err = g.Validate()

@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"github.com/lib/pq"
 	"github.com/tsmweb/go-helper-api/cerror"
-	"github.com/tsmweb/use-service/helper/database"
+	"github.com/tsmweb/user-service/helper/database"
 	"time"
 )
 
@@ -22,15 +22,15 @@ func NewRepositoryPostgres(db database.Database) Repository {
 // Get returns the contact by userID and contactID.
 func (r *repositoryPostgres) Get(ctx context.Context, userID, contactID string) (*Contact, error) {
 	stmt, err := r.dataBase.DB().PrepareContext(ctx,`
-			SELECT user_id, 
-				contact_id, 
-				name, 
-				lastname, 
-				created_at, 
-				updated_at 
-			FROM contact 
-			WHERE user_id = $1 
-			  AND contact_id = $2`)
+			SELECT c.user_id, 
+				c.contact_id, 
+				c.name, 
+				c.lastname, 
+				c.created_at, 
+				COALESCE(c.updated_at, c.created_at, c.updated_at) AS updated_at
+			FROM contact c
+			WHERE c.user_id = $1 
+			  AND c.contact_id = $2`)
 	if err != nil {
 		return nil, err
 	}
@@ -57,9 +57,14 @@ func (r *repositoryPostgres) Get(ctx context.Context, userID, contactID string) 
 // GetAll returns all contacts by userID.
 func (r *repositoryPostgres) GetAll(ctx context.Context, userID string) ([]*Contact, error) {
 	stmt, err := r.dataBase.DB().PrepareContext(ctx, `
-			SELECT user_id, contact_id, name, lastname, created_at, updated_at 
-			FROM contact 
-			WHERE user_id = $1`)
+			SELECT c.user_id, 
+				c.contact_id, 
+				c.name, 
+				c.lastname, 
+				c.created_at, 
+				COALESCE(c.updated_at, c.created_at, c.updated_at) AS updated_at
+			FROM contact c 
+			WHERE c.user_id = $1`)
 	if err != nil {
 		return nil, err
 	}
@@ -157,15 +162,15 @@ func (r *repositoryPostgres) Create(ctx context.Context, contact *Contact) error
 	}
 
 	stmt, err := txn.PrepareContext(ctx, `
-		INSERT INTO contact(user_id, contact_id, name, lastname, created_at) 
-		VALUES($1, $2, $3, $4, $5)`)
+		INSERT INTO contact(user_id, contact_id, name, lastname, created_at, updated_at) 
+		VALUES($1, $2, $3, $4, $5, $6)`)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
-		contact.UserID, contact.ID, contact.Name, contact.LastName, contact.CreatedAt)
+		contact.UserID, contact.ID, contact.Name, contact.LastName, contact.CreatedAt, contact.UpdatedAt)
 	if err != nil {
 		txn.Rollback()
 		// "23505": "unique_violation"

@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/tsmweb/use-service/common"
+	"github.com/tsmweb/user-service/common"
 	"net/http"
 	"net/http/httptest"
 	"testing"

@@ -1,6 +1,6 @@
-module github.com/tsmweb/use-service
+module github.com/tsmweb/user-service
 
-go 1.15
+go 1.16
 
 require (
 	github.com/google/wire v0.4.0

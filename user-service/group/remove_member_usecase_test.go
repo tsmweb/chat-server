@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/tsmweb/use-service/common"
+	"github.com/tsmweb/user-service/common"
 	"testing"
 )
 

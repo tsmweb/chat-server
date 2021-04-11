@@ -8,12 +8,12 @@ import (
 type Presenter struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
-	Description string `json:"description"`
+	Description string `json:"description,omitempty"`
 	Owner       string `json:"owner"`
 	Members     []*MemberPresenter `json:"members"`
-	UpdatedBy   string    `json:"updated_at"`
+	UpdatedBy   string    `json:"updated_by,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	UpdatedAt   time.Time `json:"updated_at,omitempty"`
 }
 
 // ToEntity mapper Presenter to Entity
@@ -52,9 +52,9 @@ type MemberPresenter struct {
 	GroupID   string    `json:"group_id"`
 	UserID    string    `json:"user_id"`
 	Admin     bool      `json:"admin"`
-	UpdatedBy string    `json:"updated_at"`
+	UpdatedBy string    `json:"updated_by,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 }
 
 // ToEntity mapper MemberPresenter to Entity

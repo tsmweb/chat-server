@@ -8,9 +8,10 @@ package main
 import (
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/middleware"
-	"github.com/tsmweb/use-service/contact"
-	"github.com/tsmweb/use-service/helper/database"
-	"github.com/tsmweb/use-service/helper/setting"
+	"github.com/tsmweb/user-service/contact"
+	"github.com/tsmweb/user-service/group"
+	"github.com/tsmweb/user-service/helper/database"
+	"github.com/tsmweb/user-service/helper/setting"
 )
 
 // Injectors from wire.go:
@@ -31,6 +32,25 @@ func InitContactRouter() *contact.Router {
 	service := contact.NewService(getUseCase, getAllUseCase, getPresenceUseCase, createUseCase, updateUseCase, deleteUseCase, blockUseCase, unblockUseCase)
 	controller := contact.NewController(jwt, service)
 	router := contact.NewRouter(auth, controller)
+	return router
+}
+
+func InitGroupRouter() *group.Router {
+	jwt := jwtProvider()
+	auth := middleware.NewAuth(jwt)
+	database := dataBaseProvider()
+	repository := group.NewRepositoryPostgres(database)
+	getUseCase := group.NewGetUseCase(repository)
+	getAllUseCase := group.NewGetAllUseCase(repository)
+	createUseCase := group.NewCreateUseCase(repository)
+	updateUseCase := group.NewUpdateUseCase(repository)
+	deleteUseCase := group.NewDeleteUseCase(repository)
+	addMemberUseCase := group.NewAddMemberUseCase(repository)
+	removeMemberUseCase := group.NewRemoveMemberUseCase(repository)
+	setAdminUseCase := group.NewSetAdminUseCase(repository)
+	service := group.NewService(getUseCase, getAllUseCase, createUseCase, updateUseCase, deleteUseCase, addMemberUseCase, removeMemberUseCase, setAdminUseCase)
+	controller := group.NewController(jwt, service)
+	router := group.NewRouter(auth, controller)
 	return router
 }
 

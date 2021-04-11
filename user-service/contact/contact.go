@@ -20,7 +20,6 @@ func NewContact(ID, name, lastname, userID string) (*Contact, error) {
 		LastName:  lastname,
 		UserID:    userID,
 		CreatedAt: time.Now().UTC(),
-		UpdatedAt: time.Now().UTC(),
 	}
 
 	err := c.Validate()

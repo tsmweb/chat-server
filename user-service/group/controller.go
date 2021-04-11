@@ -9,7 +9,7 @@ import (
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/cerror"
 	ctlr "github.com/tsmweb/go-helper-api/controller"
-	"github.com/tsmweb/use-service/common"
+	"github.com/tsmweb/user-service/common"
 	"log"
 	"net/http"
 )
@@ -234,6 +234,7 @@ func (c *controller) Delete() http.Handler {
 	})
 }
 
+// AddMember add member to group.
 func (c *controller) AddMember() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !c.HasContentType(r, ctlr.MimeApplicationJSON) {
@@ -290,6 +291,7 @@ func (c *controller) AddMember() http.Handler {
 	})
 }
 
+// RemoveMember removes a member from the group.
 func (c *controller) RemoveMember() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, err := c.ExtractID(r)
@@ -326,6 +328,7 @@ func (c *controller) RemoveMember() http.Handler {
 	})
 }
 
+// SetAdmin elevates a member to administrator status.
 func (c *controller) SetAdmin() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !c.HasContentType(r, ctlr.MimeApplicationJSON) {

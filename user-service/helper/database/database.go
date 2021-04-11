@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/tsmweb/use-service/helper/setting"
+	"github.com/tsmweb/user-service/helper/setting"
 	"time"
 )
 

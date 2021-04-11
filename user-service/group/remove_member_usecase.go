@@ -2,7 +2,7 @@ package group
 
 import (
 	"context"
-	"github.com/tsmweb/use-service/common"
+	"github.com/tsmweb/user-service/common"
 )
 
 // RemoveMemberUseCase removes member from Group, otherwise an error is returned.
