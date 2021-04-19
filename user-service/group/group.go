@@ -33,7 +33,7 @@ func NewGroup(name, description, owner string) (*Group, error) {
 		CreatedAt:   time.Now().UTC(),
 	}
 
-	err = g.Validate()
+	err = g.Validate(CREATE)
 	if err != nil {
 		return nil, err
 	}
@@ -42,14 +42,14 @@ func NewGroup(name, description, owner string) (*Group, error) {
 }
 
 // Validate model Group
-func (g *Group) Validate() error {
+func (g *Group) Validate(op Operation) error {
 	if g.ID == "" {
 		return ErrIDValidateModel
 	}
 	if g.Name == "" {
 		return ErrNameValidateModel
 	}
-	if g.Owner == "" {
+	if op == CREATE && g.Owner == "" {
 		return ErrOwnerValidateModel
 	}
 	return nil

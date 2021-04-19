@@ -22,7 +22,7 @@ func NewUpdateUseCase(r Repository) UpdateUseCase {
 
 // Execute performs the update use case.
 func (u *updateUseCase) Execute(ctx context.Context, group *Group) error {
-	err := group.Validate()
+	err := group.Validate(UPDATE)
 	if err != nil {
 		return err
 	}

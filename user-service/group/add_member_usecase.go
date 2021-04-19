@@ -23,16 +23,6 @@ func NewAddMemberUseCase(r Repository) AddMemberUseCase {
 
 // Execute performs the creation use case.
 func (u *addMemberUseCase) Execute(ctx context.Context, groupID string, userID string, admin bool) error {
-	err := u.checkPermission(ctx, groupID)
-	if err != nil {
-		return err
-	}
-
-	member, err := NewMember(groupID, userID, admin)
-	if err != nil {
-		return err
-	}
-
 	ok, err := u.repository.ExistsGroup(ctx, groupID)
 	if err != nil {
 		return err
@@ -47,6 +37,16 @@ func (u *addMemberUseCase) Execute(ctx context.Context, groupID string, userID s
 	}
 	if !ok {
 		return ErrUserNotFound
+	}
+
+	err = u.checkPermission(ctx, groupID)
+	if err != nil {
+		return err
+	}
+
+	member, err := NewMember(groupID, userID, admin)
+	if err != nil {
+		return err
 	}
 
 	err = u.repository.AddMember(ctx, member)
