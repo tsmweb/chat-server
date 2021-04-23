@@ -1,13 +1,14 @@
 package user
 
 import (
+	"context"
 	"errors"
 	"github.com/tsmweb/go-helper-api/cerror"
 )
 
 // GetUseCase returns a User by ID, otherwise an error is returned.
 type GetUseCase interface {
-	Execute(ID string) (*User, error)
+	Execute(ctx context.Context, ID string) (*User, error)
 }
 
 type getUseCase struct {
@@ -20,8 +21,8 @@ func NewGetUseCase(repository Repository) GetUseCase {
 }
 
 // Execute executes the get use case.
-func (u *getUseCase) Execute(ID string) (*User, error) {
-	user, err := u.repository.Get(ID)
+func (u *getUseCase) Execute(ctx context.Context, ID string) (*User, error) {
+	user, err := u.repository.Get(ctx, ID)
 	if err != nil {
 		if errors.Is(err, cerror.ErrNotFound) {
 			return nil, ErrUserNotFound

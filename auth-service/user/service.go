@@ -1,10 +1,12 @@
 package user
 
+import "context"
+
 // Service service is a façade for use cases.
 type Service interface {
-	Get(ID string) (*User, error)
-	Create(ID, name, lastname, password string) error
-	Update(user *User) error
+	Get(ctx context.Context, ID string) (*User, error)
+	Create(ctx context.Context, ID, name, lastname, password string) error
+	Update(ctx context.Context, user *User) error
 }
 
 type service struct {
@@ -26,16 +28,16 @@ func NewService(
 }
 
 // Get performs the get use case.
-func (s *service) Get(ID string) (*User, error) {
-	return s.getUC.Execute(ID)
+func (s *service) Get(ctx context.Context, ID string) (*User, error) {
+	return s.getUC.Execute(ctx, ID)
 }
 
 // Create performs the creation use case.
-func (s *service) Create(ID, name, lastname, password string) error {
-	return s.createUC.Execute(ID, name, lastname, password)
+func (s *service) Create(ctx context.Context, ID, name, lastname, password string) error {
+	return s.createUC.Execute(ctx, ID, name, lastname, password)
 }
 
 // Update performs the update use case.
-func (s *service) Update(user *User) error {
-	return s.updateUC.Execute(user)
+func (s *service) Update(ctx context.Context, user *User) error {
+	return s.updateUC.Execute(ctx, user)
 }

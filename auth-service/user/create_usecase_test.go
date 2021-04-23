@@ -1,6 +1,7 @@
 package user
 
 import (
+	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -10,12 +11,13 @@ import (
 
 func TestCreateUseCase_Execute(t *testing.T) {
 	//t.Parallel()
+	ctx := context.Background()
 
 	t.Run("when use case fails with ErrValidateModel", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		uc := NewCreateUseCase(r)
-		err := uc.Execute("+5518999999999", "Steve", "Jobs", "")
+		err := uc.Execute(ctx,"+5518999999999", "Steve", "Jobs", "")
 
 		assert.Equal(t, ErrPasswordValidateModel, err)
 	})
@@ -23,12 +25,12 @@ func TestCreateUseCase_Execute(t *testing.T) {
 	t.Run("when use case fails with ErrUserAlreadyExists", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("Create", mock.Anything).
+		r.On("Create", mock.Anything, mock.Anything).
 			Return(cerror.ErrRecordAlreadyRegistered).
 			Once()
 
 		uc := NewCreateUseCase(r)
-		err := uc.Execute("+5518999999999", "Steve", "Jobs", "123456")
+		err := uc.Execute(ctx, "+5518999999999", "Steve", "Jobs", "123456")
 
 		assert.Equal(t, ErrUserAlreadyExists, err)
 	})
@@ -36,12 +38,12 @@ func TestCreateUseCase_Execute(t *testing.T) {
 	t.Run("when use case fails with Error", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("Create", mock.Anything).
+		r.On("Create", mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
 
 		uc := NewCreateUseCase(r)
-		err := uc.Execute("+5518999999999", "Steve", "Jobs", "123456")
+		err := uc.Execute(ctx, "+5518999999999", "Steve", "Jobs", "123456")
 
 		assert.NotNil(t, err)
 	})
@@ -49,12 +51,12 @@ func TestCreateUseCase_Execute(t *testing.T) {
 	t.Run("when use case succeeds", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("Create", mock.Anything).
+		r.On("Create", mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
 
 		uc := NewCreateUseCase(r)
-		err := uc.Execute("+5518999999999", "Steve", "Jobs", "123456")
+		err := uc.Execute(ctx, "+5518999999999", "Steve", "Jobs", "123456")
 
 		assert.Nil(t, err)
 	})

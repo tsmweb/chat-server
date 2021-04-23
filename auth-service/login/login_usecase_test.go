@@ -1,6 +1,7 @@
 package login
 
 import (
+	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -12,13 +13,14 @@ import (
 
 func TestLoginUseCase_Execute(t *testing.T) {
 	//t.Parallel()
+	ctx := context.Background()
 
 	t.Run("when use case fails with ErrValidateModel", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
 		j := new(common.MockJWT)
 		uc := NewLoginUseCase(r, j)
-		_, err := uc.Execute("+5518999999999", "")
+		_, err := uc.Execute(ctx, "+5518999999999", "")
 
 		assert.Equal(t, ErrPasswordValidateModel, err)
 	})
@@ -26,25 +28,22 @@ func TestLoginUseCase_Execute(t *testing.T) {
 	t.Run("when use case fails with ErrUnauthorized", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("Login", mock.Anything).
+		r.On("Login", mock.Anything, mock.Anything).
 			Return(false, nil).
 			Once()
 		j := new(common.MockJWT)
-
 		uc := NewLoginUseCase(r, j)
-		_, err := uc.Execute("+5518999999999", "123456")
+		_, err := uc.Execute(ctx, "+5518999999999", "123456")
 
 		assert.Equal(t, cerror.ErrUnauthorized, err)
 
-		r.On("Login", mock.Anything).
+		r.On("Login", mock.Anything, mock.Anything).
 			Return(true, nil).
 			Once()
-
 		j.On("GenerateToken", "+5518999999999", setting.ExpireToken()).
 			Return("", nil).
 			Once()
-
-		_, err = uc.Execute("+5518999999999", "123456")
+		_, err = uc.Execute(ctx, "+5518999999999", "123456")
 
 		assert.Equal(t, cerror.ErrUnauthorized, err)
 	})
@@ -52,25 +51,22 @@ func TestLoginUseCase_Execute(t *testing.T) {
 	t.Run("when use case fails with Error", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-		r.On("Login", mock.Anything).
+		r.On("Login", mock.Anything, mock.Anything).
 			Return(false, errors.New("error")).
 			Once()
 		j := new(common.MockJWT)
-
 		uc := NewLoginUseCase(r, j)
-		_, err := uc.Execute("+5518999999999", "123456")
+		_, err := uc.Execute(ctx, "+5518999999999", "123456")
 
 		assert.NotNil(t, err)
 
-		r.On("Login", mock.Anything).
+		r.On("Login", mock.Anything, mock.Anything).
 			Return(true, nil).
 			Once()
-
 		j.On("GenerateToken", "+5518999999999", setting.ExpireToken()).
 			Return(nil, errors.New("error")).
 			Once()
-
-		_, err = uc.Execute("+5518999999999", "123456")
+		_, err = uc.Execute(ctx, "+5518999999999", "123456")
 
 		assert.NotNil(t, err)
 	})
@@ -80,17 +76,15 @@ func TestLoginUseCase_Execute(t *testing.T) {
 		token := "A1B2C3D4E5F6"
 
 		r := new(mockRepository)
-		r.On("Login", mock.Anything).
+		r.On("Login", mock.Anything, mock.Anything).
 			Return(true, nil).
 			Once()
-
 		j := new(common.MockJWT)
 		j.On("GenerateToken", "+5518999999999", setting.ExpireToken()).
 			Return(token, nil).
 			Once()
-
 		uc := NewLoginUseCase(r, j)
-		tokenUC, err := uc.Execute("+5518999999999", "123456")
+		tokenUC, err := uc.Execute(ctx, "+5518999999999", "123456")
 
 		assert.Nil(t, err)
 		assert.Equal(t, token, tokenUC)

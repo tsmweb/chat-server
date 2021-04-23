@@ -1,6 +1,7 @@
 package login
 
 import (
+	"context"
 	"github.com/tsmweb/auth-service/helper/setting"
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/cerror"
@@ -9,7 +10,7 @@ import (
 // LoginUseCase returns a token if the credentials are valid, otherwise an error
 // is returned.
 type LoginUseCase interface {
-	Execute(ID, password string) (string, error)
+	Execute(ctx context.Context, ID, password string) (string, error)
 }
 
 type loginUseCase struct {
@@ -23,13 +24,13 @@ func NewLoginUseCase(repository Repository, jwt auth.JWT) LoginUseCase {
 }
 
 // Execute executes the login use case.
-func (u *loginUseCase) Execute(ID, password string) (string, error) {
+func (u *loginUseCase) Execute(ctx context.Context, ID, password string) (string, error) {
 	l, err := NewLogin(ID, password)
 	if err != nil {
 		return "", err
 	}
 
-	ok, err := u.repository.Login(l)
+	ok, err := u.repository.Login(ctx, l)
 	if err != nil {
 		return "", err
 	}

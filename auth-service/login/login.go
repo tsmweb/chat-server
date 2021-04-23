@@ -18,7 +18,7 @@ func NewLogin(ID, password string) (*Login, error) {
 	l := &Login{
 		ID: ID,
 		Password: password,
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().UTC(),
 	}
 
 	err := l.Validate()

@@ -1,14 +1,15 @@
 package login
 
 import (
-	"github.com/tsmweb/auth-service/user"
+	"context"
+	"github.com/tsmweb/auth-service/common"
 	"github.com/tsmweb/go-helper-api/cerror"
 	"time"
 )
 
 // UpdateUseCase updates the login password, otherwise an error will be returned.
 type UpdateUseCase interface {
-	Execute(login *Login) error
+	Execute(ctx context.Context, login *Login) error
 }
 
 type updateUseCase struct {
@@ -23,25 +24,40 @@ func NewUpdateUseCase(r Repository) UpdateUseCase {
 }
 
 // Execute executes the update use case.
-func (u *updateUseCase) Execute(login *Login) error {
+func (u *updateUseCase) Execute(ctx context.Context, login *Login) error {
 	err := login.Validate()
 	if err != nil {
 		return err
 	}
 
-	login.UpdatedAt = time.Now()
+	err = u.checkPermission(ctx, login.ID)
+	if err != nil {
+		return err
+	}
+
+	login.UpdatedAt = time.Now().UTC()
 
 	err = login.ApplyHashPassword()
 	if err != nil {
 		return cerror.ErrInternalServer
 	}
 
-	rows, err := u.repository.Update(login)
+	ok, err := u.repository.Update(ctx, login)
 	if err != nil {
 		return err
 	}
-	if rows <= 0 {
-		return user.ErrUserNotFound
+	if !ok {
+		return ErrUserNotFound
+	}
+
+	return nil
+}
+
+func (u *updateUseCase) checkPermission(ctx context.Context, userID string) error {
+	authID := ctx.Value(common.AuthContextKey).(string)
+	// checks if the ID owns the data
+	if userID != authID {
+		return ErrOperationNotAllowed
 	}
 
 	return nil

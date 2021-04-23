@@ -1,9 +1,11 @@
 package login
 
+import "context"
+
 // Service service is a façade for use cases.
 type Service interface {
-	Login(ID, password string) (string, error)
-	Update(login *Login) error
+	Login(ctx context.Context, ID, password string) (string, error)
+	Update(ctx context.Context, login *Login) error
 }
 
 type service struct {
@@ -22,11 +24,11 @@ func NewService(
 }
 
 // Login performs the login use case.
-func (s *service) Login(ID, password string) (string, error) {
-	return s.loginUC.Execute(ID, password)
+func (s *service) Login(ctx context.Context, ID, password string) (string, error) {
+	return s.loginUC.Execute(ctx, ID, password)
 }
 
 // Update performs the update use case.
-func (s *service) Update(login *Login) error {
-	return s.updateUC.Execute(login)
+func (s *service) Update(ctx context.Context, login *Login) error {
+	return s.updateUC.Execute(ctx, login)
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/tsmweb/auth-service/common"
 	"net/http"
 	"net/http/httptest"
@@ -26,11 +27,11 @@ func TestController_Get(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", req, "id").
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
 		mService := new(mockService)
-		mService.On("Get", "+5518999999999").
+		mService.On("Get", mock.Anything, mock.Anything).
 			Return(User{}, nil).
 			Once()
 
@@ -46,11 +47,11 @@ func TestController_Get(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", req, "id").
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Get", "+5518999999999").
+		mService.On("Get", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
 
@@ -66,11 +67,11 @@ func TestController_Get(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", req, "id").
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Get", "+5518999999999").
+		mService.On("Get", mock.Anything, mock.Anything).
 			Return(nil, ErrUserNotFound).
 			Once()
 
@@ -98,11 +99,11 @@ func TestController_Get(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", req, "id").
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Get", "+5518999999999").
+		mService.On("Get", mock.Anything, mock.Anything).
 			Return(user, nil).
 			Once()
 
@@ -165,7 +166,7 @@ func TestController_Create(t *testing.T) {
 
 		mJWT := new(common.MockJWT)
 		mService := new(mockService)
-		mService.On("Create", p.ID, p.Name, p.LastName, p.Password).
+		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(ErrNameValidateModel).
 			Once()
 
@@ -193,7 +194,7 @@ func TestController_Create(t *testing.T) {
 
 		mJWT := new(common.MockJWT)
 		mService := new(mockService)
-		mService.On("Create", p.ID, p.Name, p.LastName, p.Password).
+		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(ErrUserAlreadyExists).
 			Once()
 
@@ -221,7 +222,7 @@ func TestController_Create(t *testing.T) {
 
 		mJWT := new(common.MockJWT)
 		mService := new(mockService)
-		mService.On("Create", p.ID, p.Name, p.LastName, p.Password).
+		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
 
@@ -249,7 +250,7 @@ func TestController_Create(t *testing.T) {
 
 		mJWT := new(common.MockJWT)
 		mService := new(mockService)
-		mService.On("Create", p.ID, p.Name, p.LastName, p.Password).
+		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
 
@@ -285,7 +286,7 @@ func TestController_Update(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", req, "id").
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("jwt error")).
 			Once()
 		mService := new(mockService)
@@ -303,15 +304,43 @@ func TestController_Update(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", req, "id").
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-
 		ctrl := NewController(mJWT, mService)
 		ctrl.Update().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
+	})
+
+	t.Run("when controller return StatusBadRequest", func(t *testing.T) {
+		//t.Parallel()
+		p := &Presenter{
+			ID:       "+5518999999999",
+			LastName: "Jobs",
+		}
+
+		pj, err := json.Marshal(p)
+		assert.Nil(t, err)
+
+		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader(pj))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		mJWT := new(common.MockJWT)
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
+			Return("+5518999999999", nil).
+			Once()
+		mService := new(mockService)
+		mService.On("Update", mock.Anything, mock.Anything).
+			Return(ErrNameValidateModel).
+			Once()
+
+		ctrl := NewController(mJWT, mService)
+		ctrl.Update().ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
 	t.Run("when controller return StatusUnauthorized", func(t *testing.T) {
@@ -330,44 +359,18 @@ func TestController_Update(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", req, "id").
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
+		mService.On("Update", mock.Anything, mock.Anything).
+			Return(ErrOperationNotAllowed).
+			Once()
 
 		ctrl := NewController(mJWT, mService)
 		ctrl.Update().ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
-	})
-
-	t.Run("when controller return StatusBadRequest", func(t *testing.T) {
-		//t.Parallel()
-		p := &Presenter{
-			ID:       "+5518999999999",
-			LastName: "Jobs",
-		}
-
-		pj, err := json.Marshal(p)
-		assert.Nil(t, err)
-
-		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader(pj))
-		req.Header.Set("Content-Type", "application/json")
-		rec := httptest.NewRecorder()
-
-		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", req, "id").
-			Return("+5518999999999", nil).
-			Once()
-		mService := new(mockService)
-		mService.On("Update", p.ToEntity()).
-			Return(ErrNameValidateModel).
-			Once()
-
-		ctrl := NewController(mJWT, mService)
-		ctrl.Update().ServeHTTP(rec, req)
-
-		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
 	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
@@ -386,11 +389,11 @@ func TestController_Update(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", req, "id").
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Update", p.ToEntity()).
+		mService.On("Update", mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
 
@@ -416,11 +419,11 @@ func TestController_Update(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", req, "id").
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Update", p.ToEntity()).
+		mService.On("Update", mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
 

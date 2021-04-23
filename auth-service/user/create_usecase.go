@@ -1,13 +1,14 @@
 package user
 
 import (
+	"context"
 	"errors"
 	"github.com/tsmweb/go-helper-api/cerror"
 )
 
 // CreateUseCase creates a new User, otherwise an error is returned.
 type CreateUseCase interface {
-	Execute(ID, name, lastname, password string) error
+	Execute(ctx context.Context, ID, name, lastname, password string) error
 }
 
 type createUseCase struct {
@@ -20,13 +21,13 @@ func NewCreateUseCase(repository Repository) CreateUseCase {
 }
 
 // Execute executes the creation use case.
-func (u *createUseCase) Execute(ID, name, lastname, password string) error {
+func (u *createUseCase) Execute(ctx context.Context, ID, name, lastname, password string) error {
 	user, err := NewUser(ID, name, lastname, password)
 	if err != nil {
 		return err
 	}
 
-	err = u.repository.Create(user)
+	err = u.repository.Create(ctx, user)
 	if err != nil {
 		if errors.Is(err, cerror.ErrRecordAlreadyRegistered) {
 			return ErrUserAlreadyExists

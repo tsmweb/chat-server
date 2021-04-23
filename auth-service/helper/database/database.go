@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"github.com/tsmweb/auth-service/helper/setting"
@@ -36,13 +37,15 @@ func NewPostgresDatabase() Database {
 		panic(err.Error())
 	}
 
-	err = db.Ping()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	err = db.PingContext(ctx)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	db.SetMaxOpenConns(50)
-	db.SetMaxIdleConns(2)
+	db.SetMaxOpenConns(100)
+	db.SetMaxIdleConns(5)
 	db.SetConnMaxLifetime(time.Minute * 5)
 
 	return &PostgresDatabase{db}

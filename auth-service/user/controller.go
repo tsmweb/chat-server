@@ -1,8 +1,10 @@
 package user
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"github.com/tsmweb/auth-service/common"
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/cerror"
 	ctlr "github.com/tsmweb/go-helper-api/controller"
@@ -43,7 +45,7 @@ func (c *controller) Get() http.Handler {
 			return
 		}
 
-		user, err := c.service.Get(ID)
+		user, err := c.service.Get(r.Context(), ID)
 		if err != nil {
 			log.Println(err.Error())
 
@@ -79,7 +81,7 @@ func (c *controller) Create() http.Handler {
 			return
 		}
 
-		err = c.service.Create(input.ID, input.Name, input.LastName, input.Password)
+		err = c.service.Create(r.Context(), input.ID, input.Name, input.LastName, input.Password)
 		if err != nil {
 			log.Println(err.Error())
 
@@ -110,7 +112,7 @@ func (c *controller) Update() http.Handler {
 			return
 		}
 
-		ID, err := c.ExtractID(r)
+		userID, err := c.ExtractID(r)
 		if err != nil {
 			log.Println(err.Error())
 			c.RespondWithError(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
@@ -125,19 +127,20 @@ func (c *controller) Update() http.Handler {
 			return
 		}
 
-		//checks if the ID owns the data
-		if input.ID != ID {
-			c.RespondWithError(w, http.StatusUnauthorized, "You are not authorized to change the data")
-			return
-		}
+		ctx := context.WithValue(r.Context(), common.AuthContextKey, userID)
 
-		err = c.service.Update(input.ToEntity())
+		err = c.service.Update(ctx, input.ToEntity())
 		if err != nil {
 			log.Println(err.Error())
 
 			var errValidateModel *cerror.ErrValidateModel
 			if errors.As(err, &errValidateModel) {
 				c.RespondWithError(w, http.StatusBadRequest, err.Error())
+				return
+			}
+
+			if errors.Is(err, ErrOperationNotAllowed) {
+				c.RespondWithError(w, http.StatusUnauthorized, err.Error())
 				return
 			}
 

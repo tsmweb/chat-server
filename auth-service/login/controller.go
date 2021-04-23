@@ -1,9 +1,10 @@
 package login
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
-	"github.com/tsmweb/auth-service/user"
+	"github.com/tsmweb/auth-service/common"
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/cerror"
 	"log"
@@ -50,7 +51,7 @@ func (c *controller) Login() http.Handler {
 			return
 		}
 
-		token, err := c.service.Login(input.ID, input.Password)
+		token, err := c.service.Login(r.Context(), input.ID, input.Password)
 		if err != nil {
 			log.Println(err.Error())
 			var errValidateModel *cerror.ErrValidateModel
@@ -80,7 +81,7 @@ func (c *controller) Update() http.Handler {
 			return
 		}
 
-		ID, err := c.ExtractID(r)
+		userID, err := c.ExtractID(r)
 		if err != nil {
 			log.Println(err.Error())
 			c.RespondWithError(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
@@ -96,13 +97,9 @@ func (c *controller) Update() http.Handler {
 			return
 		}
 
-		// checks if the ID owns the data
-		if input.ID != ID {
-			c.RespondWithError(w, http.StatusUnauthorized, "You are not authorized to change the data")
-			return
-		}
+		ctx := context.WithValue(r.Context(), common.AuthContextKey, userID)
 
-		err = c.service.Update(input.ToEntity())
+		err = c.service.Update(ctx, input.ToEntity())
 		if err != nil {
 			log.Println(err.Error())
 			var errValidateModel *cerror.ErrValidateModel
@@ -111,7 +108,12 @@ func (c *controller) Update() http.Handler {
 				return
 			}
 
-			if errors.Is(err, user.ErrUserNotFound) {
+			if errors.Is(err, ErrOperationNotAllowed) {
+				c.RespondWithError(w, http.StatusUnauthorized, err.Error())
+				return
+			}
+
+			if errors.Is(err, ErrUserNotFound) {
 				c.RespondWithError(w, http.StatusNotFound, err.Error())
 				return
 			}

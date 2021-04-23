@@ -22,7 +22,7 @@ func NewUser(ID, name, lastname, password string) (*User, error) {
 		Name:     name,
 		LastName: lastname,
 		Password: password,
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().UTC(),
 	}
 
 	err := p.Validate(CREATE)

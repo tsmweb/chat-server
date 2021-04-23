@@ -1,10 +1,12 @@
 package user
 
 import (
+	"context"
 	"database/sql"
 	"github.com/lib/pq"
 	"github.com/tsmweb/auth-service/helper/database"
 	"github.com/tsmweb/go-helper-api/cerror"
+	"time"
 )
 
 // repositoryPostgres implementation for Repository interface.
@@ -18,20 +20,26 @@ func NewRepositoryPostgres(db database.Database) Repository {
 }
 
 // Get returns the user by id.
-func (r *repositoryPostgres) Get(ID string) (*User, error) {
-	stmt, err := r.dataBase.DB().Prepare(`
-		SELECT ID, name, lastname, created_at, updated_at FROM "user" WHERE ID = $1`)
+func (r *repositoryPostgres) Get(ctx context.Context, ID string) (*User, error) {
+	stmt, err := r.dataBase.DB().PrepareContext(ctx, `
+		SELECT u.id, 
+			u.name, 
+			u.lastname, 
+			u.created_at,
+			COALESCE(u.updated_at, u.created_at, u.updated_at) AS updated_at
+		FROM "user" u WHERE u.id = $1`)
 	if err != nil {
 		return nil, err
 	}
+	defer stmt.Close()
 
 	var user User
-	err = stmt.QueryRow(ID).Scan(
-		&user.ID,
-		&user.Name,
-		&user.LastName,
-		&user.CreatedAt,
-		&user.UpdatedAt)
+	err = stmt.QueryRowContext(ctx, ID).
+		Scan(&user.ID,
+			&user.Name,
+			&user.LastName,
+			&user.CreatedAt,
+			&user.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, cerror.ErrNotFound
@@ -44,13 +52,21 @@ func (r *repositoryPostgres) Get(ID string) (*User, error) {
 }
 
 // Create new user in the data base.
-func (r *repositoryPostgres) Create(user *User) error {
+func (r *repositoryPostgres) Create(ctx context.Context, user *User) error {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return err
 	}
 
-	_, err = txn.Exec(`INSERT INTO "user"(id, name, lastname, created_at) VALUES($1, $2, $3, $4)`,
+	stmt, err := txn.PrepareContext(ctx, `
+		INSERT INTO "user"(id, name, lastname, created_at) 
+		VALUES($1, $2, $3, $4)`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx,
 		user.ID, user.Name, user.LastName, user.CreatedAt)
 	if err != nil {
 		txn.Rollback()
@@ -62,8 +78,7 @@ func (r *repositoryPostgres) Create(user *User) error {
 		return err
 	}
 
-	_, err = txn.Exec(`INSERT INTO login(user_id, password, created_at) VALUES($1, $2, $3)`,
-		user.ID, user.Password, user.CreatedAt)
+	err = r.addLogin(ctx, txn, user.ID, user.Password, user.CreatedAt)
 	if err != nil {
 		txn.Rollback()
 		return err
@@ -79,33 +94,55 @@ func (r *repositoryPostgres) Create(user *User) error {
 }
 
 // Update user data in the data base.
-func (r *repositoryPostgres) Update(user *User) (int, error) {
+func (r *repositoryPostgres) Update(ctx context.Context, user *User) (bool, error) {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
-		return -1, err
+		return false, err
 	}
 
-	result, err := txn.Exec(`
+	stmt, err := txn.PrepareContext(ctx, `
 		UPDATE "user" 
 		SET name = $1, lastname = $2, updated_at = $3
-		WHERE id = $4`,
+		WHERE id = $4`)
+	if err != nil {
+		return false, err
+	}
+	defer stmt.Close()
+
+	result, err := stmt.ExecContext(ctx,
 		user.Name, user.LastName, user.UpdatedAt, user.ID)
 	if err != nil {
 		txn.Rollback()
-		return -1, err
+		return false, err
 	}
 
 	ra, _ := result.RowsAffected()
 	if ra != 1 {
 		txn.Rollback()
-		return 0, nil
+		return false, nil
 	}
 
 	err = txn.Commit()
 	if err != nil {
 		txn.Rollback()
-		return -1, err
+		return false, err
 	}
 
-	return int(ra), nil
+	return true, nil
+}
+
+func (r *repositoryPostgres) addLogin(ctx context.Context,
+	txn *sql.Tx, userID string, password string, createdAt time.Time) error {
+	stmt, err := txn.PrepareContext(ctx, `
+		INSERT INTO login(user_id, password, created_at) 
+		VALUES($1, $2, $3)`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx,
+		userID, password, createdAt)
+
+	return err
 }

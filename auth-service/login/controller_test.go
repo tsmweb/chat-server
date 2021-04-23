@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/tsmweb/auth-service/common"
-	"github.com/tsmweb/auth-service/user"
 	"github.com/tsmweb/go-helper-api/cerror"
 	"net/http"
 	"net/http/httptest"
@@ -71,7 +71,7 @@ func TestController_Login(t *testing.T) {
 
 		mJWT := new(common.MockJWT)
 		mService := new(mockService)
-		mService.On("Login", vm.ID, vm.Password).
+		mService.On("Login", mock.Anything, mock.Anything, mock.Anything).
 			Return("", ErrPasswordValidateModel).
 			Once()
 
@@ -97,7 +97,7 @@ func TestController_Login(t *testing.T) {
 
 		mJWT := new(common.MockJWT)
 		mService := new(mockService)
-		mService.On("Login", vm.ID, vm.Password).
+		mService.On("Login", mock.Anything, mock.Anything, mock.Anything).
 			Return("", cerror.ErrUnauthorized).
 			Once()
 
@@ -123,7 +123,7 @@ func TestController_Login(t *testing.T) {
 
 		mJWT := new(common.MockJWT)
 		mService := new(mockService)
-		mService.On("Login", vm.ID, vm.Password).
+		mService.On("Login", mock.Anything, mock.Anything, mock.Anything).
 			Return("", errors.New("error")).
 			Once()
 
@@ -156,7 +156,7 @@ func TestController_Login(t *testing.T) {
 
 		mJWT := new(common.MockJWT)
 		mService := new(mockService)
-		mService.On("Login", vm.ID, vm.Password).
+		mService.On("Login", mock.Anything, mock.Anything, mock.Anything).
 			Return("A1B2C3D4E5F6", nil).
 			Once()
 
@@ -195,7 +195,7 @@ func TestController_Update(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", req, "id").
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("jwt error")).
 			Once()
 		mService := new(mockService)
@@ -213,7 +213,7 @@ func TestController_Update(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", req, "id").
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
@@ -239,10 +239,13 @@ func TestController_Update(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", req, "id").
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
+		mService.On("Update", mock.Anything, mock.Anything).
+			Return(ErrOperationNotAllowed).
+			Once()
 
 		ctrl := NewController(mJWT, mService)
 		ctrl.Update().ServeHTTP(rec, req)
@@ -265,11 +268,11 @@ func TestController_Update(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", req, "id").
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Update", vm.ToEntity()).
+		mService.On("Update", mock.Anything, mock.Anything).
 			Return(ErrPasswordValidateModel).
 			Once()
 
@@ -294,12 +297,12 @@ func TestController_Update(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", req, "id").
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Update", vm.ToEntity()).
-			Return(user.ErrUserNotFound).
+		mService.On("Update", mock.Anything, mock.Anything).
+			Return(ErrUserNotFound).
 			Once()
 
 		ctrl := NewController(mJWT, mService)
@@ -323,11 +326,11 @@ func TestController_Update(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", req, "id").
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Update", vm.ToEntity()).
+		mService.On("Update", mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
 
@@ -352,11 +355,11 @@ func TestController_Update(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", req, "id").
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
 		mService := new(mockService)
-		mService.On("Update", vm.ToEntity()).
+		mService.On("Update", mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
 
