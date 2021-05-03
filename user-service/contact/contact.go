@@ -22,8 +22,7 @@ func NewContact(ID, name, lastname, userID string) (*Contact, error) {
 		CreatedAt: time.Now().UTC(),
 	}
 
-	err := c.Validate()
-	if err != nil {
+	if err := c.Validate(); err != nil {
 		return c, err
 	}
 

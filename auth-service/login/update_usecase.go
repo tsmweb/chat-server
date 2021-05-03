@@ -30,15 +30,13 @@ func (u *updateUseCase) Execute(ctx context.Context, login *Login) error {
 		return err
 	}
 
-	err = u.checkPermission(ctx, login.ID)
-	if err != nil {
+	if err = u.checkPermission(ctx, login.ID); err != nil {
 		return err
 	}
 
 	login.UpdatedAt = time.Now().UTC()
 
-	err = login.ApplyHashPassword()
-	if err != nil {
+	if err = login.ApplyHashPassword(); err != nil {
 		return cerror.ErrInternalServer
 	}
 

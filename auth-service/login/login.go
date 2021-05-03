@@ -26,8 +26,7 @@ func NewLogin(ID, password string) (*Login, error) {
 		return l, err
 	}
 
-	err = l.ApplyHashPassword()
-	if err != nil {
+	if err = l.ApplyHashPassword(); err != nil {
 		return l, err
 	}
 

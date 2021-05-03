@@ -27,8 +27,7 @@ func (u *createUseCase) Execute(ctx context.Context, ID, name, lastname, passwor
 		return err
 	}
 
-	err = u.repository.Create(ctx, user)
-	if err != nil {
+	if err = u.repository.Create(ctx, user); err != nil {
 		if errors.Is(err, cerror.ErrRecordAlreadyRegistered) {
 			return ErrUserAlreadyExists
 		} else {

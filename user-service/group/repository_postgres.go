@@ -243,8 +243,7 @@ func (r *repositoryPostgres) Create(ctx context.Context, group *Group) error {
 		return err
 	}
 
-	err = txn.Commit()
-	if err != nil {
+	if err = txn.Commit(); err != nil {
 		txn.Rollback()
 		return err
 	}
@@ -284,8 +283,7 @@ func (r *repositoryPostgres) Update(ctx context.Context, group *Group) (bool, er
 		return false, nil
 	}
 
-	err = txn.Commit()
-	if err != nil {
+	if err = txn.Commit(); err != nil {
 		txn.Rollback()
 		return false, err
 	}
@@ -300,14 +298,12 @@ func (r *repositoryPostgres) Delete(ctx context.Context, groupID string) (bool, 
 		return false, err
 	}
 
-	err = r.addAllMembersToNotify(ctx, txn, groupID)
-	if err != nil {
+	if err = r.addAllMembersToNotify(ctx, txn, groupID); err != nil {
 		txn.Rollback()
 		return false, err
 	}
 
-	err = r.removeAllMembers(ctx, txn, groupID)
-	if err != nil {
+	if err = r.removeAllMembers(ctx, txn, groupID); err != nil {
 		txn.Rollback()
 		return false, err
 	}
@@ -332,8 +328,7 @@ func (r *repositoryPostgres) Delete(ctx context.Context, groupID string) (bool, 
 		return false, nil
 	}
 
-	err = txn.Commit()
-	if err != nil {
+	if err = txn.Commit(); err != nil {
 		txn.Rollback()
 		return false, err
 	}
@@ -348,8 +343,7 @@ func (r *repositoryPostgres) AddMember(ctx context.Context, member *Member) erro
 		return err
 	}
 
-	err = r.addMember(ctx, txn, member)
-	if err != nil {
+	if err = r.addMember(ctx, txn, member); err != nil {
 		txn.Rollback()
 		// "23505": "unique_violation"
 		if err.(*pq.Error).Code == "23505" {
@@ -359,8 +353,7 @@ func (r *repositoryPostgres) AddMember(ctx context.Context, member *Member) erro
 		return err
 	}
 
-	err = txn.Commit()
-	if err != nil {
+	if err = txn.Commit(); err != nil {
 		txn.Rollback()
 		return err
 	}
@@ -400,8 +393,7 @@ func (r *repositoryPostgres) SetAdmin(ctx context.Context, member *Member) (bool
 		return false, nil
 	}
 
-	err = txn.Commit()
-	if err != nil {
+	if err = txn.Commit(); err != nil {
 		txn.Rollback()
 		return false, err
 	}
@@ -437,8 +429,7 @@ func (r *repositoryPostgres) RemoveMember(ctx context.Context, groupID, userID s
 		return false, nil
 	}
 
-	err = txn.Commit()
-	if err != nil {
+	if err = txn.Commit(); err != nil {
 		txn.Rollback()
 		return false, err
 	}

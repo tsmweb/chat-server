@@ -84,8 +84,7 @@ func (r *repositoryPostgres) Create(ctx context.Context, user *User) error {
 		return err
 	}
 
-	err = txn.Commit()
-	if err != nil {
+	if err = txn.Commit(); err != nil {
 		txn.Rollback()
 		return err
 	}
@@ -122,8 +121,7 @@ func (r *repositoryPostgres) Update(ctx context.Context, user *User) (bool, erro
 		return false, nil
 	}
 
-	err = txn.Commit()
-	if err != nil {
+	if err = txn.Commit(); err != nil {
 		txn.Rollback()
 		return false, err
 	}

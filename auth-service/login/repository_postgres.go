@@ -66,8 +66,7 @@ func (r *repositoryPostgres) Update(ctx context.Context, login *Login) (bool, er
 		return false, nil
 	}
 
-	err = txn.Commit()
-	if err != nil {
+	if err = txn.Commit(); err != nil {
 		txn.Rollback()
 		return false, err
 	}

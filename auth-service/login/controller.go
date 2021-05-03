@@ -44,8 +44,8 @@ func (c *controller) Login() http.Handler {
 
 		input := Presenter{}
 		decoder := json.NewDecoder(r.Body)
-		err := decoder.Decode(&input)
-		if err != nil {
+
+		if err := decoder.Decode(&input); err != nil {
 			log.Println(err.Error())
 			c.RespondWithError(w, http.StatusUnprocessableEntity, "Malformed JSON")
 			return
@@ -90,8 +90,8 @@ func (c *controller) Update() http.Handler {
 
 		input := Presenter{}
 		decoder := json.NewDecoder(r.Body)
-		err = decoder.Decode(&input)
-		if err != nil {
+
+		if err = decoder.Decode(&input); err != nil {
 			log.Println(err.Error())
 			c.RespondWithError(w, http.StatusUnprocessableEntity, "Malformed JSON")
 			return
@@ -99,8 +99,7 @@ func (c *controller) Update() http.Handler {
 
 		ctx := context.WithValue(r.Context(), common.AuthContextKey, userID)
 
-		err = c.service.Update(ctx, input.ToEntity())
-		if err != nil {
+		if err = c.service.Update(ctx, input.ToEntity()); err != nil {
 			log.Println(err.Error())
 			var errValidateModel *cerror.ErrValidateModel
 			if errors.As(err, &errValidateModel) {

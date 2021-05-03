@@ -27,8 +27,7 @@ func (u *updateUseCase) Execute(ctx context.Context, user *User) error {
 		return err
 	}
 
-	err = u.checkPermission(ctx, user.ID)
-	if err != nil {
+	if err = u.checkPermission(ctx, user.ID); err != nil {
 		return err
 	}
 

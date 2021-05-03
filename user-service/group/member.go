@@ -21,8 +21,7 @@ func NewMember(groupID, userID string, admin bool) (*Member, error) {
 		CreatedAt: time.Now().UTC(),
 	}
 
-	err := m.Validate()
-	if err != nil {
+	if err := m.Validate(); err != nil {
 		return nil, err
 	}
 

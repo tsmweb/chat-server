@@ -23,8 +23,7 @@ var (
 )
 
 func Load(workDir string) {
-	err := godotenv.Load(path.Join(workDir, "/.env"))
-	if err != nil {
+	if err := godotenv.Load(path.Join(workDir, "/.env")); err != nil {
 		log.Fatalf("Error loading .env file [%s]", workDir)
 	}
 

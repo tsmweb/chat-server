@@ -33,8 +33,7 @@ func NewGroup(name, description, owner string) (*Group, error) {
 		CreatedAt:   time.Now().UTC(),
 	}
 
-	err = g.Validate(CREATE)
-	if err != nil {
+	if err = g.Validate(CREATE); err != nil {
 		return nil, err
 	}
 

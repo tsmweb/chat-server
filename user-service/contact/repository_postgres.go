@@ -181,8 +181,7 @@ func (r *repositoryPostgres) Create(ctx context.Context, contact *Contact) error
 		return err
 	}
 
-	err = txn.Commit()
-	if err != nil {
+	if err = txn.Commit(); err != nil {
 		txn.Rollback()
 		return err
 	}
@@ -222,8 +221,7 @@ func (r *repositoryPostgres) Update(ctx context.Context, contact *Contact) (bool
 		return false, nil
 	}
 
-	err = txn.Commit()
-	if err != nil {
+	if err = txn.Commit(); err != nil {
 		txn.Rollback()
 		return false, err
 	}
@@ -259,8 +257,7 @@ func (r *repositoryPostgres) Delete(ctx context.Context, userID, contactID strin
 		return false, nil
 	}
 
-	err = txn.Commit()
-	if err != nil {
+	if err = txn.Commit(); err != nil {
 		txn.Rollback()
 		return false, err
 	}
@@ -294,8 +291,7 @@ func (r *repositoryPostgres) Block(ctx context.Context, userID, blockedUserID st
 		return err
 	}
 
-	err = txn.Commit()
-	if err != nil {
+	if err = txn.Commit(); err != nil {
 		txn.Rollback()
 		return err
 	}
@@ -331,8 +327,7 @@ func (r *repositoryPostgres) Unblock(ctx context.Context, userID, blockedUserID 
 		return false, nil
 	}
 
-	err = txn.Commit()
-	if err != nil {
+	if err = txn.Commit(); err != nil {
 		txn.Rollback()
 		return false, err
 	}
