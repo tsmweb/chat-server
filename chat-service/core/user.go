@@ -2,17 +2,18 @@ package core
 
 import (
 	"encoding/json"
-	"github.com/gobwas/ws"
-	"github.com/gobwas/ws/wsutil"
 	"io"
 	"sync"
 )
 
 type User struct {
-	io sync.Mutex
+	id string
+
+	io   sync.Mutex
 	conn io.ReadWriteCloser
 
-	id   string
+	read  func(conn io.ReadWriter) (io.Reader, error)
+	write func(conn io.Writer, x interface{}) error
 }
 
 func (u *User) Receive() (*Message, error) {
@@ -42,12 +43,9 @@ func (u *User) readMessage() (*Message, error) {
 	u.io.Lock()
 	defer u.io.Unlock()
 
-	h, r, err := wsutil.NextReader(u.conn, ws.StateServerSide)
+	r, err := u.read(u.conn)
 	if err != nil {
 		return nil, err
-	}
-	if h.OpCode.IsControl() {
-		return nil, wsutil.ControlFrameHandler(u.conn, ws.StateServerSide)(h, r)
 	}
 
 	msg := &Message{}
@@ -60,26 +58,18 @@ func (u *User) readMessage() (*Message, error) {
 }
 
 func (u *User) WriteMessage(msg *Message) error {
-	return u.write(msg)
-}
-
-func (u *User) WriteError(msgID string, err error) error {
-	return u.write(Error{
-		ID: msgID,
-		Error: err.Error(),
-	})
-}
-
-func (u *User) write(x interface{}) error {
-	w := wsutil.NewWriter(u.conn, ws.StateServerSide, ws.OpText)
-	encoder := json.NewEncoder(w)
-
 	u.io.Lock()
 	defer u.io.Unlock()
 
-	if err := encoder.Encode(x); err != nil {
-		return err
-	}
+	return u.write(u.conn, msg)
+}
 
-	return w.Flush()
+func (u *User) WriteError(msgID string, err error) error {
+	u.io.Lock()
+	defer u.io.Unlock()
+
+	return u.write(u.conn, Error{
+		ID:    msgID,
+		Error: err.Error(),
+	})
 }

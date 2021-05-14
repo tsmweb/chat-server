@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
+	"github.com/tsmweb/chat-service/helper/connutil"
 	"github.com/tsmweb/easygo/netpoll"
 	"github.com/tsmweb/go-helper-api/concurrent/executor"
 	"net"
@@ -49,8 +50,10 @@ func NewChat(
 
 func (c *Chat) Register(userID string, conn net.Conn) error {
 	user := &User{
-		id:   userID,
-		conn: conn,
+		id:    userID,
+		conn:  conn,
+		read:  connutil.Read,
+		write: connutil.Write,
 	}
 
 	// Create netpoll event descriptor for conn.
