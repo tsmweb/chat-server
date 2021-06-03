@@ -36,12 +36,14 @@ func (c *Controller) Connect() http.Handler {
 		// upgrade connection
 		conn, _, _, err := ws.UpgradeHTTP(r, w)
 		if err != nil {
+			log.Println(err.Error())
 			c.RespondWithError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		// Register incoming connection in chat.
 		if err = c.chat.Register(userID, conn); err != nil {
+			log.Println(err.Error())
 			c.RespondWithError(w, http.StatusInternalServerError, err.Error())
 			return
 		}

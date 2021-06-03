@@ -1,6 +1,7 @@
 package core
 
 import (
+	"github.com/tsmweb/chat-service/common/ebus"
 	"log"
 )
 
@@ -9,6 +10,7 @@ type MessageDispatcher interface {
 }
 
 type OfflineMessageDispatcher struct {
+	eBus ebus.EBus
 }
 
 func NewOfflineMessageDispatcher() *OfflineMessageDispatcher {
@@ -21,6 +23,7 @@ func (omd *OfflineMessageDispatcher) Send(msg *Message) error {
 }
 
 type GroupMessageDispatcher struct {
+	eBus ebus.EBus
 }
 
 func NewGroupMessageDispatcher() *GroupMessageDispatcher {

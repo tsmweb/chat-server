@@ -1,10 +1,12 @@
 package core
 
 import (
+	"github.com/tsmweb/chat-service/common/ebus"
 	"log"
 )
 
 type PresenceDispatcher struct {
+	eBus ebus.EBus
 }
 
 func NewPresenceDispatcher() *PresenceDispatcher {

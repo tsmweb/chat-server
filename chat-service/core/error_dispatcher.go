@@ -1,8 +1,12 @@
 package core
 
-import "log"
+import (
+	"github.com/tsmweb/chat-service/common/ebus"
+	"log"
+)
 
 type ErrorDispatcher struct {
+	eBus ebus.EBus
 }
 
 func NewErrorDispatcher() *ErrorDispatcher {

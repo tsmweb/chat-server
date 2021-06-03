@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/tsmweb/chat-service/helper/setting"
+	"github.com/tsmweb/chat-service/common/setting"
 	"github.com/tsmweb/go-helper-api/concurrent/executor"
 	"github.com/tsmweb/go-helper-api/middleware"
 	"github.com/urfave/negroni"
@@ -49,10 +49,10 @@ func main() {
 
 	// Executor to perform background processing,
 	// limiting resource consumption when executing a collection of jobs.
-	exe := executor.New(setting.GoPollSize())
-	defer exe.Shutdown()
+	executor := executor.New(setting.GoPoolSize())
+	defer executor.Shutdown()
 
-	chatServer, err := InitChat(setting.Localhost(), exe)
+	chatServer, err := InitChat(setting.Localhost(), executor)
 	if err != nil {
 		log.Fatalf("[!] error when starting chat: %s\n", err.Error())
 	}

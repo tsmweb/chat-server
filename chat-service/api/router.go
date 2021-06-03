@@ -13,7 +13,7 @@ const version string = "v1"
 var resource string
 
 func init() {
-	resource = fmt.Sprintf("/%s/chat", version)
+	resource = fmt.Sprintf("/%s/ws", version)
 }
 
 // Router for chat end points.

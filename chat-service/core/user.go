@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"github.com/tsmweb/chat-service/common/connutil"
 	"io"
 	"sync"
 )
@@ -12,8 +13,8 @@ type User struct {
 	io   sync.Mutex
 	conn io.ReadWriteCloser
 
-	read  func(conn io.ReadWriter) (io.Reader, error)
-	write func(conn io.Writer, x interface{}) error
+	reader connutil.Reader
+	writer connutil.Writer
 }
 
 func (u *User) Receive() (*Message, error) {
@@ -43,7 +44,7 @@ func (u *User) readMessage() (*Message, error) {
 	u.io.Lock()
 	defer u.io.Unlock()
 
-	r, err := u.read(u.conn)
+	r, err := u.reader.Reader(u.conn)
 	if err != nil {
 		return nil, err
 	}
@@ -61,14 +62,14 @@ func (u *User) WriteMessage(msg *Message) error {
 	u.io.Lock()
 	defer u.io.Unlock()
 
-	return u.write(u.conn, msg)
+	return u.writer.Writer(u.conn, msg)
 }
 
 func (u *User) WriteError(msgID string, err error) error {
 	u.io.Lock()
 	defer u.io.Unlock()
 
-	return u.write(u.conn, Error{
+	return u.writer.Writer(u.conn, Error{
 		ID:    msgID,
 		Error: err.Error(),
 	})

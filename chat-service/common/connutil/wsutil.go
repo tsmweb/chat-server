@@ -7,7 +7,7 @@ import (
 	"io"
 )
 
-func Read(conn io.ReadWriter) (io.Reader, error) {
+func ReaderWS(conn io.ReadWriter) (io.Reader, error) {
 	h, r, err := wsutil.NextReader(conn, ws.StateServerSide)
 	if err != nil {
 		return nil, err
@@ -19,7 +19,7 @@ func Read(conn io.ReadWriter) (io.Reader, error) {
 	return r, nil
 }
 
-func Write(conn io.Writer, x interface{}) error {
+func WriterWS(conn io.Writer, x interface{}) error {
 	w := wsutil.NewWriter(conn, ws.StateServerSide, ws.OpText)
 	encoder := json.NewEncoder(w)
 

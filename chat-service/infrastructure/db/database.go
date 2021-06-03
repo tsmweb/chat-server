@@ -1,10 +1,10 @@
-package database
+package db
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/tsmweb/chat-service/helper/setting"
+	"github.com/tsmweb/chat-service/common/setting"
 	"time"
 )
 
@@ -16,7 +16,7 @@ var (
 	instance Database
 )
 
-// Database read only interface to access database connection.
+// Database read only interface to access db connection.
 type Database interface {
 	DB() *sql.DB
 }
@@ -49,7 +49,7 @@ func NewPostgresDatabase() Database {
 	return &PostgresDatabase{db}
 }
 
-// DB get instance of a connection to the database.
+// DB get instance of a connection to the db.
 func (pd *PostgresDatabase) DB() *sql.DB {
 	return pd.db
 }

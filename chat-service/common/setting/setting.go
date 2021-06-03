@@ -10,17 +10,18 @@ import (
 )
 
 var (
-	localhost  string
-	goPollSize int
-	host       string
-	port       int
-	user       string
-	password   string
-	dbname     string
-	dbschema   string
-	serverPort int
-	privateKey string
-	publicKey  string
+	localhost       string
+	goPoolSize      int
+	host            string
+	port            int
+	user            string
+	password        string
+	dbname          string
+	dbschema        string
+	serverPort      int
+	privateKey      string
+	publicKey       string
+	kafkaBrokerUrls string
 )
 
 func Load(workDir string) {
@@ -30,7 +31,7 @@ func Load(workDir string) {
 	}
 
 	localhost = os.Getenv("LOCAL_HOST")
-	goPollSize, _ = strconv.Atoi(os.Getenv("GOPOLL_SIZE"))
+	goPoolSize, _ = strconv.Atoi(os.Getenv("GOPOOL_SIZE"))
 	host = os.Getenv("PGHOST")
 	port, _ = strconv.Atoi(os.Getenv("PGPORT"))
 	user = os.Getenv("PGUSER")
@@ -40,16 +41,18 @@ func Load(workDir string) {
 
 	serverPort, _ = strconv.Atoi(os.Getenv("SERVER_PORT"))
 
-	privateKey = workDir + "/helper/setting/keys/private-key"
-	publicKey = workDir + "/helper/setting/keys/public-key.pub"
+	privateKey = workDir + "/common/setting/keys/private-key"
+	publicKey = workDir + "/common/setting/keys/public-key.pub"
+
+	kafkaBrokerUrls = os.Getenv("KAFKA_BROKER_URLS")
 }
 
 func Localhost() string {
 	return localhost
 }
 
-func GoPollSize() int {
-	return goPollSize
+func GoPoolSize() int {
+	return goPoolSize
 }
 
 func PathPrivateKey() string {
@@ -86,4 +89,8 @@ func DBName() string {
 
 func DBSchema() string {
 	return dbschema
+}
+
+func KafkaBrokerUrls() string {
+	return kafkaBrokerUrls
 }

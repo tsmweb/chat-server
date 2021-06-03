@@ -3,20 +3,23 @@ package core
 import (
 	"context"
 	"fmt"
-	"github.com/tsmweb/chat-service/helper/connutil"
-	"github.com/tsmweb/easygo/netpoll"
-	"github.com/tsmweb/go-helper-api/concurrent/executor"
+	"github.com/tsmweb/chat-service/common/concurrent"
+	"github.com/tsmweb/chat-service/common/connutil"
+	"github.com/tsmweb/chat-service/common/epoll"
 	"net"
 )
 
 type Chat struct {
-	poller    netpoll.Poller
-	executor  *executor.Executor
+	poller    epoll.EPoll
+	executor  concurrent.ExecutorService
 	localhost string
 
 	chUserIN  chan *User
 	chUserOUT chan *User
 	chMessage chan *Message
+
+	reader connutil.Reader
+	writer connutil.Writer
 
 	userStatusHandler *UserStatusHandler
 	messageHandler    *MessageHandler
@@ -24,9 +27,11 @@ type Chat struct {
 }
 
 func NewChat(
-	p netpoll.Poller,
-	e *executor.Executor,
+	p epoll.EPoll,
+	e concurrent.ExecutorService,
 	lh string,
+	reader connutil.Reader,
+	writer connutil.Writer,
 	ush *UserStatusHandler,
 	mh *MessageHandler,
 	ed *ErrorDispatcher,
@@ -38,6 +43,8 @@ func NewChat(
 		chUserIN:          make(chan *User),
 		chUserOUT:         make(chan *User),
 		chMessage:         make(chan *Message),
+		reader:            reader,
+		writer:            writer,
 		userStatusHandler: ush,
 		messageHandler:    mh,
 		errorDispatcher:   ed,
@@ -50,27 +57,32 @@ func NewChat(
 
 func (c *Chat) Register(userID string, conn net.Conn) error {
 	user := &User{
-		id:    userID,
-		conn:  conn,
-		read:  connutil.Read,
-		write: connutil.Write,
+		id:     userID,
+		conn:   conn,
+		reader: c.reader,
+		writer: c.writer,
 	}
 
-	// Create netpoll event descriptor for conn.
-	desc := netpoll.Must(netpoll.HandleRead(conn))
+	observer, err := c.poller.ObservableRead(conn)
+	if err != nil {
+		c.sendError(fmt.Errorf("%s Chat.Register(): %s", user.id, err.Error()))
+		return err
+	}
 
-	// Subscribe to events about conn.
-	err := c.poller.Start(desc, func(ev netpoll.Event) {
-		if ev&(netpoll.EventReadHup|netpoll.EventHup) != 0 {
-			c.poller.Stop(desc)
+	err = observer.Start(func(closed bool, err error) {
+		if closed || err != nil {
+			observer.Stop()
 			c.chUserOUT <- user
+			if err != nil {
+				c.sendError(fmt.Errorf("%s epoll.Event(): %s", user.id, err.Error()))
+			}
 			return
 		}
 
 		c.executor.Schedule(func(ctx context.Context) {
 			msg, err := user.Receive()
 			if err != nil {
-				c.poller.Stop(desc)
+				observer.Stop()
 				c.chUserOUT <- user
 				c.sendError(fmt.Errorf("%s user.Receive(): %s", user.id, err.Error()))
 			}
@@ -125,7 +137,7 @@ func (c *Chat) sendError(err error) {
 	c.errorDispatcher.Send(err)
 }
 
-func (c *Chat) messageJob(msg *Message, user *User) executor.Job {
+func (c *Chat) messageJob(msg *Message, user *User) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		handle := func(msg *Message) {
 			if err := c.messageHandler.HandleMessage(msg); err != nil {
@@ -143,7 +155,7 @@ func (c *Chat) messageJob(msg *Message, user *User) executor.Job {
 	}
 }
 
-func (c *Chat) userINJob(user *User) executor.Job {
+func (c *Chat) userINJob(user *User) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		err := c.userStatusHandler.HandleStatus(user.id, c.localhost, ONLINE)
 		if err != nil {
@@ -158,7 +170,7 @@ func (c *Chat) userINJob(user *User) executor.Job {
 	}
 }
 
-func (c *Chat) userOUTJob(user *User) executor.Job {
+func (c *Chat) userOUTJob(user *User) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		err := c.userStatusHandler.HandleStatus(user.id, c.localhost, OFFLINE)
 		if err != nil {

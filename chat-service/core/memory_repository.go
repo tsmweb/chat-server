@@ -20,7 +20,7 @@ func NewMemoryRepository() Repository {
 func (mr *memoryRepository) generatesMessages(userID string) {
 	var msgs []*Message
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 3; i++ {
 		msg, _ := NewMessage(
 			"+5518988888888",
 			userID,
@@ -49,6 +49,10 @@ func (mr *memoryRepository) GetUserOnline(userID string) (string, bool, error) {
 }
 
 func (mr *memoryRepository) GetMessagesOffline(userID string) ([]*Message, error) {
-	mr.generatesMessages(userID)
+	//mr.generatesMessages(userID)
 	return mr.messagesOffline[userID], nil
+}
+
+func (mr *memoryRepository) IsBlockedUser(userID string, blockedID string) (bool, error) {
+	return false, nil
 }
