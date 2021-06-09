@@ -25,7 +25,7 @@ func (mr *memoryRepository) generatesMessages(userID string) {
 			"+5518988888888",
 			userID,
 			"",
-			"Chat",
+			TEXT,
 			fmt.Sprintf("%d: test internal", i))
 		msgs = append(msgs, msg)
 	}

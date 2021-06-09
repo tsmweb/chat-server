@@ -29,12 +29,12 @@ func (u *User) Receive() (*Message, error) {
 	}
 
 	if err = msg.Validate(); err != nil {
-		return nil, u.WriteError(msg.ID, err)
+		return nil, u.WriteResponse(msg.ID, ERROR, err.Error())
 	}
 
 	// Spoofed internal is discarded.
 	if msg.From != u.id {
-		return nil, u.WriteError(msg.ID, ErrMessageSpoof)
+		return nil, u.WriteResponse(msg.ID, ERROR, ErrMessageSpoof.Error())
 	}
 
 	return msg, nil
@@ -65,12 +65,14 @@ func (u *User) WriteMessage(msg *Message) error {
 	return u.writer.Writer(u.conn, msg)
 }
 
-func (u *User) WriteError(msgID string, err error) error {
+func (u *User) WriteResponse(msgID string, contentType ContentType, content string) error {
 	u.io.Lock()
 	defer u.io.Unlock()
 
-	return u.writer.Writer(u.conn, Error{
-		ID:    msgID,
-		Error: err.Error(),
-	})
+	res := NewResponse(msgID, contentType, content)
+	return u.writer.Writer(u.conn, res)
+}
+
+func (u *User) WriteACK(msgID string) error {
+	return u.WriteResponse(msgID, ACK, "sent")
 }

@@ -88,6 +88,10 @@ func (c *Chat) Register(userID string, conn net.Conn) error {
 			}
 			if msg != nil {
 				c.SendMessage(msg)
+
+				if err := user.WriteACK(msg.ID); err != nil {
+					c.sendError(fmt.Errorf("%s user.WriteACK(): %s", user.id, err.Error()))
+				}
 			}
 		})
 	})

@@ -10,15 +10,24 @@ import (
 
 type Message struct {
 	ID          string    `json:"id"`
-	From        string    `json:"from"`
-	To          string    `json:"to"`
+	From        string    `json:"from,omitempty"`
+	To          string    `json:"to,omitempty"`
 	Group       string    `json:"group,omitempty"`
 	Date        time.Time `json:"date"`
-	ContentType string    `json:"content_type"`
+	ContentType string    `json:"content-type"`
 	Content     string    `json:"content"`
 }
 
-func NewMessage(from, to, group, contentType, content string) (*Message, error) {
+func NewResponse(msgID string, contentType ContentType, content string) *Message {
+	return &Message{
+		ID: msgID,
+		Date: time.Now().UTC(),
+		ContentType: contentType.String(),
+		Content: content,
+	}
+}
+
+func NewMessage(from string, to string, group string, contentType ContentType, content string) (*Message, error) {
 	msgID, err := hashutil.HashSHA1(from + strconv.FormatInt(time.Now().Unix(), 10))
 	if err != nil {
 		return nil, err
@@ -30,7 +39,7 @@ func NewMessage(from, to, group, contentType, content string) (*Message, error) 
 		To:          to,
 		Group:       group,
 		Date:        time.Now().UTC(),
-		ContentType: contentType,
+		ContentType: contentType.String(),
 		Content:     content,
 	}
 
@@ -74,9 +83,4 @@ func (m Message) String() string {
 	}
 
 	return string(b)
-}
-
-type Error struct {
-	ID    string `json:"id"`
-	Error string `json:"error"`
 }

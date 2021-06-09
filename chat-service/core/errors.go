@@ -11,5 +11,5 @@ var ErrReceiverValidateModel = &cerror.ErrValidateModel{Msg: "required to or gro
 var ErrDateValidateModel = &cerror.ErrValidateModel{Msg: "required date"}
 var ErrContentTypeValidateModel = &cerror.ErrValidateModel{Msg: "required content_type"}
 var ErrContentValidateModel = &cerror.ErrValidateModel{Msg: "required content"}
-var ErrMessageSpoof = errors.New("internal not allowed")
+var ErrMessageSpoof = errors.New("message not allowed")
 var ErrClosedChannel = errors.New("closed channel")
