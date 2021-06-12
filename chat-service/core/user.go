@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"github.com/tsmweb/chat-service/common/connutil"
+	"github.com/tsmweb/chat-service/core/ctype"
 	"io"
 	"sync"
 )
@@ -28,13 +29,10 @@ func (u *User) Receive() (*Message, error) {
 		return nil, nil
 	}
 
-	if err = msg.Validate(); err != nil {
-		return nil, u.WriteResponse(msg.ID, ERROR, err.Error())
-	}
+	msg.From = u.id
 
-	// Spoofed internal is discarded.
-	if msg.From != u.id {
-		return nil, u.WriteResponse(msg.ID, ERROR, ErrMessageSpoof.Error())
+	if err = msg.Validate(); err != nil {
+		return nil, u.WriteResponse(msg.ID, ctype.ERROR, err.Error())
 	}
 
 	return msg, nil
@@ -65,7 +63,7 @@ func (u *User) WriteMessage(msg *Message) error {
 	return u.writer.Writer(u.conn, msg)
 }
 
-func (u *User) WriteResponse(msgID string, contentType ContentType, content string) error {
+func (u *User) WriteResponse(msgID string, contentType ctype.ContentType, content string) error {
 	u.io.Lock()
 	defer u.io.Unlock()
 
@@ -73,6 +71,6 @@ func (u *User) WriteResponse(msgID string, contentType ContentType, content stri
 	return u.writer.Writer(u.conn, res)
 }
 
-func (u *User) WriteACK(msgID string) error {
-	return u.WriteResponse(msgID, ACK, "sent")
+func (u *User) WriteACK(msgID string, content string) error {
+	return u.WriteResponse(msgID, ctype.ACK, content)
 }

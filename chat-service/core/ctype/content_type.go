@@ -1,4 +1,4 @@
-package core
+package ctype
 
 // ContentType represents the type of message content, such as ACK, TEXT, MEDIA, STATUS and ERROR.
 type ContentType int

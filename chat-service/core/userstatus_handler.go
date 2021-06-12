@@ -1,6 +1,7 @@
 package core
 
 import (
+	"github.com/tsmweb/chat-service/core/status"
 	"log"
 	"time"
 )
@@ -20,7 +21,7 @@ func NewUserStatusHandler(
 	}
 }
 
-func (ush *UserStatusHandler) HandleStatus(userID, host string, status UserStatus) error {
+func (ush *UserStatusHandler) HandleStatus(userID, host string, status status.UserStatus) error {
 	err := ush.setStatus(userID, host, status)
 	if err != nil {
 		return err
@@ -29,10 +30,10 @@ func (ush *UserStatusHandler) HandleStatus(userID, host string, status UserStatu
 	return ush.presenceDispatcher.Send(userID, status)
 }
 
-func (ush *UserStatusHandler) setStatus(userID, host string, status UserStatus) error {
-	log.Printf("[>] %s set status %s\n", userID, status.String())
+func (ush *UserStatusHandler) setStatus(userID, host string, userStatus status.UserStatus) error {
+	log.Printf("[>] %s set status %s\n", userID, userStatus.String())
 
-	if status == ONLINE {
+	if userStatus == status.ONLINE {
 		if err := ush.repository.AddUserOnline(userID, host, time.Now().UTC()); err != nil {
 			return err
 		}

@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/tsmweb/chat-service/common/concurrent"
 	"github.com/tsmweb/chat-service/common/connutil"
 	"github.com/tsmweb/chat-service/common/epoll"
+	"github.com/tsmweb/chat-service/core/ctype"
 	"github.com/tsmweb/easygo/netpoll"
 	"github.com/tsmweb/go-helper-api/concurrent/executor"
 	"io"
@@ -18,9 +20,6 @@ import (
 )
 
 func TestChat(t *testing.T) {
-	user1 := "+5518977777777"
-	user2 := "+5518966666666"
-
 	executor := executor.New(100)
 	defer executor.Shutdown()
 
@@ -30,13 +29,13 @@ func TestChat(t *testing.T) {
 	defer ln.Close()
 
 	// user 1
-	conn1 := newConnUser(t, ln.Addr().String(), user1)
+	conn1 := newConnUser(t, ln.Addr().String(), userTest1)
 	defer conn1.Close()
 
-	t.Run("chat.SendMessage sends message to user1", func(t *testing.T) {
-		time.Sleep(10 * time.Millisecond)
+	t.Run("chat.SendMessage sends message to userTest1", func(t *testing.T) {
+		time.Sleep(100 * time.Millisecond)
+		sMSG, _ := NewMessage(userTest2, userTest1, "", ctype.TEXT, "hello")
 
-		sMSG, _ := NewMessage(user2, user1, "", TEXT, "hello")
 		if err := chat.SendMessage(sMSG); err != nil {
 			t.Fatalf("error chat.SendMessage(): %v", err)
 		}
@@ -46,13 +45,43 @@ func TestChat(t *testing.T) {
 		t.Log(rMSG)
 		assert.Equal(t, sMSG.ID, rMSG.ID)
 	})
+	
+	t.Run("when the message is not valid", func(t *testing.T) {
+		time.Sleep(100 * time.Millisecond)
+		msg, _ := NewMessage(userTest1, userTest2, "", ctype.TEXT, "hello")
+		msg.ContentType = ""
 
-	t.Run("user2 sends message to user1", func(t *testing.T) {
-		// user 2
-		conn2 := newConnUser(t, ln.Addr().String(), user2)
+		if err := writerConn(conn1, msg); err != nil {
+			t.Fatalf("error send message writerConn(): %v", err)
+		}
+
+		res := readMessageFromConn(t, conn1)
+		t.Log(res)
+		assert.Equal(t, res.ID, msg.ID)
+		assert.Equal(t, res.Content, ErrContentTypeValidateModel.Error())
+	})
+
+	t.Run("when userTest1 was blocked by userTest3", func(t *testing.T) {
+		time.Sleep(100 * time.Millisecond)
+		msg, _ := NewMessage(userTest1, userTest3, "", ctype.TEXT, "hello")
+
+		if err := writerConn(conn1, msg); err != nil {
+			t.Fatalf("error send message writerConn(): %v", err)
+		}
+
+		res := readMessageFromConn(t, conn1)
+		t.Log(res)
+		assert.Equal(t, res.ID, msg.ID)
+		assert.Equal(t, res.Content, fmt.Sprintf(BlockedMessage, msg.To))
+	})
+
+	t.Run("userTest2 sends message to userTest1", func(t *testing.T) {
+		time.Sleep(100 * time.Millisecond)
+		conn2 := newConnUser(t, ln.Addr().String(), userTest2)
 		defer conn2.Close()
 
-		sMSG, _ := NewMessage(user2, user1, "", TEXT, "hello test")
+		sMSG, _ := NewMessage(userTest2, userTest1, "", ctype.TEXT, "hello test")
+
 		if err := writerConn(conn2, sMSG); err != nil {
 			t.Fatalf("error send message writerConn(): %v", err)
 		}

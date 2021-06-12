@@ -6,6 +6,7 @@ import (
 	"github.com/tsmweb/chat-service/common/concurrent"
 	"github.com/tsmweb/chat-service/common/connutil"
 	"github.com/tsmweb/chat-service/common/epoll"
+	"github.com/tsmweb/chat-service/core/status"
 	"net"
 )
 
@@ -74,30 +75,44 @@ func (c *Chat) Register(userID string, conn net.Conn) error {
 			observer.Stop()
 			c.chUserOUT <- user
 			if err != nil {
-				c.sendError(fmt.Errorf("%s epoll.Event(): %s", user.id, err.Error()))
+				c.sendError(fmt.Errorf("%s epoll.Event(): %v", user.id, err.Error()))
 			}
 			return
 		}
 
 		c.executor.Schedule(func(ctx context.Context) {
+			sendACK := func(msgID, content string) {
+				if err := user.WriteACK(msgID, content); err != nil {
+					c.sendError(fmt.Errorf("%s user.WriteACK(): %v", user.id, err.Error()))
+				}
+			}
+
 			msg, err := user.Receive()
 			if err != nil {
 				observer.Stop()
 				c.chUserOUT <- user
-				c.sendError(fmt.Errorf("%s user.Receive(): %s", user.id, err.Error()))
+				c.sendError(fmt.Errorf("%s user.Receive(): %v", user.id, err.Error()))
+				return
 			}
 			if msg != nil {
-				c.SendMessage(msg)
-
-				if err := user.WriteACK(msg.ID); err != nil {
-					c.sendError(fmt.Errorf("%s user.WriteACK(): %s", user.id, err.Error()))
+				ok, err := c.messageHandler.isBlockedUser(msg.To, msg.From)
+				if err != nil {
+					c.sendError(fmt.Errorf("%s messageHandler.isBlockedUser(): %v", user.id, err.Error()))
+					return
 				}
+				if ok {
+					sendACK(msg.ID, fmt.Sprintf(BlockedMessage, msg.To))
+					return
+				}
+
+				c.SendMessage(msg)
+				sendACK(msg.ID, "sent")
 			}
 		})
 	})
 
 	if err != nil {
-		c.sendError(fmt.Errorf("%s Chat.Register(): %s", user.id, err.Error()))
+		c.sendError(fmt.Errorf("%s Chat.Register(): %v", user.id, err.Error()))
 		return err
 	}
 
@@ -161,7 +176,7 @@ func (c *Chat) messageJob(msg *Message, user *User) func(ctx context.Context) {
 
 func (c *Chat) userINJob(user *User) func(ctx context.Context) {
 	return func(ctx context.Context) {
-		err := c.userStatusHandler.HandleStatus(user.id, c.localhost, ONLINE)
+		err := c.userStatusHandler.HandleStatus(user.id, c.localhost, status.ONLINE)
 		if err != nil {
 			c.sendError(fmt.Errorf("%s HandleStatus(): %s", user.id, err.Error()))
 			return
@@ -176,7 +191,7 @@ func (c *Chat) userINJob(user *User) func(ctx context.Context) {
 
 func (c *Chat) userOUTJob(user *User) func(ctx context.Context) {
 	return func(ctx context.Context) {
-		err := c.userStatusHandler.HandleStatus(user.id, c.localhost, OFFLINE)
+		err := c.userStatusHandler.HandleStatus(user.id, c.localhost, status.OFFLINE)
 		if err != nil {
 			c.sendError(fmt.Errorf("%s SetStatus(): %s", user.id, err.Error()))
 			return

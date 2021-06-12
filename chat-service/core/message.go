@@ -2,10 +2,15 @@ package core
 
 import (
 	"encoding/json"
+	"github.com/tsmweb/chat-service/core/ctype"
 	"github.com/tsmweb/go-helper-api/util/hashutil"
 	"strconv"
 	"strings"
 	"time"
+)
+
+const (
+	BlockedMessage = "message blocked by %s"
 )
 
 type Message struct {
@@ -18,7 +23,7 @@ type Message struct {
 	Content     string    `json:"content"`
 }
 
-func NewResponse(msgID string, contentType ContentType, content string) *Message {
+func NewResponse(msgID string, contentType ctype.ContentType, content string) *Message {
 	return &Message{
 		ID: msgID,
 		Date: time.Now().UTC(),
@@ -27,7 +32,7 @@ func NewResponse(msgID string, contentType ContentType, content string) *Message
 	}
 }
 
-func NewMessage(from string, to string, group string, contentType ContentType, content string) (*Message, error) {
+func NewMessage(from string, to string, group string, contentType ctype.ContentType, content string) (*Message, error) {
 	msgID, err := hashutil.HashSHA1(from + strconv.FormatInt(time.Now().Unix(), 10))
 	if err != nil {
 		return nil, err

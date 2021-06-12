@@ -1,4 +1,4 @@
-package core
+package status
 
 // UserStatus type that represents the user's status as ONLINE and OFFLINE.
 type UserStatus int

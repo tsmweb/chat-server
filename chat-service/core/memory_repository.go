@@ -2,19 +2,31 @@ package core
 
 import (
 	"fmt"
+	"github.com/tsmweb/chat-service/core/ctype"
 	"time"
+)
+
+const (
+	userTest1 = "+5518911111111"
+	userTest2 = "+5518922222222"
+	userTest3 = "+5518933333333"
 )
 
 type memoryRepository struct {
 	usersOnline map[string]string
 	messagesOffline map[string][]*Message
+	blockedUser map[string]string
 }
 
 func NewMemoryRepository() Repository {
-	return &memoryRepository{
+	mr := &memoryRepository{
 		usersOnline: make(map[string]string),
 		messagesOffline: make(map[string][]*Message),
+		blockedUser: make(map[string]string),
 	}
+
+	mr.blockedUser[userTest3] = userTest1
+	return mr
 }
 
 func (mr *memoryRepository) generatesMessages(userID string) {
@@ -22,10 +34,10 @@ func (mr *memoryRepository) generatesMessages(userID string) {
 
 	for i := 0; i < 3; i++ {
 		msg, _ := NewMessage(
-			"+5518988888888",
+			userTest3,
 			userID,
 			"",
-			TEXT,
+			ctype.TEXT,
 			fmt.Sprintf("%d: test internal", i))
 		msgs = append(msgs, msg)
 	}
@@ -54,5 +66,6 @@ func (mr *memoryRepository) GetMessagesOffline(userID string) ([]*Message, error
 }
 
 func (mr *memoryRepository) IsBlockedUser(userID string, blockedID string) (bool, error) {
-	return false, nil
+	bID := mr.blockedUser[userID]
+	return bID == blockedID, nil
 }

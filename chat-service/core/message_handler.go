@@ -51,3 +51,7 @@ func (mh *MessageHandler) sendMessageBygRPC(host string, msg *Message) error {
 	// TODO
 	return nil
 }
+
+func (mh *MessageHandler) isBlockedUser(userID string, blockedID string) (bool, error) {
+	return mh.repository.IsBlockedUser(userID, blockedID)
+}
