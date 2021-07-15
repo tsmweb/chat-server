@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+  app:
+    container_name: chat-service
+    build: .
+    ports:
+      - "8080:8080"
+      - "6060:6060"
+    volumes:
+      - .:/go/src/
+    environment:
+      HOST_ID: H01
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"

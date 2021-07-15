@@ -21,7 +21,7 @@
 .env
 
 # Keys
-common/setting/keys/*
+config/keys/*
 
 # Test
 test
