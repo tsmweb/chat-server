@@ -10,18 +10,19 @@ import (
 )
 
 const (
-	BlockedMessage = "message blocked by %s"
+	InvalidMessage = "invalid message"
 )
 
-// ContentType represents the type of message content, such as ACK, TEXT, MEDIA, STATUS and ERROR.
+// ContentType represents the type of message content,
+// such as ContentACK, ContentText, ContentMedia, ContentStatus and ContentError.
 type ContentType int
 
 const (
-	ACK    ContentType = 0x1
-	TEXT               = 0x2
-	MEDIA              = 0x4
-	STATUS             = 0x8
-	ERROR              = 0x80
+	ContentACK    ContentType = 0x1
+	ContentText               = 0x2
+	ContentMedia              = 0x4
+	ContentStatus             = 0x8
+	ContentError              = 0x80
 )
 
 func (ct ContentType) String() (str string) {
@@ -33,19 +34,19 @@ func (ct ContentType) String() (str string) {
 		return true
 	}
 
-	if name(ACK, "ACK") {
+	if name(ContentACK, "ack") {
 		return
 	}
-	if name(TEXT, "TEXT") {
+	if name(ContentText, "text") {
 		return
 	}
-	if name(MEDIA, "MEDIA") {
+	if name(ContentMedia, "media") {
 		return
 	}
-	if name(STATUS, "STATUS") {
+	if name(ContentStatus, "status") {
 		return
 	}
-	if name(ERROR, "ERROR") {
+	if name(ContentError, "error") {
 		return
 	}
 
@@ -53,26 +54,26 @@ func (ct ContentType) String() (str string) {
 }
 
 var (
-	ErrIDValidateModel = &cerror.ErrValidateModel{Msg: "required id"}
-	ErrFromValidateModel = &cerror.ErrValidateModel{Msg: "required from"}
-	ErrReceiverValidateModel = &cerror.ErrValidateModel{Msg: "required to or group"}
-	ErrDateValidateModel = &cerror.ErrValidateModel{Msg: "required date"}
+	ErrIDValidateModel          = &cerror.ErrValidateModel{Msg: "required id"}
+	ErrFromValidateModel        = &cerror.ErrValidateModel{Msg: "required from"}
+	ErrReceiverValidateModel    = &cerror.ErrValidateModel{Msg: "required to or group"}
+	ErrDateValidateModel        = &cerror.ErrValidateModel{Msg: "required date"}
 	ErrContentTypeValidateModel = &cerror.ErrValidateModel{Msg: "required content_type"}
-	ErrContentValidateModel = &cerror.ErrValidateModel{Msg: "required content"}
+	ErrContentValidateModel     = &cerror.ErrValidateModel{Msg: "required content"}
 )
 
-
+// Message represents data sent and received by users.
 type Message struct {
 	ID          string    `json:"id"`
 	From        string    `json:"from,omitempty"`
 	To          string    `json:"to,omitempty"`
 	Group       string    `json:"group,omitempty"`
 	Date        time.Time `json:"date"`
-	ContentType string    `json:"content-type"`
+	ContentType string    `json:"content_type"`
 	Content     string    `json:"content"`
-	Host        string    `json:"host,omitempty"`
 }
 
+// NewResponse creates and returns a new Message instance.
 func NewResponse(msgID string, contentType ContentType, content string) *Message {
 	return &Message{
 		ID:          msgID,
@@ -82,7 +83,8 @@ func NewResponse(msgID string, contentType ContentType, content string) *Message
 	}
 }
 
-func New(from string, to string, group string, contentType ContentType, content string) (*Message, error) {
+// NewMessage creates and returns a new Message instance.
+func NewMessage(from string, to string, group string, contentType ContentType, content string) (*Message, error) {
 	msgID, err := hashutil.HashSHA1(from + strconv.FormatInt(time.Now().Unix(), 10))
 	if err != nil {
 		return nil, err
@@ -105,6 +107,7 @@ func New(from string, to string, group string, contentType ContentType, content 
 	return msg, nil
 }
 
+// Validate verifies that the required attributes of the message are present.
 func (m Message) Validate() error {
 	if strings.TrimSpace(m.ID) == "" {
 		return ErrIDValidateModel
@@ -127,18 +130,12 @@ func (m Message) Validate() error {
 	return nil
 }
 
+// IsGroupMessage returns true if the message is addressed to a group of users.
 func (m Message) IsGroupMessage() bool {
 	return strings.TrimSpace(m.Group) != ""
 }
 
-func (m Message) ToJSON() []byte {
-	b, err := json.Marshal(m)
-	if err != nil {
-		return nil
-	}
-	return b
-}
-
 func (m Message) String() string {
-	return string(m.ToJSON())
+	mj, _ := json.Marshal(m)
+	return string(mj)
 }

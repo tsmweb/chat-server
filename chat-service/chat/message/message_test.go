@@ -2,13 +2,14 @@ package message
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/tsmweb/chat-service/chat"
 	"testing"
 	"time"
 )
 
 func TestNewMessage(t *testing.T) {
 	//t.Parallel()
-	m, err := New("+5518977777777", "+5518966666666", "", TEXT, "test")
+	m, err := NewMessage("+5518977777777", "+5518966666666", "", ContentText, "test")
 
 	assert.Nil(t, err)
 	assert.NotNil(t, m.ID)
@@ -31,42 +32,42 @@ func TestMessage_Validate(t *testing.T) {
 		{
 			from:       "+5518977777777",
 			to:         "+5518966666666",
-			contenType: TEXT,
+			contenType: ContentText,
 			content:    "test",
 			want:       nil,
 		},
 		{
 			from:       "",
 			to:         "+5518966666666",
-			contenType: TEXT,
+			contenType: ContentText,
 			content:    "test",
-			want:       ErrFromValidateModel,
+			want:       chat.ErrFromValidateModel,
 		},
 		{
 			from:       "+5518977777777",
 			to:         "",
-			contenType: TEXT,
+			contenType: ContentText,
 			content:    "test",
-			want:       ErrReceiverValidateModel,
+			want:       chat.ErrReceiverValidateModel,
 		},
 		{
 			from:       "+5518977777777",
 			to:         "+5518966666666",
 			contenType: 0,
 			content:    "test",
-			want:       ErrContentTypeValidateModel,
+			want:       chat.ErrContentTypeValidateModel,
 		},
 		{
 			from:       "+5518977777777",
 			to:         "+5518966666666",
-			contenType: TEXT,
+			contenType: ContentText,
 			content:    "",
-			want:       ErrContentValidateModel,
+			want:       chat.ErrContentValidateModel,
 		},
 	}
 
 	for _, tc := range tests {
-		_, err := New(tc.from, tc.to, "", tc.contenType, tc.content)
+		_, err := NewMessage(tc.from, tc.to, "", tc.contenType, tc.content)
 		assert.Equal(t, err, tc.want)
 	}
 }

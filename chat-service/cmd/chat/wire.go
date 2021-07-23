@@ -9,21 +9,17 @@ import (
 	"github.com/tsmweb/chat-service/chat"
 	"github.com/tsmweb/chat-service/config"
 	"github.com/tsmweb/chat-service/infrastructure/db"
-	"github.com/tsmweb/chat-service/infrastructure/kafka"
 	"github.com/tsmweb/chat-service/pkg/concurrent"
-	"github.com/tsmweb/chat-service/pkg/ebus"
 	"github.com/tsmweb/chat-service/pkg/epoll"
-	"github.com/tsmweb/chat-service/pkg/topic"
 	"github.com/tsmweb/chat-service/util/connutil"
 	"github.com/tsmweb/chat-service/web/api"
 	"github.com/tsmweb/easygo/netpoll"
 	"github.com/tsmweb/go-helper-api/auth"
+	"github.com/tsmweb/go-helper-api/kafka"
 	"github.com/tsmweb/go-helper-api/middleware"
 )
 
-func InitChatRouter(
-	executor concurrent.ExecutorService,
-) (*api.Router, error) {
+func InitChatRouter(executor concurrent.ExecutorService) (*api.Router, error) {
 	wire.Build(
 		ProviderJWT,
 		middleware.NewAuth,
@@ -35,7 +31,7 @@ func InitChatRouter(
 		ProviderKafka,
 		chat.NewMemoryRepository,
 		chat.NewChat,
-		api.NewController,
+		api.HandleWS,
 		api.NewRouter,
 	)
 
@@ -81,13 +77,13 @@ func ProviderPollerConfig(executor concurrent.ExecutorService) *netpoll.Config {
 	return &netpoll.Config{
 		OnWaitError: func(err error) {
 			executor.Schedule(func(ctx context.Context) {
-				ebus.Instance().Publish(topic.ErrorMessage, err.Error())
+				//ebus.Instance().Publish(topic.ErrorMessage, err.Error())
 			})
 		},
 	}
 }
 
 // Kafka
-func ProviderKafka() chat.Kafka {
+func ProviderKafka() kafka.Kafka {
 	return kafka.New([]string{config.KafkaBootstrapServers()}, config.KafkaClientID())
 }

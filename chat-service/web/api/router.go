@@ -18,23 +18,23 @@ func init() {
 
 // Router for chat end points.
 type Router struct {
-	auth       middleware.Auth
-	controller *Controller
+	auth   middleware.Auth
+	handleWS http.Handler
 }
 
-// // NewRouter creates a router for Contact.
-func NewRouter(auth middleware.Auth, ctrl *Controller) *Router {
+// // NewRouter creates a router for Chat.
+func NewRouter(a middleware.Auth, handleWS http.Handler) *Router {
 	return &Router{
-		auth: auth,
-		controller: ctrl,
+		auth:   a,
+		handleWS: handleWS,
 	}
 }
 
-// MakeRouters creates a router for chat.
+// MakeRouter create a router for chat.
 func (r *Router) MakeRouters(mr *mux.Router) {
-	// chat [GET]
+	// ws [GET]
 	mr.Handle(resource, negroni.New(
 		negroni.HandlerFunc(r.auth.RequireTokenAuth),
-		negroni.Wrap(r.controller.Connect())),
+		negroni.Wrap(r.handleWS)),
 	).Methods(http.MethodGet)
 }

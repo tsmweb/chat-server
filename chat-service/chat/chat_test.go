@@ -8,12 +8,12 @@ import (
 	"github.com/tsmweb/chat-service/chat"
 	"github.com/tsmweb/chat-service/chat/message"
 	"github.com/tsmweb/chat-service/config"
-	"github.com/tsmweb/chat-service/infrastructure/kafka"
 	"github.com/tsmweb/chat-service/pkg/concurrent"
 	"github.com/tsmweb/chat-service/pkg/epoll"
 	"github.com/tsmweb/chat-service/util/connutil"
 	"github.com/tsmweb/easygo/netpoll"
 	"github.com/tsmweb/go-helper-api/concurrent/executor"
+	"github.com/tsmweb/go-helper-api/kafka"
 	"io"
 	"net"
 	"strings"
@@ -27,20 +27,48 @@ func TestChat(t *testing.T) {
 
 	c := initChat(t, executor)
 
-	t.Logf("BootstrapServer: %s", config.KafkaBootstrapServers())
-	t.Logf("NewMessagesTopic: %s", config.KafkaNewMessagesTopic())
-	t.Logf("HostTopic: %s", config.KafkaHostTopic())
-
 	ln := runServerTest(t, c)
 	defer ln.Close()
 
 	// user 1
 	conn1 := newConnUser(t, ln.Addr().String(), chat.UserTest1)
-	defer conn1.Close()
+	defer func() {
+		conn1.Close()
+		time.Sleep(time.Second)
+	}()
+
+	t.Run("when the message is not valid", func(t *testing.T) {
+		time.Sleep(100 * time.Millisecond)
+		msg, _ := message.NewMessage(chat.UserTest1, chat.UserTest2, "", message.ContentText, "hello")
+		msg.ContentType = ""
+
+		if err := writerConn(conn1, msg); err != nil {
+			t.Fatalf("error send message writerConn(): %v", err)
+		}
+
+		res := readMessageFromConn(t, conn1)
+		t.Log(res)
+		assert.Equal(t, res.ID, msg.ID)
+		assert.Equal(t, res.Content, message.ErrContentTypeValidateModel.Error())
+	})
+
+	t.Run("when UserTest1 was blocked by UserTest3", func(t *testing.T) {
+		time.Sleep(100 * time.Millisecond)
+		msg, _ := message.NewMessage(chat.UserTest1, chat.UserTest3, "", message.ContentText, "hello")
+
+		if err := writerConn(conn1, msg); err != nil {
+			t.Fatalf("error send message writerConn(): %v", err)
+		}
+
+		res := readMessageFromConn(t, conn1)
+		t.Log(res)
+		assert.Equal(t, res.ID, msg.ID)
+		assert.Equal(t, res.Content, message.InvalidMessage)
+	})
 
 	t.Run("send message to UserTest1", func(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
-		msg, _ := message.New(chat.UserTest2, chat.UserTest1, "", message.TEXT, "hello")
+		msg, _ := message.NewMessage(chat.UserTest2, chat.UserTest1, "", message.ContentText, "hello")
 
 		if err := writerConn(conn1, msg); err != nil {
 			t.Fatalf("error send message writerConn(): %v", err)
@@ -53,41 +81,12 @@ func TestChat(t *testing.T) {
 	})
 
 	/*
-	t.Run("when the message is not valid", func(t *testing.T) {
-		time.Sleep(100 * time.Millisecond)
-		msg, _ := New(UserTest1, UserTest2, "", TEXT, "hello")
-		msg.ContentType = ""
-
-		if err := writerConn(conn1, msg); err != nil {
-			t.Fatalf("error send message writerConn(): %v", err)
-		}
-
-		res := readMessageFromConn(t, conn1)
-		t.Log(res)
-		assert.Equal(t, res.ID, msg.ID)
-		assert.Equal(t, res.Content, ErrContentTypeValidateModel.Error())
-	})
-
-	t.Run("when UserTest1 was blocked by UserTest3", func(t *testing.T) {
-		time.Sleep(100 * time.Millisecond)
-		msg, _ := New(UserTest1, UserTest3, "", TEXT, "hello")
-
-		if err := writerConn(conn1, msg); err != nil {
-			t.Fatalf("error send message writerConn(): %v", err)
-		}
-
-		res := readMessageFromConn(t, conn1)
-		t.Log(res)
-		assert.Equal(t, res.ID, msg.ID)
-		assert.Equal(t, res.Content, fmt.Sprintf(BlockedMessage, msg.To))
-	})
-*/
 	t.Run("UserTest2 sends message to UserTest1", func(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 		conn2 := newConnUser(t, ln.Addr().String(), chat.UserTest2)
 		defer conn2.Close()
 
-		sMSG, _ := message.New(chat.UserTest2, chat.UserTest1, "", message.TEXT, "hello test")
+		sMSG, _ := chat.New(chat.UserTest2, chat.UserTest1, "", chat.ContentText, "hello test")
 
 		if err := writerConn(conn2, sMSG); err != nil {
 			t.Fatalf("error send message writerConn(): %v", err)
@@ -101,6 +100,7 @@ func TestChat(t *testing.T) {
 		t.Log(rMSG)
 		assert.Equal(t, sMSG.ID, rMSG.ID)
 	})
+	*/
 }
 
 func newConnUser(t *testing.T, addr, userID string) net.Conn {

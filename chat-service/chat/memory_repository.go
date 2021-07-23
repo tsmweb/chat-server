@@ -17,6 +17,7 @@ type memoryRepository struct {
 	usersOnline     map[string]string
 	messagesOffline map[string][]*message.Message
 	blockedUser     map[string]string
+	groups          map[string]struct{}
 	groupMembers    map[string][]string
 }
 
@@ -25,10 +26,12 @@ func NewMemoryRepository() Repository {
 		usersOnline:     make(map[string]string),
 		messagesOffline: make(map[string][]*message.Message),
 		blockedUser:     make(map[string]string),
+		groups:          make(map[string]struct{}),
 		groupMembers:    make(map[string][]string),
 	}
 
 	mr.blockedUser[UserTest3] = UserTest1
+	mr.groups[Group1] = struct{}{}
 	mr.groupMembers[Group1] = []string{
 		UserTest1,
 		UserTest2,
@@ -41,11 +44,11 @@ func (mr *memoryRepository) generatesMessages(userID string) {
 	var msgs []*message.Message
 
 	for i := 0; i < 3; i++ {
-		msg, _ := message.New(
+		msg, _ := message.NewMessage(
 			UserTest3,
 			userID,
 			"",
-			message.TEXT,
+			message.ContentText,
 			fmt.Sprintf("%d: test internal", i))
 		msgs = append(msgs, msg)
 	}
@@ -73,9 +76,16 @@ func (mr *memoryRepository) GetMessagesOffline(userID string) ([]*message.Messag
 	return mr.messagesOffline[userID], nil
 }
 
-func (mr *memoryRepository) IsBlockedUser(userID string, blockedID string) (bool, error) {
-	bID := mr.blockedUser[userID]
-	return bID == blockedID, nil
+func (mr *memoryRepository) IsValidUser(fromID string, toID string) (bool, error) {
+	bID := mr.blockedUser[toID]
+	isValid := !(bID == fromID)
+
+	if isValid {
+		_, ok := mr.usersOnline[toID]
+		isValid = ok
+	}
+
+	return isValid, nil
 }
 
 func (mr *memoryRepository) GetGroupMembers(groupID string) ([]string, error) {

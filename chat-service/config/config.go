@@ -24,15 +24,15 @@ var (
 	privateKey string
 	publicKey  string
 
-	kafkaBootstrapServers string
-	kafkaClientID         string
-	kafkaServersTopic     string
-	kafkaClientsTopic     string
-	kafkaNewMessagesTopic string
-	kafkaOffMessagesTopic string
-	kafkaHostTopic        string
-	kafkaErrorsTopic      string
-	kafkaGroupID          string
+	kafkaBootstrapServers   string
+	kafkaClientID           string
+	kafkaServersTopic       string
+	kafkaUsersTopic         string
+	kafkaNewMessagesTopic   string
+	kafkaOffMessagesTopic   string
+	kafkaHostTopic          string
+	kafkaErrorsTopic        string
+	kafkaGroupID            string
 )
 
 func Load(workDir string) {
@@ -59,7 +59,7 @@ func Load(workDir string) {
 	kafkaBootstrapServers = os.Getenv("KAFKA_BOOTSTRAP_SERVERS")
 	kafkaClientID = os.Getenv("KAFKA_CLIENT_ID")
 	kafkaServersTopic = os.Getenv("KAFKA_SERVERS_TOPIC")
-	kafkaClientsTopic = os.Getenv("KAFKA_CLIENTS_TOPIC")
+	kafkaUsersTopic = os.Getenv("KAFKA_USERS_TOPIC")
 	kafkaNewMessagesTopic = os.Getenv("KAFKA_NEW_MESSAGES_TOPIC")
 	kafkaOffMessagesTopic = os.Getenv("KAFKA_OFF_MESSAGES_TOPIC")
 	kafkaErrorsTopic = os.Getenv("KAFKA_ERRORS_TOPIC")
@@ -127,8 +127,8 @@ func KafkaServersTopic() string {
 	return kafkaServersTopic
 }
 
-func KafkaClientsTopic() string {
-	return kafkaClientsTopic
+func KafkaUsersTopic() string {
+	return kafkaUsersTopic
 }
 
 func KafkaNewMessagesTopic() string {

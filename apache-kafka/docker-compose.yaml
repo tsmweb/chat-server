@@ -47,7 +47,7 @@ services:
             bash -c
             "sleep 5s &&
             kafka-topics --create --topic=SERVERS --partitions 3 --if-not-exists --bootstrap-server=kafka:9092 &&
-            kafka-topics --create --topic=CLIENTS --partitions 3 --if-not-exists --bootstrap-server=kafka:9092 &&
+            kafka-topics --create --topic=USERS --partitions 3 --if-not-exists --bootstrap-server=kafka:9092 &&
             kafka-topics --create --topic=NEW_MESSAGES --partitions 3 --if-not-exists --bootstrap-server=kafka:9092 &&
             kafka-topics --create --topic=OFF_MESSAGES --partitions 3 --if-not-exists --bootstrap-server=kafka:9092 &&
             kafka-topics --create --topic=H01_MESSAGES --partitions 3 --if-not-exists --bootstrap-server=kafka:9092 &&

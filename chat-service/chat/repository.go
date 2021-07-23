@@ -11,6 +11,6 @@ type Repository interface {
 	DeleteUserOnline(userID string) error
 	GetUserOnline(userID string) (string, bool, error)
 	GetMessagesOffline(userID string) ([]*message.Message, error)
-	IsBlockedUser(userID string, blockedID string) (bool, error)
+	IsValidUser(fromID string, toID string) (bool, error)
 	GetGroupMembers(groupID string) ([]string, error)
 }

@@ -7,7 +7,9 @@ import (
 	"time"
 )
 
-var ErrClosedChannel = errors.New("closed channel")
+var (
+	ErrClosedChannel            = errors.New("closed channel")
+)
 
 type ErrorEvent struct {
 	HostID    string    `json:"host_id"`

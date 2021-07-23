@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestController_Connect(t *testing.T) {
+func TestHandleWS(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
@@ -23,8 +23,7 @@ func TestController_Connect(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		ctrl := NewController(mJWT, nil)
-		ctrl.Connect().ServeHTTP(rec, req)
+		HandleWS(mJWT, nil).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
@@ -38,10 +37,10 @@ func TestController_Connect(t *testing.T) {
 		mJWT.On("ExtractToken", mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		ctrl := NewController(mJWT, nil)
+		handle := HandleWS(mJWT, nil)
 
 		router := mux.NewRouter()
-		server := NewRouter(middleware.NewAuth(mJWT), ctrl)
+		server := NewRouter(middleware.NewAuth(mJWT), handle)
 		server.MakeRouters(router)
 		router.ServeHTTP(rec, req)
 
