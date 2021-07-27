@@ -5,12 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
+	"github.com/tsmweb/chat-service/adapter"
 	"github.com/tsmweb/chat-service/chat"
 	"github.com/tsmweb/chat-service/chat/message"
+	"github.com/tsmweb/chat-service/chat/user"
 	"github.com/tsmweb/chat-service/config"
-	"github.com/tsmweb/chat-service/pkg/concurrent"
 	"github.com/tsmweb/chat-service/pkg/epoll"
-	"github.com/tsmweb/chat-service/util/connutil"
 	"github.com/tsmweb/easygo/netpoll"
 	"github.com/tsmweb/go-helper-api/concurrent/executor"
 	"github.com/tsmweb/go-helper-api/kafka"
@@ -21,11 +21,11 @@ import (
 	"time"
 )
 
-func TestChat(t *testing.T) {
+func TestServer(t *testing.T) {
 	executor := executor.New(100)
 	defer executor.Shutdown()
 
-	c := initChat(t, executor)
+	c := initServer(t)
 
 	ln := runServerTest(t, c)
 	defer ln.Close()
@@ -81,7 +81,7 @@ func TestChat(t *testing.T) {
 	})
 
 	/*
-	t.Run("UserTest2 sends message to UserTest1", func(t *testing.T) {
+	t.run("UserTest2 sends message to UserTest1", func(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 		conn2 := newConnUser(t, ln.Addr().String(), chat.UserTest2)
 		defer conn2.Close()
@@ -132,14 +132,14 @@ func readMessageFromConn(t *testing.T, conn net.Conn) *message.Message {
 	return msg
 }
 
-func initChat(t *testing.T, executor concurrent.ExecutorService) *chat.Chat {
+func initServer(t *testing.T) *chat.Server {
 	t.Helper()
 	config.Load("../")
 
 	pollerConfig := epoll.ProviderPollerConfig(func(err error) {
-		executor.Schedule(func(ctx context.Context) {
+		go func(err error) {
 			t.Fatal("error netpoll.Config(): ", err)
-		})
+		}(err)
 	})
 	poller, err := netpoll.New(pollerConfig)
 	if err != nil {
@@ -147,34 +147,40 @@ func initChat(t *testing.T, executor concurrent.ExecutorService) *chat.Chat {
 	}
 	ePoll := epoll.NewEPoll(poller)
 	repository := chat.NewMemoryRepository()
-	reader := connutil.FuncReader(readerConn)
-	writer := connutil.FuncWriter(writerConn)
-	Kaf := kafka.New([]string{config.KafkaBootstrapServers()}, config.KafkaClientID())
+	reader := chat.ConnReaderFunc(readerConn)
+	writer := chat.ConnWriterFunc(writerConn)
+	msgEncoder := message.EncoderFunc(adapter.MessageMarshal)
+	msgDecoder := message.DecoderFunc(adapter.MessageUnmarshal)
+	userEncoder := user.EncoderFunc(adapter.UserMarshal)
+	kaf := kafka.New([]string{config.KafkaBootstrapServers()}, config.KafkaClientID())
 
-	chat := chat.NewChat(
+	server := chat.NewServer(
+		context.Background(),
 		ePoll,
-		executor,
 		reader,
 		writer,
+		msgEncoder,
+		msgDecoder,
+		userEncoder,
 		repository,
-		Kaf)
+		kaf)
 
-	return chat
+	return server
 }
 
-func readerConn(conn io.ReadWriter) (io.Reader, error) {
+func readerConn(conn net.Conn) (io.Reader, error) {
 	return conn, nil
 }
 
-func writerConn(conn io.Writer, x interface{}) (err error) {
+func writerConn(conn net.Conn, data interface{}) (err error) {
 	encoder := json.NewEncoder(conn)
-	if err = encoder.Encode(x); err != nil {
+	if err = encoder.Encode(data); err != nil {
 		return
 	}
 	return
 }
 
-func runServerTest(tb testing.TB, chat *chat.Chat) net.Listener {
+func runServerTest(tb testing.TB, chat *chat.Server) net.Listener {
 	ln, err := net.Listen("tcp", "localhost:")
 	if err != nil {
 		tb.Fatal(err)

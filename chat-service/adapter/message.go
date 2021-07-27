@@ -1,29 +1,30 @@
-package message
+package adapter
 
 import (
-	"github.com/tsmweb/chat-service/pkg/protobuf"
+	"github.com/tsmweb/chat-service/chat/message"
+	"github.com/tsmweb/chat-service/infra/protobuf"
 	"google.golang.org/protobuf/proto"
 	"time"
 )
 
-// Marshal marshal to protobuf.Message.
-func Marshal(msg *Message) ([]byte, error) {
+// MessageMarshal is a message.Message encoder for protobuf.Message.
+func MessageMarshal(m *message.Message) ([]byte, error) {
 	mpb := new(protobuf.Message)
-	protobufFromMessage(msg, mpb)
+	protobufFromMessage(m, mpb)
 	return proto.Marshal(mpb)
 }
 
-// Unmarshal unmarshal to Message.
-func Unmarshal(in []byte, msg *Message) error {
+// MessageUnmarshal is a protobuf.Message decoder for message.Message.
+func MessageUnmarshal(in []byte, m *message.Message) error {
 	mpb := new(protobuf.Message)
 	if err := proto.Unmarshal(in, mpb); err != nil {
 		return err
 	}
-	protobufToMessage(mpb, msg)
+	protobufToMessage(mpb, m)
 	return nil
 }
 
-func protobufFromMessage(m *Message, mpb *protobuf.Message) {
+func protobufFromMessage(m *message.Message, mpb *protobuf.Message) {
 	mpb.Id = m.ID
 	mpb.From = m.From
 	mpb.To = m.To
@@ -32,7 +33,7 @@ func protobufFromMessage(m *Message, mpb *protobuf.Message) {
 	mpb.Content = m.Content
 }
 
-func protobufToMessage(mpb *protobuf.Message, m *Message) {
+func protobufToMessage(mpb *protobuf.Message, m *message.Message) {
 	m.ID = mpb.GetId()
 	m.From = mpb.GetFrom()
 	m.To = mpb.GetTo()

@@ -1,13 +1,15 @@
-package connutil
+package adapter
 
 import (
 	"encoding/json"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"io"
+	"net"
 )
 
-func ReaderWS(conn io.ReadWriter) (io.Reader, error) {
+// ReaderWS is a net.Conn websocket reader.
+func ReaderWS(conn net.Conn) (io.Reader, error) {
 	h, r, err := wsutil.NextReader(conn, ws.StateServerSide)
 	if err != nil {
 		return nil, err
@@ -19,11 +21,12 @@ func ReaderWS(conn io.ReadWriter) (io.Reader, error) {
 	return r, nil
 }
 
-func WriterWS(conn io.Writer, x interface{}) error {
+// WriterWS is a net.Conn websocket writer.
+func WriterWS(conn net.Conn, data interface{}) error {
 	w := wsutil.NewWriter(conn, ws.StateServerSide, ws.OpText)
 	encoder := json.NewEncoder(w)
 
-	if err := encoder.Encode(x); err != nil {
+	if err := encoder.Encode(data); err != nil {
 		return err
 	}
 

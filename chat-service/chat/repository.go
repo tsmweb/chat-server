@@ -9,7 +9,6 @@ import (
 type Repository interface {
 	AddUserOnline(userID string, host string, createAt time.Time) error
 	DeleteUserOnline(userID string) error
-	GetUserOnline(userID string) (string, bool, error)
 	GetMessagesOffline(userID string) ([]*message.Message, error)
 	IsValidUser(fromID string, toID string) (bool, error)
 	GetGroupMembers(groupID string) ([]string, error)

@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-func HandleWS(jwt auth.JWT, chat *chat.Chat) http.Handler {
+func HandleWS(jwt auth.JWT, chat *chat.Server) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		data, err := jwt.GetDataToken(r, "id")
 		if err != nil || data == nil {

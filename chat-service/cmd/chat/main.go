@@ -1,15 +1,17 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/tsmweb/chat-service/config"
-	"github.com/tsmweb/go-helper-api/concurrent/executor"
 	"github.com/tsmweb/go-helper-api/middleware"
 	"github.com/urfave/negroni"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"syscall"
 )
 
@@ -40,31 +42,26 @@ func main() {
 		}()
 	}
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	go func(ctx context.Context, fn context.CancelFunc) {
+		<-ctx.Done()
+		fn()
+	}(ctx, stop)
+
 	// Working directory
 	//workDir, _ := os.Getwd()
 	config.Load("../../")
 
 	// starts API server
-	log.Println("[>] starting chat server")
-	initWebServer()
-}
+	providers := CreateProvider(ctx)
 
-func initWebServer() {
-	// Executor to perform background processing,
-	// limiting resource consumption when executing a collection of jobs.
-	executor := executor.New(config.GoPoolSize())
-	defer executor.Shutdown()
-
-	chatRouter, err := InitChatRouter(executor)
+	chatRouter, err := providers.RouterProvider()
 	if err != nil {
 		log.Fatalf("[!] error when starting chat: %s\n", err.Error())
 	}
 
 	router := mux.NewRouter()
 	chatRouter.MakeRouters(router)
-
-	log.Println("[>] chat server started")
-	log.Println("[>] starting entrypoint")
 
 	handler := middleware.GZIP(router)
 	handler = middleware.CORS(handler)

@@ -3,43 +3,19 @@ package chat
 import (
 	"encoding/json"
 	"github.com/tsmweb/chat-service/chat/message"
-	"github.com/tsmweb/chat-service/util/connutil"
-	"io"
+	"net"
 	"sync"
 )
-
-// UserStatus type that represents the user's status as UserOnline and UserOffline.
-type UserStatus int
-
-const (
-	UserOnline  UserStatus = 0x1
-	UserOffline            = 0x2
-)
-
-func (us UserStatus) String() (str string) {
-	name := func(status UserStatus, name string) bool {
-		if us&status == 0 {
-			return false
-		}
-		str = name
-		return true
-	}
-
-	if name(UserOnline, "online") { return }
-	if name(UserOffline, "offline") { return }
-
-	return
-}
 
 // UserConn type that represents the user connection.
 type UserConn struct {
 	userID string
 
 	io   sync.Mutex
-	conn io.ReadWriteCloser
+	conn net.Conn
 
-	reader connutil.Reader
-	writer connutil.Writer
+	reader ConnReader
+	writer ConnWriter
 }
 
 // Receive read user connection data.
