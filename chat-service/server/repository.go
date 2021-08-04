@@ -1,7 +1,6 @@
-package chat
+package server
 
 import (
-	"github.com/tsmweb/chat-service/chat/message"
 	"time"
 )
 
@@ -9,7 +8,8 @@ import (
 type Repository interface {
 	AddUserOnline(userID string, host string, createAt time.Time) error
 	DeleteUserOnline(userID string) error
-	GetMessagesOffline(userID string) ([]*message.Message, error)
 	IsValidUser(fromID string, toID string) (bool, error)
 	GetGroupMembers(groupID string) ([]string, error)
+	GetUserContactsOnline(userID string) ([]string, error)
+	GetContactsWithUserOnline(userID string) ([]string, error)
 }

@@ -1,2 +1,2 @@
 gen:
-	protoc -I=./pkg/protobuf --go_out=./pkg/ ./pkg/protobuf/*.proto
+	protoc -I=./infra/protobuf --go_out=./infra/ ./infra/protobuf/*.proto

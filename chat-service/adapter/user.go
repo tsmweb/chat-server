@@ -1,7 +1,7 @@
 package adapter
 
 import (
-	"github.com/tsmweb/chat-service/chat/user"
+	"github.com/tsmweb/chat-service/server/user"
 	"github.com/tsmweb/chat-service/infra/protobuf"
 	"google.golang.org/protobuf/proto"
 	"time"
@@ -9,8 +9,7 @@ import (
 
 // UserMarshal is a user.User encoder for protobuf.User.
 func UserMarshal(u *user.User) ([]byte, error) {
-	upb := new(protobuf.User)
-	protobufFromUser(u, upb)
+	upb := protobufFromUser(u)
 	return proto.Marshal(upb)
 }
 
@@ -24,11 +23,13 @@ func UserUnmarshal(in []byte, u *user.User) error {
 	return nil
 }
 
-func protobufFromUser(u *user.User, upb *protobuf.User) {
-	upb.Id = u.ID
-	upb.Status = protobuf.UserStatus(protobuf.UserStatus_value[u.Status])
-	upb.ServerID = u.ServerID
-	upb.Date = u.Date.Unix()
+func protobufFromUser(u *user.User) *protobuf.User {
+	return &protobuf.User{
+		Id: u.ID,
+		Status: protobuf.UserStatus(protobuf.UserStatus_value[u.Status]),
+		ServerID: u.ServerID,
+		Date: u.Date.Unix(),
+	}
 }
 
 func protobufToUser(upb *protobuf.User, u *user.User) {

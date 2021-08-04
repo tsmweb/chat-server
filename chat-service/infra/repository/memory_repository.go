@@ -1,8 +1,7 @@
-package chat
+package repository
 
 import (
-	"fmt"
-	"github.com/tsmweb/chat-service/chat/message"
+	"github.com/tsmweb/chat-service/server"
 	"time"
 )
 
@@ -16,17 +15,15 @@ const (
 type memoryRepository struct {
 	users           map[string]struct{}
 	usersOnline     map[string]string
-	messagesOffline map[string][]*message.Message
 	blockedUser     map[string]string
 	groups          map[string]struct{}
 	groupMembers    map[string][]string
 }
 
-func NewMemoryRepository() Repository {
+func NewMemoryRepository() server.Repository {
 	mr := &memoryRepository{
 		users:           make(map[string]struct{}),
 		usersOnline:     make(map[string]string),
-		messagesOffline: make(map[string][]*message.Message),
 		blockedUser:     make(map[string]string),
 		groups:          make(map[string]struct{}),
 		groupMembers:    make(map[string][]string),
@@ -45,22 +42,6 @@ func NewMemoryRepository() Repository {
 	return mr
 }
 
-func (mr *memoryRepository) generatesMessages(userID string) {
-	var msgs []*message.Message
-
-	for i := 0; i < 3; i++ {
-		msg, _ := message.NewMessage(
-			UserTest3,
-			userID,
-			"",
-			message.ContentText,
-			fmt.Sprintf("%d: test internal", i))
-		msgs = append(msgs, msg)
-	}
-
-	mr.messagesOffline[userID] = msgs
-}
-
 func (mr *memoryRepository) AddUserOnline(userID string, host string, createAt time.Time) error {
 	mr.usersOnline[userID] = host
 	return nil
@@ -69,11 +50,6 @@ func (mr *memoryRepository) AddUserOnline(userID string, host string, createAt t
 func (mr *memoryRepository) DeleteUserOnline(userID string) error {
 	delete(mr.usersOnline, userID)
 	return nil
-}
-
-func (mr *memoryRepository) GetMessagesOffline(userID string) ([]*message.Message, error) {
-	//mr.generatesMessages(userID)
-	return mr.messagesOffline[userID], nil
 }
 
 func (mr *memoryRepository) IsValidUser(fromID string, toID string) (bool, error) {
@@ -90,4 +66,24 @@ func (mr *memoryRepository) IsValidUser(fromID string, toID string) (bool, error
 
 func (mr *memoryRepository) GetGroupMembers(groupID string) ([]string, error) {
 	return mr.groupMembers[groupID], nil
+}
+
+func (mr *memoryRepository) GetUserContactsOnline(userID string) ([]string, error) {
+	var contacts []string
+
+	for _, v := range mr.usersOnline {
+		contacts = append(contacts, v)
+	}
+
+	return contacts, nil
+}
+
+func (mr *memoryRepository) GetContactsWithUserOnline(userID string) ([]string, error) {
+	var contacts []string
+
+	for _, v := range mr.usersOnline {
+		contacts = append(contacts, v)
+	}
+
+	return contacts, nil
 }

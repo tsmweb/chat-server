@@ -16,7 +16,7 @@ func init() {
 	resource = fmt.Sprintf("/%s/ws", version)
 }
 
-// Router for chat end points.
+// Router for server end points.
 type Router struct {
 	auth   middleware.Auth
 	handleWS http.Handler
@@ -30,7 +30,7 @@ func NewRouter(a middleware.Auth, handleWS http.Handler) *Router {
 	}
 }
 
-// MakeRouter create a router for chat.
+// MakeRouter create a router for server.
 func (r *Router) MakeRouters(mr *mux.Router) {
 	// ws [GET]
 	mr.Handle(resource, negroni.New(

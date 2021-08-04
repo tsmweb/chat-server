@@ -1,8 +1,8 @@
-package chat
+package server
 
 import (
 	"encoding/json"
-	"github.com/tsmweb/chat-service/chat/message"
+	"github.com/tsmweb/chat-service/server/message"
 	"net"
 	"sync"
 )

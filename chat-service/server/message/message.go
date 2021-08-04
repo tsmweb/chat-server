@@ -108,7 +108,7 @@ func NewMessage(from string, to string, group string, contentType ContentType, c
 }
 
 // Validate verifies that the required attributes of the message are present.
-func (m Message) Validate() error {
+func (m *Message) Validate() error {
 	if strings.TrimSpace(m.ID) == "" {
 		return ErrIDValidateModel
 	}
@@ -131,11 +131,11 @@ func (m Message) Validate() error {
 }
 
 // IsGroupMessage returns true if the message is addressed to a group of users.
-func (m Message) IsGroupMessage() bool {
+func (m *Message) IsGroupMessage() bool {
 	return strings.TrimSpace(m.Group) != ""
 }
 
-func (m Message) String() string {
+func (m *Message) String() string {
 	mj, _ := json.Marshal(m)
 	return string(mj)
 }

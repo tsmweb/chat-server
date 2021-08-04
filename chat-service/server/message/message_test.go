@@ -2,7 +2,6 @@ package message
 
 import (
 	"github.com/stretchr/testify/assert"
-	"github.com/tsmweb/chat-service/chat"
 	"testing"
 	"time"
 )
@@ -41,28 +40,28 @@ func TestMessage_Validate(t *testing.T) {
 			to:         "+5518966666666",
 			contenType: ContentText,
 			content:    "test",
-			want:       chat.ErrFromValidateModel,
+			want:       ErrFromValidateModel,
 		},
 		{
 			from:       "+5518977777777",
 			to:         "",
 			contenType: ContentText,
 			content:    "test",
-			want:       chat.ErrReceiverValidateModel,
+			want:       ErrReceiverValidateModel,
 		},
 		{
 			from:       "+5518977777777",
 			to:         "+5518966666666",
 			contenType: 0,
 			content:    "test",
-			want:       chat.ErrContentTypeValidateModel,
+			want:       ErrContentTypeValidateModel,
 		},
 		{
 			from:       "+5518977777777",
 			to:         "+5518966666666",
 			contenType: ContentText,
 			content:    "",
-			want:       chat.ErrContentValidateModel,
+			want:       ErrContentValidateModel,
 		},
 	}
 

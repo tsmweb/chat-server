@@ -57,7 +57,7 @@ func main() {
 
 	chatRouter, err := providers.RouterProvider()
 	if err != nil {
-		log.Fatalf("[!] error when starting chat: %s\n", err.Error())
+		log.Fatalf("[!] error when starting server: %s\n", err.Error())
 	}
 
 	router := mux.NewRouter()

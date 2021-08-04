@@ -1,16 +1,15 @@
 package adapter
 
 import (
-	"github.com/tsmweb/chat-service/chat/message"
 	"github.com/tsmweb/chat-service/infra/protobuf"
+	"github.com/tsmweb/chat-service/server/message"
 	"google.golang.org/protobuf/proto"
 	"time"
 )
 
 // MessageMarshal is a message.Message encoder for protobuf.Message.
 func MessageMarshal(m *message.Message) ([]byte, error) {
-	mpb := new(protobuf.Message)
-	protobufFromMessage(m, mpb)
+	mpb := protobufFromMessage(m)
 	return proto.Marshal(mpb)
 }
 
@@ -24,13 +23,15 @@ func MessageUnmarshal(in []byte, m *message.Message) error {
 	return nil
 }
 
-func protobufFromMessage(m *message.Message, mpb *protobuf.Message) {
-	mpb.Id = m.ID
-	mpb.From = m.From
-	mpb.To = m.To
-	mpb.Date = m.Date.Unix()
-	mpb.ContentType = protobuf.ContentType(protobuf.ContentType_value[m.ContentType])
-	mpb.Content = m.Content
+func protobufFromMessage(m *message.Message) *protobuf.Message {
+	return &protobuf.Message {
+		Id: m.ID,
+		From: m.From,
+		To: m.To,
+		Date: m.Date.Unix(),
+		ContentType: protobuf.ContentType(protobuf.ContentType_value[m.ContentType]),
+		Content: m.Content,
+	}
 }
 
 func protobufToMessage(mpb *protobuf.Message, m *message.Message) {
