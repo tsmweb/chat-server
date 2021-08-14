@@ -11,18 +11,20 @@ import (
 
 const (
 	InvalidMessage = "invalid message"
+	AckMessage     = "ack"
 )
 
 // ContentType represents the type of message content,
-// such as ContentACK, ContentText, ContentMedia, ContentStatus and ContentError.
+// such as ContentTypeACK, ContentTypeText, ContentTypeMedia, ContentTypeStatus and ContentTypeError.
 type ContentType int
 
 const (
-	ContentACK    ContentType = 0x1
-	ContentText               = 0x2
-	ContentMedia              = 0x4
-	ContentStatus             = 0x8
-	ContentError              = 0x80
+	ContentTypeACK    ContentType = 0x1
+	ContentTypeText               = 0x2
+	ContentTypeMedia              = 0x4
+	ContentTypeStatus             = 0x8
+	ContentTypeInfo               = 0x10
+	ContentTypeError              = 0x20
 )
 
 func (ct ContentType) String() (str string) {
@@ -34,19 +36,22 @@ func (ct ContentType) String() (str string) {
 		return true
 	}
 
-	if name(ContentACK, "ack") {
+	if name(ContentTypeACK, "ack") {
 		return
 	}
-	if name(ContentText, "text") {
+	if name(ContentTypeText, "text") {
 		return
 	}
-	if name(ContentMedia, "media") {
+	if name(ContentTypeMedia, "media") {
 		return
 	}
-	if name(ContentStatus, "status") {
+	if name(ContentTypeStatus, "status") {
 		return
 	}
-	if name(ContentError, "error") {
+	if name(ContentTypeInfo, "info") {
+		return
+	}
+	if name(ContentTypeError, "error") {
 		return
 	}
 

@@ -9,10 +9,14 @@ import (
 	"time"
 )
 
+// HandleUserStatus handles user status.
 type HandleUserStatus interface {
+	// Execute performs user status handling.
 	Execute(ctx context.Context, userID string, status user.Status,
 		chMessage, chSendMessage chan<- message.Message) *ErrorEvent
-	Stop()
+
+	// Close connections.
+	Close()
 }
 
 type handleUserStatus struct {
@@ -21,6 +25,7 @@ type handleUserStatus struct {
 	repository Repository
 }
 
+// NewHandleUserStatus implements the HandleUserStatus interface.
 func NewHandleUserStatus(
 	encoder user.Encoder,
 	producer kafka.Producer,
@@ -33,6 +38,8 @@ func NewHandleUserStatus(
 	}
 }
 
+// Execute performs user status handling as: register in the database,
+// publish in topic kafka and notifies contacts.
 func (h *handleUserStatus) Execute(ctx context.Context, userID string, status user.Status,
 	chMessage, chSendMessage chan<- message.Message,
 ) *ErrorEvent {
@@ -49,17 +56,25 @@ func (h *handleUserStatus) Execute(ctx context.Context, userID string, status us
 		return err
 	}
 
-	if err := h.notifyUserStatus(userID, status, chMessage, chSendMessage); err != nil {
+	if status == user.Online {
+		if err := h.notifyContactStatusToUser(userID, status, chSendMessage); err != nil {
+			return err
+		}
+	}
+
+	if err := h.notifyUserStatusToContacts(userID, status, chMessage); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (h *handleUserStatus) Stop() {
+// Close connection with kafka producer.
+func (h *handleUserStatus) Close() {
 	h.producer.Close()
 }
 
+// setUserStatus logs user status in the data store.
 func (h *handleUserStatus) setUserStatus(userID, serverID string, status user.Status) *ErrorEvent {
 	if status == user.Online {
 		if err := h.repository.AddUserOnline(userID, serverID, time.Now().UTC()); err != nil {
@@ -74,6 +89,7 @@ func (h *handleUserStatus) setUserStatus(userID, serverID string, status user.St
 	return nil
 }
 
+// publishUserStatus publish user status to kafka topic.
 func (h *handleUserStatus) publishUserStatus(ctx context.Context, userID, serverID string,
 	status user.Status,
 ) *ErrorEvent {
@@ -90,27 +106,34 @@ func (h *handleUserStatus) publishUserStatus(ctx context.Context, userID, server
 	return nil
 }
 
-func (h *handleUserStatus) notifyUserStatus(userID string, status user.Status,
-	chMessage, chSendMessage chan<- message.Message) *ErrorEvent {
-	// sends the contact's presence message to the user.
+// notifyContactStatusToUser sends the contact's presence message to the user.
+func (h *handleUserStatus) notifyContactStatusToUser(userID string, status user.Status,
+	chSendMessage chan<- message.Message) *ErrorEvent {
+
 	contacts, err := h.repository.GetUserContactsOnline(userID)
 	if err != nil {
-		return NewErrorEvent(userID, "HandleUserStatus.notifyUserStatus()", err.Error())
+		return NewErrorEvent(userID, "Repository.GetUserContactsOnline()", err.Error())
 	}
 
 	for _, contact := range contacts {
-		msgForUser, _ := message.NewMessage(contact, userID, "", message.ContentStatus, status.String())
+		msgForUser, _ := message.NewMessage(contact, userID, "", message.ContentTypeStatus, status.String())
 		chSendMessage <- *msgForUser
 	}
 
-	// sends user presence message to online contacts.
-	contacts, err = h.repository.GetContactsWithUserOnline(userID)
+	return nil
+}
+
+// notifyUserStatusToContacts sends user presence message to online contacts.
+func (h *handleUserStatus) notifyUserStatusToContacts(userID string, status user.Status,
+	chMessage chan<- message.Message) *ErrorEvent {
+
+	contacts, err := h.repository.GetContactsWithUserOnline(userID)
 	if err != nil {
-		return NewErrorEvent(userID, "HandleUserStatus.notifyUserStatus()", err.Error())
+		return NewErrorEvent(userID, "Repository.GetContactsWithUserOnline()", err.Error())
 	}
 
 	for _, contact := range contacts {
-		msgForContact, _ := message.NewMessage(userID, contact, "", message.ContentStatus, status.String())
+		msgForContact, _ := message.NewMessage(userID, contact, "", message.ContentTypeStatus, status.String())
 		chMessage <- *msgForContact
 	}
 

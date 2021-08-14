@@ -6,9 +6,13 @@ import (
 	"log"
 )
 
+// HandleError handles errors.
 type HandleError interface {
+	// Execute performs errors handling.
 	Execute(ctx context.Context, err ErrorEvent)
-	Stop()
+
+	// Close connections.
+	Close()
 }
 
 type handleError struct {
@@ -16,6 +20,7 @@ type handleError struct {
 	producer kafka.Producer
 }
 
+// NewHandleError implements the HandleError interface.
 func NewHandleError(
 	encoder ErrorEventEncoder,
 	producer kafka.Producer,
@@ -26,6 +31,7 @@ func NewHandleError(
 	}
 }
 
+// Execute performs errors handling and publish in topic kafka.
 func (h *handleError) Execute(ctx context.Context, errEvent ErrorEvent) {
 	epb, err := h.encoder.Marshal(&errEvent)
 	if err != nil {
@@ -38,6 +44,7 @@ func (h *handleError) Execute(ctx context.Context, errEvent ErrorEvent) {
 	}
 }
 
-func (h *handleError) Stop() {
+// Close connection with kafka producer.
+func (h *handleError) Close() {
 	h.producer.Close()
 }

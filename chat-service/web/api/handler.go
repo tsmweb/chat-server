@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-func HandleWS(jwt auth.JWT, chat *server.Server) http.Handler {
+func HandleWS(jwt auth.JWT, server *server.Server) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		data, err := jwt.GetDataToken(r, "id")
 		if err != nil || data == nil {
@@ -28,7 +28,7 @@ func HandleWS(jwt auth.JWT, chat *server.Server) http.Handler {
 		}
 
 		// Register incoming connection in server.
-		if err = chat.Register(userID, conn); err != nil {
+		if err = server.Register(userID, conn); err != nil {
 			log.Println(err.Error())
 			httputil.RespondWithError(w, http.StatusInternalServerError, err.Error())
 			return

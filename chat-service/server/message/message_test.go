@@ -8,7 +8,7 @@ import (
 
 func TestNewMessage(t *testing.T) {
 	//t.Parallel()
-	m, err := NewMessage("+5518977777777", "+5518966666666", "", ContentText, "test")
+	m, err := NewMessage("+5518977777777", "+5518966666666", "", ContentTypeText, "test")
 
 	assert.Nil(t, err)
 	assert.NotNil(t, m.ID)
@@ -31,21 +31,21 @@ func TestMessage_Validate(t *testing.T) {
 		{
 			from:       "+5518977777777",
 			to:         "+5518966666666",
-			contenType: ContentText,
+			contenType: ContentTypeText,
 			content:    "test",
 			want:       nil,
 		},
 		{
 			from:       "",
 			to:         "+5518966666666",
-			contenType: ContentText,
+			contenType: ContentTypeText,
 			content:    "test",
 			want:       ErrFromValidateModel,
 		},
 		{
 			from:       "+5518977777777",
 			to:         "",
-			contenType: ContentText,
+			contenType: ContentTypeText,
 			content:    "test",
 			want:       ErrReceiverValidateModel,
 		},
@@ -59,7 +59,7 @@ func TestMessage_Validate(t *testing.T) {
 		{
 			from:       "+5518977777777",
 			to:         "+5518966666666",
-			contenType: ContentText,
+			contenType: ContentTypeText,
 			content:    "",
 			want:       ErrContentValidateModel,
 		},

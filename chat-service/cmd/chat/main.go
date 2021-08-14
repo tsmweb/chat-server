@@ -49,7 +49,7 @@ func main() {
 	}(ctx, stop)
 
 	// Working directory
-	//workDir, _ := os.Getwd()
+	// workDir, _ := os.Getwd()
 	config.Load("../../")
 
 	// starts API server

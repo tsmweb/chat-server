@@ -41,7 +41,7 @@ func TestServer(t *testing.T) {
 
 	t.Run("when the message is not valid", func(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
-		msg, _ := message.NewMessage(repository.UserTest1, repository.UserTest2, "", message.ContentText, "hello")
+		msg, _ := message.NewMessage(repository.UserTest1, repository.UserTest2, "", message.ContentTypeText, "hello")
 		msg.ContentType = ""
 
 		if err := writerConn(conn1, msg); err != nil {
@@ -56,7 +56,7 @@ func TestServer(t *testing.T) {
 
 	t.Run("when UserTest1 was blocked by UserTest3", func(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
-		msg, _ := message.NewMessage(repository.UserTest1, repository.UserTest3, "", message.ContentText, "hello")
+		msg, _ := message.NewMessage(repository.UserTest1, repository.UserTest3, "", message.ContentTypeText, "hello")
 
 		if err := writerConn(conn1, msg); err != nil {
 			t.Fatalf("error send message writerConn(): %v", err)
@@ -70,7 +70,7 @@ func TestServer(t *testing.T) {
 
 	t.Run("UserTest2 sends message to UserTest1", func(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
-		msg, _ := message.NewMessage(repository.UserTest2, repository.UserTest1, "", message.ContentText, "hello test")
+		msg, _ := message.NewMessage(repository.UserTest2, repository.UserTest1, "", message.ContentTypeText, "hello test")
 
 		if err := writerConn(conn2, msg); err != nil {
 			t.Fatalf("error send message writerConn(): %v", err)

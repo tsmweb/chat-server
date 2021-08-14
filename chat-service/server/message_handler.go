@@ -6,10 +6,13 @@ import (
 	"github.com/tsmweb/go-helper-api/kafka"
 )
 
-// HandleMessage
+// HandleMessage handles messages.
 type HandleMessage interface {
+	// Execute performs message handling.
 	Execute(ctx context.Context, msg message.Message) *ErrorEvent
-	Stop()
+
+	// Close connections.
+	Close()
 }
 
 type handleMessage struct {
@@ -17,6 +20,7 @@ type handleMessage struct {
 	producer kafka.Producer
 }
 
+// NewHandleMessage implements the HandleMessage interface.
 func NewHandleMessage(
 	encoder message.Encoder,
 	producer kafka.Producer,
@@ -27,6 +31,7 @@ func NewHandleMessage(
 	}
 }
 
+// Execute performs message handling as: encode and publish in topic kafka.
 func (h *handleMessage) Execute(ctx context.Context, msg message.Message) *ErrorEvent {
 	mpb, err := h.encoder.Marshal(&msg)
 	if err != nil {
@@ -40,12 +45,14 @@ func (h *handleMessage) Execute(ctx context.Context, msg message.Message) *Error
 	return nil
 }
 
-func (h *handleMessage) Stop() {
+// Close connection with kafka producer.
+func (h *handleMessage) Close() {
 	h.producer.Close()
 }
 
-// HandleGroupMessage
+// HandleGroupMessage handles group messages.
 type HandleGroupMessage interface {
+	// Execute performs group message handling.
 	Execute(msg message.Message, chMessage chan<- message.Message) *ErrorEvent
 }
 
@@ -53,12 +60,15 @@ type handleGroupMessage struct {
 	repository Repository
 }
 
+// NewHandleGroupMessage implements the HandleGroupMessage interface.
 func NewHandleGroupMessage(repository Repository) HandleGroupMessage {
 	return &handleGroupMessage{
 		repository: repository,
 	}
 }
 
+// Execute performs group message handling.
+// Load group members into database and send in message channel.
 func (h *handleGroupMessage) Execute(msg message.Message, chMessage chan<- message.Message) *ErrorEvent {
 	users, err := h.repository.GetGroupMembers(msg.Group)
 	if err != nil {

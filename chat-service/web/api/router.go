@@ -22,7 +22,7 @@ type Router struct {
 	handleWS http.Handler
 }
 
-// // NewRouter creates a router for Chat.
+// NewRouter creates a router for Chat.
 func NewRouter(a middleware.Auth, handleWS http.Handler) *Router {
 	return &Router{
 		auth:   a,

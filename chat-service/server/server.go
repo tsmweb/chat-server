@@ -99,19 +99,19 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 			observer.Stop()
 			s.chUserOUT <- user.userID
 			if err != nil {
-				s.chError <- *NewErrorEvent(user.userID, "Server.Register()", err.Error())
+				s.chError <- *NewErrorEvent(user.userID, "Server.Register():poller", err.Error())
 			}
 			return
 		}
 
 		s.executor.Schedule(func(ctx context.Context) {
-			sendACK := func(msgID, content string) {
-				if err := user.WriteACK(msgID, content); err != nil {
+			sendResponse := func(msgID string, contentType message.ContentType, content string) {
+				if err := user.WriteResponse(msgID, contentType, content); err != nil {
 					s.chError <- *NewErrorEvent(user.userID, "UserConn.WriteACK()", err.Error())
 				}
 			}
 
-			msg, err := user.Receive()
+			msg, err := user.Receive() // receive message from user connection
 			if err != nil {
 				observer.Stop()
 				s.chUserOUT <- user.userID
@@ -122,20 +122,20 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 				if msg.IsGroupMessage() {
 					s.chGroupMessage <- *msg
 				} else {
-					ok, err := s.repository.IsValidUser(msg.From, msg.To)
+					ok, err := s.repository.IsValidUser(msg.From, msg.To) // checks if the message recipient is a valid user
 					if err != nil {
 						s.chError <- *NewErrorEvent(user.userID, "Repository.IsValidUser()", err.Error())
 						return
 					}
 					if !ok {
-						sendACK(msg.ID, message.InvalidMessage)
+						sendResponse(msg.ID, message.ContentTypeInfo, message.InvalidMessage)
 						return
 					}
 
 					s.chMessage <- *msg
 				}
 
-				sendACK(msg.ID, "sent")
+				sendResponse(msg.ID, message.ContentTypeACK, message.AckMessage)
 			}
 		})
 	})
@@ -161,10 +161,10 @@ func (s *Server) run() {
 func (s *Server) stop() {
 	s.executor.Shutdown()
 
-	s.handleMessage.Stop()
-	s.handleOffMessage.Stop()
-	s.handleUserStatus.Stop()
-	s.handleError.Stop()
+	s.handleMessage.Close()
+	s.handleOffMessage.Close()
+	s.handleUserStatus.Close()
+	s.handleError.Close()
 }
 
 func (s *Server) messageProcessor() {
@@ -242,24 +242,25 @@ func (s *Server) groupMessageTask(msg message.Message) func(ctx context.Context)
 
 func (s *Server) sendMessageTask(msg message.Message, user *UserConn) func(ctx context.Context) {
 	return func(ctx context.Context) {
-		sendOffMessage := func(ctx context.Context, msg message.Message) {
-			var contentStatus message.ContentType = message.ContentStatus
-			if msg.ContentType == contentStatus.String() {
-				return
-			}
-
-			if err := s.handleOffMessage.Execute(ctx, msg); err != nil {
-				s.chError <- *err
-			}
-		}
-
 		if user != nil {
+			// write a message on user connection
 			if err := user.WriteMessage(&msg); err != nil {
-				sendOffMessage(ctx, msg)
+				s.sendOffMessage(ctx, msg)
 			}
 		} else {
-			sendOffMessage(ctx, msg)
+			s.sendOffMessage(ctx, msg)
 		}
+	}
+}
+
+func (s *Server) sendOffMessage(ctx context.Context, msg message.Message) {
+	var contentStatus message.ContentType = message.ContentTypeStatus
+	if msg.ContentType == contentStatus.String() {
+		return
+	}
+
+	if err := s.handleOffMessage.Execute(ctx, msg); err != nil {
+		s.chError <- *err
 	}
 }
 
