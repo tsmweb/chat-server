@@ -46,7 +46,7 @@ func (p *Providers) ServerProvider() (*server.Server, error) {
 			p.ConnWriterProvider(),
 			p.MessageDecoderProvider(),
 			p.RepositoryProvider(),
-			p.KafkaProvider(),
+			p.KafkaProvider().NewConsumer(config.KafkaGroupID(), config.KafkaHostTopic()),
 			p.HandleMessageProvider(),
 			p.HandleGroupMessageProvider(),
 			p.HandleOffMessageProvider(),

@@ -15,16 +15,17 @@ const (
 )
 
 // ContentType represents the type of message content,
-// such as ContentTypeACK, ContentTypeText, ContentTypeMedia, ContentTypeStatus and ContentTypeError.
+// such as ContentTypeACK, ContentTypeText, ContentTypeMedia, ContentTypeStatus,
+// ContentTypeInfo and ContentTypeError.
 type ContentType int
 
 const (
 	ContentTypeACK    ContentType = 0x1
-	ContentTypeText               = 0x2
-	ContentTypeMedia              = 0x4
-	ContentTypeStatus             = 0x8
-	ContentTypeInfo               = 0x10
-	ContentTypeError              = 0x20
+	ContentTypeText   ContentType = 0x2
+	ContentTypeMedia  ContentType = 0x4
+	ContentTypeStatus ContentType = 0x8
+	ContentTypeInfo   ContentType = 0x10
+	ContentTypeError  ContentType = 0x20
 )
 
 func (ct ContentType) String() (str string) {
@@ -90,33 +91,46 @@ func NewResponse(msgID string, contentType ContentType, content string) *Message
 
 // NewMessage creates and returns a new Message instance.
 func NewMessage(from string, to string, group string, contentType ContentType, content string) (*Message, error) {
-	msgID, err := hashutil.HashSHA1(from + strconv.FormatInt(time.Now().Unix(), 10))
-	if err != nil {
-		return nil, err
-	}
+	return newMessage(from, to, group, time.Now().UTC(), contentType.String(), content)
+}
 
+func newMessage(from string, to string, group string, date time.Time, contentType string, content string) (*Message, error) {
 	msg := &Message{
-		ID:          msgID,
 		From:        from,
 		To:          to,
 		Group:       group,
-		Date:        time.Now().UTC(),
-		ContentType: contentType.String(),
+		Date:        date,
+		ContentType: contentType,
 		Content:     content,
 	}
 
-	if err = msg.Validate(); err != nil {
+	if err := msg.Validate(); err != nil {
+		return nil, err
+	}
+
+	if err := msg.generateID(); err != nil {
 		return nil, err
 	}
 
 	return msg, nil
 }
 
+// ReplicateTo replicate the message to another recipient.
+func (m *Message) ReplicateTo(to string) (*Message, error) {
+	return newMessage(m.From, to, m.Group, m.Date, m.ContentType, m.Content)
+}
+
+func (m *Message) generateID() error {
+	id, err := hashutil.HashSHA1(m.From + m.To + m.Group + strconv.FormatInt(time.Now().Unix(), 10))
+	if err != nil {
+		return err
+	}
+	m.ID = id
+	return nil
+}
+
 // Validate verifies that the required attributes of the message are present.
 func (m *Message) Validate() error {
-	if strings.TrimSpace(m.ID) == "" {
-		return ErrIDValidateModel
-	}
 	if strings.TrimSpace(m.From) == "" {
 		return ErrFromValidateModel
 	}

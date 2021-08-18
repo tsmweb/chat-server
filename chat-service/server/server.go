@@ -14,9 +14,9 @@ import (
 // Server registers the user's net.Conn connection and handles the data received and sent over the connection.
 // It also produces and consumes Apache Kafka data to communicate with the cluster of services.
 type Server struct {
-	ctx        context.Context
-	executor   *executor.Executor
-	poller     epoll.EPoll
+	ctx      context.Context
+	executor *executor.Executor
+	poller   epoll.EPoll
 
 	chUserIN       chan *UserConn
 	chUserOUT      chan string
@@ -25,11 +25,11 @@ type Server struct {
 	chSendMessage  chan message.Message
 	chError        chan ErrorEvent
 
-	connReader ConnReader
-	connWriter ConnWriter
-	msgDecoder message.Decoder
-	repository Repository
-	kafka      kafka.Kafka
+	connReader     ConnReader
+	connWriter     ConnWriter
+	msgDecoder     message.Decoder
+	repository     Repository
+	consumeMessage kafka.Consumer
 
 	handleMessage      HandleMessage
 	handleGroupMessage HandleGroupMessage
@@ -46,7 +46,7 @@ func NewServer(
 	connWriter ConnWriter,
 	msgDecoder message.Decoder,
 	repo Repository,
-	kaf kafka.Kafka,
+	consumeMessage kafka.Consumer,
 	handleMessage HandleMessage,
 	handleGroupMessage HandleGroupMessage,
 	handleOffMessage HandleMessage,
@@ -66,7 +66,7 @@ func NewServer(
 		connWriter:         connWriter,
 		msgDecoder:         msgDecoder,
 		repository:         repo,
-		kafka:              kaf,
+		consumeMessage:     consumeMessage,
 		handleMessage:      handleMessage,
 		handleGroupMessage: handleGroupMessage,
 		handleOffMessage:   handleOffMessage,
@@ -203,8 +203,7 @@ loop:
 }
 
 func (s *Server) messageConsumer() {
-	consumer := s.kafka.NewConsumer(config.KafkaGroupID(), config.KafkaHostTopic())
-	defer consumer.Close()
+	defer s.consumeMessage.Close()
 
 	callbackFn := func(event *kafka.Event, err error) {
 		if err != nil {
@@ -221,7 +220,7 @@ func (s *Server) messageConsumer() {
 		s.chSendMessage <- msg
 	}
 
-	consumer.Subscribe(s.ctx, callbackFn)
+	s.consumeMessage.Subscribe(s.ctx, callbackFn)
 }
 
 func (s *Server) messageTask(msg message.Message) func(ctx context.Context) {

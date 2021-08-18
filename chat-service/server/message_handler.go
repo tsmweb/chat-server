@@ -76,8 +76,8 @@ func (h *handleGroupMessage) Execute(msg message.Message, chMessage chan<- messa
 	}
 
 	for _, user := range users {
-		msg.To = user
-		chMessage <- msg
+		m, _ := msg.ReplicateTo(user)
+		chMessage <- *m
 	}
 
 	return nil

@@ -7,7 +7,7 @@ type Status int
 
 const (
 	Online  Status = 0x1
-	Offline        = 0x2
+	Offline Status = 0x2
 )
 
 func (s Status) String() (str string) {
@@ -38,9 +38,9 @@ type User struct {
 
 func NewUser(id string, status Status, serverID string) *User {
 	return &User{
-		ID: id,
-		Status: status.String(),
+		ID:       id,
+		Status:   status.String(),
 		ServerID: serverID,
-		Date: time.Now().UTC(),
+		Date:     time.Now().UTC(),
 	}
 }

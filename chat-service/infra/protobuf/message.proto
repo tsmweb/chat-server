@@ -8,7 +8,8 @@ enum ContentType {
   text = 1;
   media = 2;
   status = 3;
-  error = 4;
+  info = 4;
+  error = 5;
 }
 
 message Message {
