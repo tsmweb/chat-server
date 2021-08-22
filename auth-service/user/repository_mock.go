@@ -35,3 +35,4 @@ func (m *mockRepository) Update(ctx context.Context, u *User) (bool, error) {
 	}
 	return args.Get(0).(bool), nil
 }
+

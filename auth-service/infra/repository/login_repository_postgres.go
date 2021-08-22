@@ -1,23 +1,24 @@
-package login
+package repository
 
 import (
 	"context"
 	"database/sql"
-	"github.com/tsmweb/auth-service/helper/database"
+	"github.com/tsmweb/auth-service/infra/db"
+	"github.com/tsmweb/auth-service/login"
 )
 
-// repositoryPostgres implementation for Repository interface.
-type repositoryPostgres struct {
-	dataBase database.Database
+// loginRepositoryPostgres implementation for login.Repository interface.
+type loginRepositoryPostgres struct {
+	dataBase db.Database
 }
 
-// NewRepositoryPostgres creates a new instance of Repository.
-func NewRepositoryPostgres(db database.Database) Repository {
-	return &repositoryPostgres{dataBase: db}
+// NewLoginRepositoryPostgres creates a new instance of login.Repository.
+func NewLoginRepositoryPostgres(db db.Database) login.Repository {
+	return &loginRepositoryPostgres{dataBase: db}
 }
 
 // Login returns if ID and password are valid.
-func (r *repositoryPostgres) Login(ctx context.Context, login *Login) (bool, error) {
+func (r *loginRepositoryPostgres) Login(ctx context.Context, login *login.Login) (bool, error) {
 	ok := false
 
 	stmt, err := r.dataBase.DB().PrepareContext(ctx,`
@@ -38,7 +39,7 @@ func (r *repositoryPostgres) Login(ctx context.Context, login *Login) (bool, err
 }
 
 // Update login data in the data base.
-func (r *repositoryPostgres) Update(ctx context.Context, login *Login) (bool, error) {
+func (r *loginRepositoryPostgres) Update(ctx context.Context, login *login.Login) (bool, error) {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return false, err

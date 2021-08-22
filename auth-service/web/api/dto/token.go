@@ -1,4 +1,4 @@
-package login
+package dto
 
 // TokenAuth JWT token.
 type TokenAuth struct {

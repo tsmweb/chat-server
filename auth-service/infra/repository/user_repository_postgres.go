@@ -1,26 +1,27 @@
-package user
+package repository
 
 import (
 	"context"
 	"database/sql"
 	"github.com/lib/pq"
-	"github.com/tsmweb/auth-service/helper/database"
+	"github.com/tsmweb/auth-service/infra/db"
+	"github.com/tsmweb/auth-service/user"
 	"github.com/tsmweb/go-helper-api/cerror"
 	"time"
 )
 
-// repositoryPostgres implementation for Repository interface.
-type repositoryPostgres struct {
-	dataBase database.Database
+// userRepositoryPostgres implementation for user.Repository interface.
+type userRepositoryPostgres struct {
+	dataBase db.Database
 }
 
-// NewRepositoryPostgres creates a new instance of Repository.
-func NewRepositoryPostgres(db database.Database) Repository {
-	return &repositoryPostgres{dataBase: db}
+// NewUserRepositoryPostgres creates a new instance of user.Repository.
+func NewUserRepositoryPostgres(db db.Database) user.Repository {
+	return &userRepositoryPostgres{dataBase: db}
 }
 
 // Get returns the user by id.
-func (r *repositoryPostgres) Get(ctx context.Context, ID string) (*User, error) {
+func (r *userRepositoryPostgres) Get(ctx context.Context, ID string) (*user.User, error) {
 	stmt, err := r.dataBase.DB().PrepareContext(ctx, `
 		SELECT u.id, 
 			u.name, 
@@ -33,7 +34,7 @@ func (r *repositoryPostgres) Get(ctx context.Context, ID string) (*User, error) 
 	}
 	defer stmt.Close()
 
-	var user User
+	var user user.User
 	err = stmt.QueryRowContext(ctx, ID).
 		Scan(&user.ID,
 			&user.Name,
@@ -52,7 +53,7 @@ func (r *repositoryPostgres) Get(ctx context.Context, ID string) (*User, error) 
 }
 
 // Create new user in the data base.
-func (r *repositoryPostgres) Create(ctx context.Context, user *User) error {
+func (r *userRepositoryPostgres) Create(ctx context.Context, user *user.User) error {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return err
@@ -93,7 +94,7 @@ func (r *repositoryPostgres) Create(ctx context.Context, user *User) error {
 }
 
 // Update user data in the data base.
-func (r *repositoryPostgres) Update(ctx context.Context, user *User) (bool, error) {
+func (r *userRepositoryPostgres) Update(ctx context.Context, user *user.User) (bool, error) {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return false, err
@@ -129,7 +130,7 @@ func (r *repositoryPostgres) Update(ctx context.Context, user *User) (bool, erro
 	return true, nil
 }
 
-func (r *repositoryPostgres) addLogin(ctx context.Context,
+func (r *userRepositoryPostgres) addLogin(ctx context.Context,
 	txn *sql.Tx, userID string, password string, createdAt time.Time) error {
 	stmt, err := txn.PrepareContext(ctx, `
 		INSERT INTO login(user_id, password, created_at) 

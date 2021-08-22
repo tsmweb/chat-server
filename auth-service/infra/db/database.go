@@ -1,10 +1,10 @@
-package database
+package db
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/tsmweb/auth-service/helper/setting"
+	"github.com/tsmweb/auth-service/config"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -31,7 +31,7 @@ type PostgresDatabase struct {
 // NewPostgresDatabase creates a new instance of PostgresDatabase.
 func NewPostgresDatabase() Database {
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable search_path=%s,public",
-		setting.DBHost(), setting.DBPort(), setting.DBUser(), setting.DBPassword(), setting.DBName(), setting.DBSchema())
+		config.DBHost(), config.DBPort(), config.DBUser(), config.DBPassword(), config.DBName(), config.DBSchema())
 	db, err := sql.Open(dbDriver, connStr)
 	if err != nil {
 		panic(err.Error())

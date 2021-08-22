@@ -2,7 +2,7 @@ package login
 
 import (
 	"context"
-	"github.com/tsmweb/auth-service/helper/setting"
+	"github.com/tsmweb/auth-service/config"
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/cerror"
 )
@@ -38,7 +38,7 @@ func (u *loginUseCase) Execute(ctx context.Context, ID, password string) (string
 		return "", cerror.ErrUnauthorized
 	}
 
-	token, err := u.jwt.GenerateToken(ID, setting.ExpireToken())
+	token, err := u.jwt.GenerateToken(ID, config.ExpireToken())
 	if err != nil {
 		return "", err
 	}

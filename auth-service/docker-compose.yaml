@@ -1,0 +1,19 @@
+version: "3"
+
+services:
+  app:
+    container_name: auth-service
+    build: .
+    ports:
+      - "8081:8081"
+    volumes:
+      - .:/go/src/
+    environment:
+      SERVER_PORT: 8081
+      PGHOST: 172.17.0.1
+      PGPORT: 5432
+      PGDATABASE: chat_db
+      PGSCHEMA: chat_db
+      PGUSER: salesapi
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"
