@@ -1,26 +1,27 @@
-package contact
+package repository
 
 import (
 	"context"
 	"database/sql"
 	"github.com/lib/pq"
 	"github.com/tsmweb/go-helper-api/cerror"
-	"github.com/tsmweb/user-service/helper/database"
+	"github.com/tsmweb/user-service/contact"
+	"github.com/tsmweb/user-service/infra/db"
 	"time"
 )
 
-// repositoryPostgres implementation for Repository interface.
-type repositoryPostgres struct {
-	dataBase database.Database
+// contactRepositoryPostgres implementation for contact.Repository interface.
+type contactRepositoryPostgres struct {
+	dataBase db.Database
 }
 
-// NewRepositoryPostgres creates a new instance of Repository.
-func NewRepositoryPostgres(db database.Database) Repository {
-	return &repositoryPostgres{dataBase: db}
+// NewContactRepositoryPostgres creates a new instance of contact.Repository.
+func NewContactRepositoryPostgres(db db.Database) contact.Repository {
+	return &contactRepositoryPostgres{dataBase: db}
 }
 
 // Get returns the contact by userID and contactID.
-func (r *repositoryPostgres) Get(ctx context.Context, userID, contactID string) (*Contact, error) {
+func (r *contactRepositoryPostgres) Get(ctx context.Context, userID, contactID string) (*contact.Contact, error) {
 	stmt, err := r.dataBase.DB().PrepareContext(ctx,`
 			SELECT c.user_id, 
 				c.contact_id, 
@@ -36,7 +37,7 @@ func (r *repositoryPostgres) Get(ctx context.Context, userID, contactID string) 
 	}
 	defer stmt.Close()
 
-	var contact Contact
+	var contact contact.Contact
 	err = stmt.QueryRowContext(ctx, userID, contactID).
 		Scan(&contact.UserID,
 			&contact.ID,
@@ -55,7 +56,7 @@ func (r *repositoryPostgres) Get(ctx context.Context, userID, contactID string) 
 }
 
 // GetAll returns all contacts by userID.
-func (r *repositoryPostgres) GetAll(ctx context.Context, userID string) ([]*Contact, error) {
+func (r *contactRepositoryPostgres) GetAll(ctx context.Context, userID string) ([]*contact.Contact, error) {
 	stmt, err := r.dataBase.DB().PrepareContext(ctx, `
 			SELECT c.user_id, 
 				c.contact_id, 
@@ -70,7 +71,7 @@ func (r *repositoryPostgres) GetAll(ctx context.Context, userID string) ([]*Cont
 	}
 	defer stmt.Close()
 
-	contacts := make([]*Contact, 0)
+	contacts := make([]*contact.Contact, 0)
 
 	rows, err := stmt.QueryContext(ctx, userID)
 	if err != nil {
@@ -79,7 +80,7 @@ func (r *repositoryPostgres) GetAll(ctx context.Context, userID string) ([]*Cont
 	defer rows.Close()
 
 	for rows.Next() {
-		var contact Contact
+		var contact contact.Contact
 		err = rows.Scan(
 			&contact.UserID,
 			&contact.ID,
@@ -105,7 +106,7 @@ func (r *repositoryPostgres) GetAll(ctx context.Context, userID string) ([]*Cont
 }
 
 // ExistsUser checks if the contact exists in the database.
-func (r *repositoryPostgres) ExistsUser(ctx context.Context, ID string) (bool, error) {
+func (r *contactRepositoryPostgres) ExistsUser(ctx context.Context, ID string) (bool, error) {
 	stmt, err := r.dataBase.DB().PrepareContext(ctx, `SELECT id FROM "user" WHERE id = $1`)
 	if err != nil {
 		return false, err
@@ -122,7 +123,7 @@ func (r *repositoryPostgres) ExistsUser(ctx context.Context, ID string) (bool, e
 }
 
 // GetPresence returns the presence status of the contact.
-func (r *repositoryPostgres) GetPresence(ctx context.Context, userID, contactID string) (PresenceType, error) {
+func (r *contactRepositoryPostgres) GetPresence(ctx context.Context, userID, contactID string) (contact.PresenceType, error) {
 	stmt, err := r.dataBase.DB().PrepareContext(ctx, `
 			SELECT CASE WHEN o.user_id IS NULL THEN 'F' ELSE 'T' END as status
 			FROM contact c
@@ -135,27 +136,27 @@ func (r *repositoryPostgres) GetPresence(ctx context.Context, userID, contactID 
           		  AND c.contact_id = b.user_id
     		  )`)
 	if err != nil {
-		return NotFound, err
+		return contact.NotFound, err
 	}
 	defer stmt.Close()
 
 	online := "N"
 	err = stmt.QueryRowContext(ctx, userID, contactID).Scan(&online)
 	if (err != nil) && (err != sql.ErrNoRows) {
-		return NotFound, err
+		return contact.NotFound, err
 	}
 
 	if online == "F" {
-		return Offline, nil
+		return contact.Offline, nil
 	}
 	if online == "T" {
-		return Online, nil
+		return contact.Online, nil
 	}
-	return NotFound, nil
+	return contact.NotFound, nil
 }
 
 // Create creates a new contact in the database.
-func (r *repositoryPostgres) Create(ctx context.Context, contact *Contact) error {
+func (r *contactRepositoryPostgres) Create(ctx context.Context, contact *contact.Contact) error {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return err
@@ -190,7 +191,7 @@ func (r *repositoryPostgres) Create(ctx context.Context, contact *Contact) error
 }
 
 // Update updates the contact data in the database.
-func (r *repositoryPostgres) Update(ctx context.Context, contact *Contact) (bool, error) {
+func (r *contactRepositoryPostgres) Update(ctx context.Context, contact *contact.Contact) (bool, error) {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return false, err
@@ -230,7 +231,7 @@ func (r *repositoryPostgres) Update(ctx context.Context, contact *Contact) (bool
 }
 
 // Delete deletes a contact from the database.
-func (r *repositoryPostgres) Delete(ctx context.Context, userID, contactID string) (bool, error) {
+func (r *contactRepositoryPostgres) Delete(ctx context.Context, userID, contactID string) (bool, error) {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return false, err
@@ -266,7 +267,7 @@ func (r *repositoryPostgres) Delete(ctx context.Context, userID, contactID strin
 }
 
 // Block adds a contact to the blocked contacts database.
-func (r *repositoryPostgres) Block(ctx context.Context, userID, blockedUserID string, createdAt time.Time) error {
+func (r *contactRepositoryPostgres) Block(ctx context.Context, userID, blockedUserID string, createdAt time.Time) error {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return err
@@ -300,7 +301,7 @@ func (r *repositoryPostgres) Block(ctx context.Context, userID, blockedUserID st
 }
 
 // Unblock removes a contact from the blocked contacts database.
-func (r *repositoryPostgres) Unblock(ctx context.Context, userID, blockedUserID string) (bool, error) {
+func (r *contactRepositoryPostgres) Unblock(ctx context.Context, userID, blockedUserID string) (bool, error) {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return false, err

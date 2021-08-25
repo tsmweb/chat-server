@@ -1,4 +1,4 @@
-package contact
+package handler
 
 import (
 	"bytes"
@@ -9,112 +9,112 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/tsmweb/user-service/common"
+	"github.com/tsmweb/user-service/contact"
+	"github.com/tsmweb/user-service/web/api/dto"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
-func TestNewController(t *testing.T) {
-	//t.Parallel()
-	c := NewController(new(common.MockJWT), new(mockService))
-	assert.NotNil(t, c)
-}
-
-func TestController_Get(t *testing.T) {
+func TestHandler_GetContact(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", resource), nil)
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", contactResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
+		mGetUseCase := new(mockContactGetUseCase)
+
+		handler := GetContact(mJWT, mGetUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", resource), ctrl.Get()).Methods(http.MethodGet)
+		router.Handle(fmt.Sprintf("%s/{id}", contactResource), handler).Methods(http.MethodGet)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when handler.GetContacts return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", resource), nil)
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", contactResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Get", mock.Anything, mock.Anything, mock.Anything).
-			Return(nil, ErrContactNotFound).
+		mGetUseCase := new(mockContactGetUseCase)
+		mGetUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
+			Return(nil, contact.ErrContactNotFound).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := GetContact(mJWT, mGetUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", resource), ctrl.Get()).Methods(http.MethodGet)
+		router.Handle(fmt.Sprintf("%s/{id}", contactResource), handler).Methods(http.MethodGet)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
-	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
+	t.Run("when handler.GetContacts return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", resource), nil)
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", contactResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Get", mock.Anything, mock.Anything, mock.Anything).
+		mGetUseCase := new(mockContactGetUseCase)
+		mGetUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := GetContact(mJWT, mGetUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", resource), ctrl.Get()).Methods(http.MethodGet)
+		router.Handle(fmt.Sprintf("%s/{id}", contactResource), handler).Methods(http.MethodGet)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusOK", func(t *testing.T) {
+	t.Run("when handler.GetContacts return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		contact := &Contact{
+		contact := &contact.Contact{
 			ID: "+5518977777777",
 			Name: "Bill",
 			LastName: "Gates",
 		}
 
-		p := Presenter{}
+		p := dto.Contact{}
 		p.FromEntity(contact)
 
 		cj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", resource), nil)
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", contactResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Get", mock.Anything, mock.Anything, mock.Anything).
+		mGetUseCase := new(mockContactGetUseCase)
+		mGetUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
 			Return(contact, nil).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := GetContact(mJWT, mGetUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", resource), ctrl.Get()).Methods(http.MethodGet)
+		router.Handle(fmt.Sprintf("%s/{id}", contactResource), handler).Methods(http.MethodGet)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)
@@ -122,66 +122,66 @@ func TestController_Get(t *testing.T) {
 	})
 }
 
-func TestController_GetAll(t *testing.T) {
+func TestHandler_GetAllContacts(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodGet, resource, nil)
+		req := httptest.NewRequest(http.MethodGet, contactResource, nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.GetAll().ServeHTTP(rec, req)
+		mGetAllUseCase := new(mockContactGetAllUseCase)
+
+		GetAllContacts(mJWT, mGetAllUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when handler.GetAllContacts return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodGet, resource, nil)
+		req := httptest.NewRequest(http.MethodGet, contactResource, nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("GetAll", mock.Anything, mock.Anything).
-			Return(nil, ErrContactNotFound).
+		mGetAllUseCase := new(mockContactGetAllUseCase)
+		mGetAllUseCase.On("Execute", mock.Anything, mock.Anything).
+			Return(nil, contact.ErrContactNotFound).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.GetAll().ServeHTTP(rec, req)
+
+		GetAllContacts(mJWT, mGetAllUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
-	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
+	t.Run("when handler.GetAllContacts return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodGet, resource, nil)
+		req := httptest.NewRequest(http.MethodGet, contactResource, nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("GetAll", mock.Anything, mock.Anything).
+		mGetAllUseCase := new(mockContactGetAllUseCase)
+		mGetAllUseCase.On("Execute", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.GetAll().ServeHTTP(rec, req)
+
+		GetAllContacts(mJWT, mGetAllUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusOK", func(t *testing.T) {
+	t.Run("when handler.GetAllContacts return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		contacts := []*Contact {
+		contacts := []*contact.Contact{
 			{
 				ID: "+5518977777777",
 				Name: "Bill",
@@ -194,35 +194,35 @@ func TestController_GetAll(t *testing.T) {
 			},
 		}
 
-		p := EntityToPresenters(contacts...)
+		p := dto.EntityToContactDTO(contacts...)
 		cj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodGet, resource, nil)
+		req := httptest.NewRequest(http.MethodGet, contactResource, nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("GetAll", mock.Anything, mock.Anything).
+		mGetAllUseCase := new(mockContactGetAllUseCase)
+		mGetAllUseCase.On("Execute", mock.Anything, mock.Anything).
 			Return(contacts, nil).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.GetAll().ServeHTTP(rec, req)
+
+		GetAllContacts(mJWT, mGetAllUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, string(cj), rec.Body.String())
 	})
 }
 
-func TestController_GetPresence(t *testing.T) {
+func TestHandler_GetContactPresence(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
-		path := fmt.Sprintf("%s/presence", resource)
+		path := fmt.Sprintf("%s/presence", contactResource)
 		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", path), nil)
 		rec := httptest.NewRecorder()
 
@@ -230,19 +230,20 @@ func TestController_GetPresence(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
+		mGetPresenceUseCase := new(mockContactGetPresenceUseCase)
+
+		handler := GetContactPresence(mJWT, mGetPresenceUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", path), ctrl.GetPresence()).Methods(http.MethodGet)
+		router.Handle(fmt.Sprintf("%s/{id}", path), handler).Methods(http.MethodGet)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when handler.GetContactPresence return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
-		path := fmt.Sprintf("%s/presence", resource)
+		path := fmt.Sprintf("%s/presence", contactResource)
 		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", path), nil)
 		rec := httptest.NewRecorder()
 
@@ -250,22 +251,23 @@ func TestController_GetPresence(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("GetPresence", mock.Anything, mock.Anything, mock.Anything).
-			Return(nil, ErrContactNotFound).
+		mGetPresenceUseCase := new(mockContactGetPresenceUseCase)
+		mGetPresenceUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
+			Return(nil, contact.ErrContactNotFound).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := GetContactPresence(mJWT, mGetPresenceUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", path), ctrl.GetPresence()).Methods(http.MethodGet)
+		router.Handle(fmt.Sprintf("%s/{id}", path), handler).Methods(http.MethodGet)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
-	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
+	t.Run("when handler.GetContactPresence return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		path := fmt.Sprintf("%s/presence", resource)
+		path := fmt.Sprintf("%s/presence", contactResource)
 		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", path), nil)
 		rec := httptest.NewRecorder()
 
@@ -273,23 +275,24 @@ func TestController_GetPresence(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("GetPresence", mock.Anything, mock.Anything, mock.Anything).
+		mGetPresenceUseCase := new(mockContactGetPresenceUseCase)
+		mGetPresenceUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := GetContactPresence(mJWT, mGetPresenceUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", path), ctrl.GetPresence()).Methods(http.MethodGet)
+		router.Handle(fmt.Sprintf("%s/{id}", path), handler).Methods(http.MethodGet)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusOK", func(t *testing.T) {
+	t.Run("when handler.GetContactPresence return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		var presence PresenceType = Online
-		p := &Presence{
+		var presence contact.PresenceType = contact.Online
+		p := &dto.Presence{
 			ID: "+5518977777777",
 			Presence: "online",
 		}
@@ -297,7 +300,7 @@ func TestController_GetPresence(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		path := fmt.Sprintf("%s/presence", resource)
+		path := fmt.Sprintf("%s/presence", contactResource)
 		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/+5518977777777", path), nil)
 		rec := httptest.NewRecorder()
 
@@ -305,14 +308,15 @@ func TestController_GetPresence(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("GetPresence", mock.Anything, mock.Anything, mock.Anything).
+		mGetPresenceUseCase := new(mockContactGetPresenceUseCase)
+		mGetPresenceUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
 			Return(presence, nil).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := GetContactPresence(mJWT, mGetPresenceUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", path), ctrl.GetPresence()).Methods(http.MethodGet)
+		router.Handle(fmt.Sprintf("%s/{id}", path), handler).Methods(http.MethodGet)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)
@@ -322,12 +326,12 @@ func TestController_GetPresence(t *testing.T) {
 
 }
 
-func TestController_Create(t *testing.T) {
+func TestHandler_CreateContact(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader([]byte("{}")))
+		req := httptest.NewRequest(http.MethodPost, contactResource, bytes.NewReader([]byte("{}")))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -335,30 +339,31 @@ func TestController_Create(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.Create().ServeHTTP(rec, req)
+
+		mCreateUseCase := new(mockContactCreateUseCase)
+
+		CreateContact(mJWT, mCreateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnsupportedMediaType", func(t *testing.T) {
+	t.Run("when handler.CreateContact return StatusUnsupportedMediaType", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader([]byte("{}")))
+		req := httptest.NewRequest(http.MethodPost, contactResource, bytes.NewReader([]byte("{}")))
 		req.Header.Set("Content-Type", "text/plain")
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.Create().ServeHTTP(rec, req)
+		mCreateUseCase := new(mockContactCreateUseCase)
+
+		CreateContact(mJWT, mCreateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnsupportedMediaType, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnprocessableEntity", func(t *testing.T) {
+	t.Run("when handler.CreateContact return StatusUnprocessableEntity", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader([]byte("{[}")))
+		req := httptest.NewRequest(http.MethodPost, contactResource, bytes.NewReader([]byte("{[}")))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -366,16 +371,16 @@ func TestController_Create(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.Create().ServeHTTP(rec, req)
+		mCreateUseCase := new(mockContactCreateUseCase)
+
+		CreateContact(mJWT, mCreateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
 	})
 
-	t.Run("when controller return StatusBadRequest", func(t *testing.T) {
+	t.Run("when handler.CreateContact return StatusBadRequest", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Contact{
 			ID: "",
 			Name: "Bill",
 			LastName: "Gates",
@@ -384,7 +389,7 @@ func TestController_Create(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPost, contactResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -392,19 +397,19 @@ func TestController_Create(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrIDValidateModel).
+		mCreateUseCase := new(mockContactCreateUseCase)
+		mCreateUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(contact.ErrIDValidateModel).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Create().ServeHTTP(rec, req)
+
+		CreateContact(mJWT, mCreateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when handler.CreateContact return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Contact{
 			ID: "+5518977777777",
 			Name: "Bill",
 			LastName: "Gates",
@@ -413,7 +418,7 @@ func TestController_Create(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPost, contactResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -421,19 +426,19 @@ func TestController_Create(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrUserNotFound).
+		mCreateUseCase := new(mockContactCreateUseCase)
+		mCreateUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(contact.ErrUserNotFound).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Create().ServeHTTP(rec, req)
+
+		CreateContact(mJWT, mCreateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
-	t.Run("when controller return StatusConflict", func(t *testing.T) {
+	t.Run("when handler.CreateContact return StatusConflict", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Contact{
 			ID: "+5518977777777",
 			Name: "Bill",
 			LastName: "Gates",
@@ -442,7 +447,7 @@ func TestController_Create(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPost, contactResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -450,19 +455,19 @@ func TestController_Create(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrContactAlreadyExists).
+		mCreateUseCase := new(mockContactCreateUseCase)
+		mCreateUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(contact.ErrContactAlreadyExists).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Create().ServeHTTP(rec, req)
+
+		CreateContact(mJWT, mCreateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusConflict, rec.Code)
 	})
 
-	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
+	t.Run("when handler.CreateContact return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Contact{
 			ID: "+5518977777777",
 			Name: "Bill",
 			LastName: "Gates",
@@ -471,7 +476,7 @@ func TestController_Create(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPost, contactResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -479,19 +484,19 @@ func TestController_Create(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		mCreateUseCase := new(mockContactCreateUseCase)
+		mCreateUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Create().ServeHTTP(rec, req)
+
+		CreateContact(mJWT, mCreateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusCreated", func(t *testing.T) {
+	t.Run("when handler.CreateContact return StatusCreated", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Contact{
 			ID: "+5518977777777",
 			Name: "Bill",
 			LastName: "Gates",
@@ -500,7 +505,7 @@ func TestController_Create(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPost, contactResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -508,23 +513,23 @@ func TestController_Create(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		mCreateUseCase := new(mockContactCreateUseCase)
+		mCreateUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Create().ServeHTTP(rec, req)
+
+		CreateContact(mJWT, mCreateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusCreated, rec.Code)
 	})
 }
 
-func TestController_Update(t *testing.T) {
+func TestHandler_UpdateContact(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader([]byte("{}")))
+		req := httptest.NewRequest(http.MethodPut, contactResource, bytes.NewReader([]byte("{}")))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -532,30 +537,30 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.Update().ServeHTTP(rec, req)
+		mUpdateUseCase := new(mockContactUpdateUseCase)
+
+		UpdateContact(mJWT, mUpdateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnsupportedMediaType", func(t *testing.T) {
+	t.Run("when handler.UpdateContact return StatusUnsupportedMediaType", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader([]byte("{}")))
+		req := httptest.NewRequest(http.MethodPut, contactResource, bytes.NewReader([]byte("{}")))
 		req.Header.Set("Content-Type", "text/plain")
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.Update().ServeHTTP(rec, req)
+		mUpdateUseCase := new(mockContactUpdateUseCase)
+
+		UpdateContact(mJWT, mUpdateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnsupportedMediaType, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnprocessableEntity", func(t *testing.T) {
+	t.Run("when handler.UpdateContact return StatusUnprocessableEntity", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader([]byte("{[}")))
+		req := httptest.NewRequest(http.MethodPut, contactResource, bytes.NewReader([]byte("{[}")))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -563,16 +568,16 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.Update().ServeHTTP(rec, req)
+		mUpdateUseCase := new(mockContactUpdateUseCase)
+
+		UpdateContact(mJWT, mUpdateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
 	})
 
-	t.Run("when controller return StatusBadRequest", func(t *testing.T) {
+	t.Run("when handler.UpdateContact return StatusBadRequest", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Contact{
 			ID: "",
 			Name: "Bill",
 			LastName: "Gates",
@@ -581,7 +586,7 @@ func TestController_Update(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPut, contactResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -589,19 +594,19 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Update", mock.Anything, mock.Anything).
-			Return(ErrIDValidateModel).
+		mUpdateUseCase := new(mockContactUpdateUseCase)
+		mUpdateUseCase.On("Execute", mock.Anything, mock.Anything).
+			Return(contact.ErrIDValidateModel).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Update().ServeHTTP(rec, req)
+
+		UpdateContact(mJWT, mUpdateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when handler.UpdateContact return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Contact{
 			ID: "+5518977777777",
 			Name: "Bill",
 			LastName: "Gates",
@@ -610,7 +615,7 @@ func TestController_Update(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPut, contactResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -618,19 +623,19 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Update", mock.Anything, mock.Anything).
-			Return(ErrContactNotFound).
+		mUpdateUseCase := new(mockContactUpdateUseCase)
+		mUpdateUseCase.On("Execute", mock.Anything, mock.Anything).
+			Return(contact.ErrContactNotFound).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Update().ServeHTTP(rec, req)
+
+		UpdateContact(mJWT, mUpdateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
-	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
+	t.Run("when handler.UpdateContact return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Contact{
 			ID: "+5518977777777",
 			Name: "Bill",
 			LastName: "Gates",
@@ -639,7 +644,7 @@ func TestController_Update(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPut, contactResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -647,19 +652,19 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Update", mock.Anything, mock.Anything).
+		mUpdateUseCase := new(mockContactUpdateUseCase)
+		mUpdateUseCase.On("Execute", mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Update().ServeHTTP(rec, req)
+
+		UpdateContact(mJWT, mUpdateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusOK", func(t *testing.T) {
+	t.Run("when handler.UpdateContact return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Contact{
 			ID: "+5518977777777",
 			Name: "Bill",
 			LastName: "Gates",
@@ -668,7 +673,7 @@ func TestController_Update(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPut, contactResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -676,112 +681,116 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Update", mock.Anything, mock.Anything).
+		mUpdateUseCase := new(mockContactUpdateUseCase)
+		mUpdateUseCase.On("Execute", mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Update().ServeHTTP(rec, req)
+
+		UpdateContact(mJWT, mUpdateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)
 	})
 }
 
-func TestController_Delete(t *testing.T) {
+func TestHandler_DeleteContact(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", resource), nil)
+		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", contactResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
+		mDeleteUseCase := new(mockContactDeleteUseCase)
+
+		handler := DeleteContact(mJWT, mDeleteUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", resource), ctrl.Delete()).Methods(http.MethodDelete)
+		router.Handle(fmt.Sprintf("%s/{id}", contactResource), handler).Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when handler.DeleteContact return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", resource), nil)
+		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", contactResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Delete", mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrContactNotFound).
+		mDeleteUseCase := new(mockContactDeleteUseCase)
+		mDeleteUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
+			Return(contact.ErrContactNotFound).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := DeleteContact(mJWT, mDeleteUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", resource), ctrl.Delete()).Methods(http.MethodDelete)
+		router.Handle(fmt.Sprintf("%s/{id}", contactResource), handler).Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
-	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
+	t.Run("when handler.DeleteContact return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", resource), nil)
+		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", contactResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Delete", mock.Anything, mock.Anything, mock.Anything).
+		mDeleteUseCase := new(mockContactDeleteUseCase)
+		mDeleteUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := DeleteContact(mJWT, mDeleteUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", resource), ctrl.Delete()).Methods(http.MethodDelete)
+		router.Handle(fmt.Sprintf("%s/{id}", contactResource), handler).Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusOK", func(t *testing.T) {
+	t.Run("when handler.DeleteContact return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", resource), nil)
+		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", contactResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Delete", mock.Anything, mock.Anything, mock.Anything).
+		mDeleteUseCase := new(mockContactDeleteUseCase)
+		mDeleteUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := DeleteContact(mJWT, mDeleteUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", resource), ctrl.Delete()).Methods(http.MethodDelete)
+		router.Handle(fmt.Sprintf("%s/{id}", contactResource), handler).Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)
 	})
 }
 
-func TestController_Block(t *testing.T) {
+func TestHandler_BlockContact(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
-		path := fmt.Sprintf("%s/block", resource)
+		path := fmt.Sprintf("%s/block", contactResource)
 		req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader([]byte("{}")))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
@@ -790,31 +799,31 @@ func TestController_Block(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.Block().ServeHTTP(rec, req)
+		mBlockUseCase := new(mockContactBlockUseCase)
+
+		BlockContact(mJWT, mBlockUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnsupportedMediaType", func(t *testing.T) {
+	t.Run("when handler.BlockContact return StatusUnsupportedMediaType", func(t *testing.T) {
 		//t.Parallel()
-		path := fmt.Sprintf("%s/block", resource)
+		path := fmt.Sprintf("%s/block", contactResource)
 		req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader([]byte("{}")))
 		req.Header.Set("Content-Type", "text/plain")
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.Block().ServeHTTP(rec, req)
+		mBlockUseCase := new(mockContactBlockUseCase)
+
+		BlockContact(mJWT, mBlockUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnsupportedMediaType, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnprocessableEntity", func(t *testing.T) {
+	t.Run("when handler.BlockContact return StatusUnprocessableEntity", func(t *testing.T) {
 		//t.Parallel()
-		path := fmt.Sprintf("%s/block", resource)
+		path := fmt.Sprintf("%s/block", contactResource)
 		req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader([]byte("{[}")))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
@@ -823,23 +832,23 @@ func TestController_Block(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.Block().ServeHTTP(rec, req)
+		mBlockUseCase := new(mockContactBlockUseCase)
+
+		BlockContact(mJWT, mBlockUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when handler.BlockContact return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Contact{
 			ID: "+5518977777777",
 		}
 
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		path := fmt.Sprintf("%s/block", resource)
+		path := fmt.Sprintf("%s/block", contactResource)
 		req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
@@ -848,26 +857,26 @@ func TestController_Block(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Block", mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrUserNotFound).
+		mBlockUseCase := new(mockContactBlockUseCase)
+		mBlockUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
+			Return(contact.ErrUserNotFound).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Block().ServeHTTP(rec, req)
+
+		BlockContact(mJWT, mBlockUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
-	t.Run("when controller return StatusConflict", func(t *testing.T) {
+	t.Run("when handler.BlockContact return StatusConflict", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Contact{
 			ID: "+5518977777777",
 		}
 
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		path := fmt.Sprintf("%s/block", resource)
+		path := fmt.Sprintf("%s/block", contactResource)
 		req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
@@ -876,26 +885,26 @@ func TestController_Block(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Block", mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrContactAlreadyBlocked).
+		mBlockUseCase := new(mockContactBlockUseCase)
+		mBlockUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
+			Return(contact.ErrContactAlreadyBlocked).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Block().ServeHTTP(rec, req)
+
+		BlockContact(mJWT, mBlockUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusConflict, rec.Code)
 	})
 
-	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
+	t.Run("when handler.BlockContact return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Contact{
 			ID: "+5518977777777",
 		}
 
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		path := fmt.Sprintf("%s/block", resource)
+		path := fmt.Sprintf("%s/block", contactResource)
 		req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
@@ -904,26 +913,26 @@ func TestController_Block(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Block", mock.Anything, mock.Anything, mock.Anything).
+		mBlockUseCase := new(mockContactBlockUseCase)
+		mBlockUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Block().ServeHTTP(rec, req)
+
+		BlockContact(mJWT, mBlockUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusOK", func(t *testing.T) {
+	t.Run("when handler.BlockContact return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Contact{
 			ID: "+5518977777777",
 		}
 
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		path := fmt.Sprintf("%s/block", resource)
+		path := fmt.Sprintf("%s/block", contactResource)
 		req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
@@ -932,23 +941,23 @@ func TestController_Block(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Block", mock.Anything, mock.Anything, mock.Anything).
+		mBlockUseCase := new(mockContactBlockUseCase)
+		mBlockUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Block().ServeHTTP(rec, req)
+
+		BlockContact(mJWT, mBlockUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)
 	})
 }
 
-func TestController_Unblock(t *testing.T) {
+func TestHandler_UnblockContact(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
-		path := fmt.Sprintf("%s/block", resource)
+		path := fmt.Sprintf("%s/block", contactResource)
 		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", path), nil)
 		rec := httptest.NewRecorder()
 
@@ -956,19 +965,20 @@ func TestController_Unblock(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
+		mUnblockUseCase := new(mockContactUnblockUseCase)
+
+		handler := UnblockContact(mJWT, mUnblockUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", path), ctrl.Unblock()).Methods(http.MethodDelete)
+		router.Handle(fmt.Sprintf("%s/{id}", path), handler).Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when handler.UnblockContact return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
-		path := fmt.Sprintf("%s/block", resource)
+		path := fmt.Sprintf("%s/block", contactResource)
 		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", path), nil)
 		rec := httptest.NewRecorder()
 
@@ -976,22 +986,23 @@ func TestController_Unblock(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Unblock", mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrUserNotFound).
+		mUnblockUseCase := new(mockContactUnblockUseCase)
+		mUnblockUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
+			Return(contact.ErrUserNotFound).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := UnblockContact(mJWT, mUnblockUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", path), ctrl.Unblock()).Methods(http.MethodDelete)
+		router.Handle(fmt.Sprintf("%s/{id}", path), handler).Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
-	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
+	t.Run("when handler.UnblockContact return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		path := fmt.Sprintf("%s/block", resource)
+		path := fmt.Sprintf("%s/block", contactResource)
 		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", path), nil)
 		rec := httptest.NewRecorder()
 
@@ -999,22 +1010,23 @@ func TestController_Unblock(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Unblock", mock.Anything, mock.Anything, mock.Anything).
+		mUnblockUseCase := new(mockContactUnblockUseCase)
+		mUnblockUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := UnblockContact(mJWT, mUnblockUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", path), ctrl.Unblock()).Methods(http.MethodDelete)
+		router.Handle(fmt.Sprintf("%s/{id}", path), handler).Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusOK", func(t *testing.T) {
+	t.Run("when handler.UnblockContact return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		path := fmt.Sprintf("%s/block", resource)
+		path := fmt.Sprintf("%s/block", contactResource)
 		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/+5518977777777", path), nil)
 		rec := httptest.NewRecorder()
 
@@ -1022,14 +1034,15 @@ func TestController_Unblock(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Unblock", mock.Anything, mock.Anything, mock.Anything).
+		mUnblockUseCase := new(mockContactUnblockUseCase)
+		mUnblockUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := UnblockContact(mJWT, mUnblockUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", path), ctrl.Unblock()).Methods(http.MethodDelete)
+		router.Handle(fmt.Sprintf("%s/{id}", path), handler).Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)

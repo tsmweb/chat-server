@@ -4,24 +4,23 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/tsmweb/go-helper-api/middleware"
-	"github.com/tsmweb/user-service/helper/setting"
+	"github.com/tsmweb/user-service/config"
 	"github.com/urfave/negroni"
 	"log"
-	"os"
 )
 
 func main() {
 	log.Println("[>] Starting server")
-	workDir, _ := os.Getwd() // working directory
-	setting.Load(workDir)
+
+	// Working directory
+	//workDir, _ := os.Getwd()
+	config.Load("../../")
 
 	router := mux.NewRouter()
-	// Contact
-	contactRouter := InitContactRouter()
-	contactRouter.MakeRouters(router)
-	// Group
-	groupRouter := InitGroupRouter()
-	groupRouter.MakeRouters(router)
+
+	provider := CreateProvider()
+	provider.ContactRouter(router)
+	provider.GroupRouter(router)
 
 	handler := middleware.GZIP(router)
 	handler = middleware.CORS(handler)
@@ -30,6 +29,6 @@ func main() {
 	nr.Use(negroni.NewLogger())
 	nr.UseHandler(handler)
 
-	serverPort := setting.ServerPort()
+	serverPort := config.ServerPort()
 	nr.Run(fmt.Sprintf(":%d", serverPort))
 }

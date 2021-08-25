@@ -46,36 +46,12 @@ func TestGetAllUseCase_Execute(t *testing.T) {
 				Name:        "Friends",
 				Description: "Group of friends",
 				Owner:       "+5518999999999",
-				Members: []*Member{
-					{
-						GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-						UserID: "+5518999999999",
-						Admin: true,
-					},
-					{
-						GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-						UserID: "+5518977777777",
-						Admin: false,
-					},
-				},
 			},
 			{
 				ID:          "2e6f9b0d5885b6010f9167787445617f553a735f",
 				Name:        "Friends",
 				Description: "Group of friends",
 				Owner:       "+5518999999999",
-				Members: []*Member{
-					{
-						GroupID: "2e6f9b0d5885b6010f9167787445617f553a735f",
-						UserID: "+5518999999999",
-						Admin: true,
-					},
-					{
-						GroupID: "2e6f9b0d5885b6010f9167787445617f553a735f",
-						UserID: "+5518966666666",
-						Admin: false,
-					},
-				},
 			},
 		}
 

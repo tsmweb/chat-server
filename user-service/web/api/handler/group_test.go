@@ -1,4 +1,4 @@
-package group
+package handler
 
 import (
 	"bytes"
@@ -9,91 +9,90 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/tsmweb/user-service/common"
+	"github.com/tsmweb/user-service/group"
+	"github.com/tsmweb/user-service/web/api/dto"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
-func TestNewController(t *testing.T) {
-	//t.Parallel()
-	c := NewController(new(common.MockJWT), new(mockService))
-	assert.NotNil(t, c)
-}
-
-func TestController_Get(t *testing.T) {
+func TestHandler_GetGroup(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", resource), nil)
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", groupResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
+		mGetUseCase := new(mockGroupGetUseCase)
+
+		handler := GetGroup(mJWT, mGetUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", resource), ctrl.Get()).Methods(http.MethodGet)
+		router.Handle(fmt.Sprintf("%s/{id}", groupResource), handler).Methods(http.MethodGet)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when handler.GetGroup return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", resource), nil)
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", groupResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Get", mock.Anything, mock.Anything).
-			Return(nil, ErrGroupNotFound).
+		mGetUseCase := new(mockGroupGetUseCase)
+		mGetUseCase.On("Execute", mock.Anything, mock.Anything).
+			Return(nil, group.ErrGroupNotFound).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := GetGroup(mJWT, mGetUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", resource), ctrl.Get()).Methods(http.MethodGet)
+		router.Handle(fmt.Sprintf("%s/{id}", groupResource), handler).Methods(http.MethodGet)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
-	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
+	t.Run("when handler.GetGroup return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", resource), nil)
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", groupResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Get", mock.Anything, mock.Anything).
+		mGetUseCase := new(mockGroupGetUseCase)
+		mGetUseCase.On("Execute", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := GetGroup(mJWT, mGetUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", resource), ctrl.Get()).Methods(http.MethodGet)
+		router.Handle(fmt.Sprintf("%s/{id}", groupResource), handler).Methods(http.MethodGet)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusOK", func(t *testing.T) {
+	t.Run("when handler.GetGroup return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		group := &Group{
+		group := &group.Group{
 			ID: "be49afd2ee890805c21ddd55879db1387aec9751",
 			Name: "Churrasco na Piscina",
 			Description: "Amigos do churrasco.",
 			Owner: "+5518999999999",
-			Members: []*Member{
+			Members: []*group.Member{
 				{
 					GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
 					UserID: "+5518999999999",
@@ -112,27 +111,28 @@ func TestController_Get(t *testing.T) {
 			},
 		}
 
-		p := Presenter{}
+		p := dto.Group{}
 		p.FromEntity(group)
 
 		gj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", resource), nil)
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", groupResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Get", mock.Anything, mock.Anything).
+		mGetUseCase := new(mockGroupGetUseCase)
+		mGetUseCase.On("Execute", mock.Anything, mock.Anything).
 			Return(group, nil).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := GetGroup(mJWT, mGetUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", resource), ctrl.Get()).Methods(http.MethodGet)
+		router.Handle(fmt.Sprintf("%s/{id}", groupResource), handler).Methods(http.MethodGet)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)
@@ -142,126 +142,97 @@ func TestController_Get(t *testing.T) {
 
 }
 
-func TestController_GetAll(t *testing.T) {
+func TestHandler_GetAllGroups(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodGet, resource, nil)
+		req := httptest.NewRequest(http.MethodGet, groupResource, nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.GetAll().ServeHTTP(rec, req)
+		mGetAllUseCase := new(mockGroupGetAllUseCase)
+
+		GetAllGroups(mJWT, mGetAllUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when handler.GetAllGroups return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodGet, resource, nil)
+		req := httptest.NewRequest(http.MethodGet, groupResource, nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("GetAll", mock.Anything, mock.Anything).
-			Return(nil, ErrGroupNotFound).
+		mGetAllUseCase := new(mockGroupGetAllUseCase)
+		mGetAllUseCase.On("Execute", mock.Anything, mock.Anything).
+			Return(nil, group.ErrGroupNotFound).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.GetAll().ServeHTTP(rec, req)
+
+		GetAllGroups(mJWT, mGetAllUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
-	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
+	t.Run("when handler.GetAllGroups return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodGet, resource, nil)
+		req := httptest.NewRequest(http.MethodGet, groupResource, nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("GetAll", mock.Anything, mock.Anything).
+		mGetAllUseCase := new(mockGroupGetAllUseCase)
+		mGetAllUseCase.On("Execute", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.GetAll().ServeHTTP(rec, req)
+
+		GetAllGroups(mJWT, mGetAllUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusOK", func(t *testing.T) {
+	t.Run("when handler.GetAllGroups return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		groups := []*Group{
+		groups := []*group.Group{
 			{
 				ID:          "be49afd2ee890805c21ddd55879db1387aec9751",
 				Name:        "Churrasco na Piscina",
 				Description: "Amigos do churrasco.",
 				Owner:       "+5518999999999",
-				Members: []*Member{
-					{
-						GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-						UserID:  "+5518999999999",
-						Admin:   true,
-					},
-					{
-						GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-						UserID:  "+5518988888888",
-						Admin:   false,
-					},
-					{
-						GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-						UserID:  "+5518977777777",
-						Admin:   false,
-					},
-				},
 			},
 			{
 				ID:          "be49afd2ee890805c21ddd55879db1387aec9752",
 				Name:        "Grupo de Trabalho",
 				Description: "Grupo de Trabalho (Exemplo)",
 				Owner:       "+5518999999999",
-				Members: []*Member{
-					{
-						GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-						UserID:  "+5518999999999",
-						Admin:   true,
-					},
-					{
-						GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-						UserID:  "+5518977777777",
-						Admin:   false,
-					},
-				},
 			},
 		}
 
-		p := EntityToPresenters(groups...)
+		p := dto.EntityToGroupDTO(groups...)
 		gj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodGet, resource, nil)
+		req := httptest.NewRequest(http.MethodGet, groupResource, nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("GetAll", mock.Anything, mock.Anything).
+		mGetAllUseCase := new(mockGroupGetAllUseCase)
+		mGetAllUseCase.On("Execute", mock.Anything, mock.Anything).
 			Return(groups, nil).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.GetAll().ServeHTTP(rec, req)
+
+		GetAllGroups(mJWT, mGetAllUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, string(gj), rec.Body.String())
@@ -269,11 +240,11 @@ func TestController_GetAll(t *testing.T) {
 	})
 }
 
-func TestController_Create(t *testing.T) {
+func TestHandler_CreateGroup(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader([]byte("{}")))
+		req := httptest.NewRequest(http.MethodPost, groupResource, bytes.NewReader([]byte("{}")))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -281,30 +252,30 @@ func TestController_Create(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.Create().ServeHTTP(rec, req)
+		mCreateUseCase := new(mockGroupCreateUseCase)
+
+		CreateGroup(mJWT, mCreateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnsupportedMediaType", func(t *testing.T) {
+	t.Run("when handler.CreateGroup return StatusUnsupportedMediaType", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader([]byte("{}")))
+		req := httptest.NewRequest(http.MethodPost, groupResource, bytes.NewReader([]byte("{}")))
 		req.Header.Set("Content-Type", "text/plain")
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.Create().ServeHTTP(rec, req)
+		mCreateUseCase := new(mockGroupCreateUseCase)
+
+		CreateGroup(mJWT, mCreateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnsupportedMediaType, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnprocessableEntity", func(t *testing.T) {
+	t.Run("when handler.CreateGroup return StatusUnprocessableEntity", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader([]byte("{[}")))
+		req := httptest.NewRequest(http.MethodPost, groupResource, bytes.NewReader([]byte("{[}")))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -312,16 +283,16 @@ func TestController_Create(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.Create().ServeHTTP(rec, req)
+		mCreateUseCase := new(mockGroupCreateUseCase)
+
+		CreateGroup(mJWT, mCreateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
 	})
 
-	t.Run("when controller return StatusBadRequest", func(t *testing.T) {
+	t.Run("when handler.CreateGroup return StatusBadRequest", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Group{
 			Name: "",
 			Description: "Exemplo de Grupo",
 		}
@@ -329,7 +300,7 @@ func TestController_Create(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPost, groupResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -337,19 +308,19 @@ func TestController_Create(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return("", ErrNameValidateModel).
+		mCreateUseCase := new(mockGroupCreateUseCase)
+		mCreateUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return("", group.ErrNameValidateModel).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Create().ServeHTTP(rec, req)
+
+		CreateGroup(mJWT, mCreateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
-	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
+	t.Run("when handler.CreateGroup return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Group{
 			Name: "Grupo Teste",
 			Description: "Exemplo de Grupo",
 		}
@@ -357,7 +328,7 @@ func TestController_Create(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPost, groupResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -365,22 +336,22 @@ func TestController_Create(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		mCreateUseCase := new(mockGroupCreateUseCase)
+		mCreateUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return("", errors.New("error")).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Create().ServeHTTP(rec, req)
+
+		CreateGroup(mJWT, mCreateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusCreated", func(t *testing.T) {
+	t.Run("when handler.CreateGroup return StatusCreated", func(t *testing.T) {
 		//t.Parallel()
 		groupID := "be49afd2ee890805c21ddd55879db1387aec9751"
-		location := fmt.Sprintf("%s/%s", resource, groupID)
+		location := fmt.Sprintf("%s/%s", groupResource, groupID)
 
-		p := &Presenter{
+		p := &dto.Group{
 			Name: "Grupo Teste",
 			Description: "Exemplo de Grupo",
 		}
@@ -388,7 +359,7 @@ func TestController_Create(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, resource, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPost, groupResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -396,12 +367,12 @@ func TestController_Create(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		mCreateUseCase := new(mockGroupCreateUseCase)
+		mCreateUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(groupID, nil).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Create().ServeHTTP(rec, req)
+
+		CreateGroup(mJWT, mCreateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusCreated, rec.Code)
 		assert.Equal(t, location, rec.Header().Get("Location"))
@@ -409,12 +380,12 @@ func TestController_Create(t *testing.T) {
 	})
 }
 
-func TestController_Update(t *testing.T) {
+func TestHandler_UpdateGroup(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader([]byte("{}")))
+		req := httptest.NewRequest(http.MethodPut, groupResource, bytes.NewReader([]byte("{}")))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -422,30 +393,30 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.Update().ServeHTTP(rec, req)
+		mUpdateUseCase := new(mockGroupUpdateUseCase)
+
+		UpdateGroup(mJWT, mUpdateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnsupportedMediaType", func(t *testing.T) {
+	t.Run("when handler.UpdateGroup return StatusUnsupportedMediaType", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader([]byte("{}")))
+		req := httptest.NewRequest(http.MethodPut, groupResource, bytes.NewReader([]byte("{}")))
 		req.Header.Set("Content-Type", "text/plain")
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.Update().ServeHTTP(rec, req)
+		mUpdateUseCase := new(mockGroupUpdateUseCase)
+
+		UpdateGroup(mJWT, mUpdateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnsupportedMediaType, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnprocessableEntity", func(t *testing.T) {
+	t.Run("when handler.UpdateGroup return StatusUnprocessableEntity", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader([]byte("{[}")))
+		req := httptest.NewRequest(http.MethodPut, groupResource, bytes.NewReader([]byte("{[}")))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -453,16 +424,16 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.Update().ServeHTTP(rec, req)
+		mUpdateUseCase := new(mockGroupUpdateUseCase)
+
+		UpdateGroup(mJWT, mUpdateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
 	})
 
-	t.Run("when controller return StatusBadRequest", func(t *testing.T) {
+	t.Run("when handler.UpdateGroup return StatusBadRequest", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Group{
 			ID: "be49afd2ee890805c21ddd55879db1387aec9751",
 			Name: "Grupo Teste",
 			Description: "Exemplo de Grupo",
@@ -471,7 +442,7 @@ func TestController_Update(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPut, groupResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -479,19 +450,19 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Update", mock.Anything, mock.Anything).
-			Return(ErrIDValidateModel).
+		mUpdateUseCase := new(mockGroupUpdateUseCase)
+		mUpdateUseCase.On("Execute", mock.Anything, mock.Anything).
+			Return(group.ErrIDValidateModel).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Update().ServeHTTP(rec, req)
+
+		UpdateGroup(mJWT, mUpdateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnauthorized", func(t *testing.T) {
+	t.Run("when handler.UpdateGroup return StatusUnauthorized", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Group{
 			ID: "be49afd2ee890805c21ddd55879db1387aec9751",
 			Name: "Grupo Teste",
 			Description: "Exemplo de Grupo",
@@ -500,7 +471,7 @@ func TestController_Update(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPut, groupResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -508,19 +479,19 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Update", mock.Anything, mock.Anything).
-			Return(ErrOperationNotAllowed).
+		mUpdateUseCase := new(mockGroupUpdateUseCase)
+		mUpdateUseCase.On("Execute", mock.Anything, mock.Anything).
+			Return(group.ErrOperationNotAllowed).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Update().ServeHTTP(rec, req)
+
+		UpdateGroup(mJWT, mUpdateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when handler.UpdateGroup return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Group{
 			ID: "be49afd2ee890805c21ddd55879db1387aec9751",
 			Name: "Grupo Teste",
 			Description: "Exemplo de Grupo",
@@ -529,7 +500,7 @@ func TestController_Update(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPut, groupResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -537,19 +508,19 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Update", mock.Anything, mock.Anything).
-			Return(ErrGroupNotFound).
+		mUpdateUseCase := new(mockGroupUpdateUseCase)
+		mUpdateUseCase.On("Execute", mock.Anything, mock.Anything).
+			Return(group.ErrGroupNotFound).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Update().ServeHTTP(rec, req)
+
+		UpdateGroup(mJWT, mUpdateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
-	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
+	t.Run("when handler.UpdateGroup return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Group{
 			ID: "be49afd2ee890805c21ddd55879db1387aec9751",
 			Name: "Grupo Teste",
 			Description: "Exemplo de Grupo",
@@ -558,7 +529,7 @@ func TestController_Update(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPut, groupResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -566,19 +537,19 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Update", mock.Anything, mock.Anything).
+		mUpdateUseCase := new(mockGroupUpdateUseCase)
+		mUpdateUseCase.On("Execute", mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Update().ServeHTTP(rec, req)
+
+		UpdateGroup(mJWT, mUpdateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusOK", func(t *testing.T) {
+	t.Run("when handler.UpdateGroup return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		p := &Presenter{
+		p := &dto.Group{
 			ID: "be49afd2ee890805c21ddd55879db1387aec9751",
 			Name: "Grupo Teste",
 			Description: "Exemplo de Grupo",
@@ -587,7 +558,7 @@ func TestController_Update(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPut, resource, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPut, groupResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -595,133 +566,143 @@ func TestController_Update(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Update", mock.Anything, mock.Anything).
+		mUpdateUseCase := new(mockGroupUpdateUseCase)
+		mUpdateUseCase.On("Execute", mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.Update().ServeHTTP(rec, req)
+
+		UpdateGroup(mJWT, mUpdateUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)
 	})
 }
 
-func TestController_Delete(t *testing.T) {
+func TestHandler_DeleteGroup(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", resource), nil)
+		req := httptest.NewRequest(http.MethodDelete,
+			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", groupResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
+		mDeleteUseCase := new(mockGroupDeleteUseCase)
+
+		handler := DeleteGroup(mJWT, mDeleteUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", resource), ctrl.Delete()).Methods(http.MethodDelete)
+		router.Handle(fmt.Sprintf("%s/{id}", groupResource), handler).Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnauthorized", func(t *testing.T) {
+	t.Run("when handler.DeleteGroup return StatusUnauthorized", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", resource), nil)
+		req := httptest.NewRequest(http.MethodDelete,
+			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", groupResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Delete", mock.Anything, mock.Anything).
-			Return(ErrOperationNotAllowed).
+		mDeleteUseCase := new(mockGroupDeleteUseCase)
+		mDeleteUseCase.On("Execute", mock.Anything, mock.Anything).
+			Return(group.ErrOperationNotAllowed).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := DeleteGroup(mJWT, mDeleteUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", resource), ctrl.Delete()).Methods(http.MethodDelete)
+		router.Handle(fmt.Sprintf("%s/{id}", groupResource), handler).Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when handler.DeleteGroup return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", resource), nil)
+		req := httptest.NewRequest(http.MethodDelete,
+			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", groupResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Delete", mock.Anything, mock.Anything).
-			Return(ErrGroupNotFound).
+		mDeleteUseCase := new(mockGroupDeleteUseCase)
+		mDeleteUseCase.On("Execute", mock.Anything, mock.Anything).
+			Return(group.ErrGroupNotFound).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := DeleteGroup(mJWT, mDeleteUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", resource), ctrl.Delete()).Methods(http.MethodDelete)
+		router.Handle(fmt.Sprintf("%s/{id}", groupResource), handler).Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
-	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
+	t.Run("when handler.DeleteGroup return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", resource), nil)
+		req := httptest.NewRequest(http.MethodDelete,
+			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", groupResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Delete", mock.Anything, mock.Anything).
+		mDeleteUseCase := new(mockGroupDeleteUseCase)
+		mDeleteUseCase.On("Execute", mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := DeleteGroup(mJWT, mDeleteUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", resource), ctrl.Delete()).Methods(http.MethodDelete)
+		router.Handle(fmt.Sprintf("%s/{id}", groupResource), handler).Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusOK", func(t *testing.T) {
+	t.Run("when handler.DeleteGroup return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", resource), nil)
+		req := httptest.NewRequest(http.MethodDelete,
+			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", groupResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("Delete", mock.Anything, mock.Anything).
+		mDeleteUseCase := new(mockGroupDeleteUseCase)
+		mDeleteUseCase.On("Execute", mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := DeleteGroup(mJWT, mDeleteUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{id}", resource), ctrl.Delete()).Methods(http.MethodDelete)
+		router.Handle(fmt.Sprintf("%s/{id}", groupResource), handler).Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)
 	})
 }
 
-func TestController_AddMember(t *testing.T) {
+func TestHandler_AddGroupMember(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, resourceMember, bytes.NewReader([]byte("{}")))
+		req := httptest.NewRequest(http.MethodPost, memberResource, bytes.NewReader([]byte("{}")))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -729,30 +710,30 @@ func TestController_AddMember(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.AddMember().ServeHTTP(rec, req)
+		mAddMemberUseCase := new(mockGroupAddMemberUseCase)
+
+		AddGroupMember(mJWT, mAddMemberUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnsupportedMediaType", func(t *testing.T) {
+	t.Run("when handler.AddGroupMember return StatusUnsupportedMediaType", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodPost, resourceMember, bytes.NewReader([]byte("{}")))
+		req := httptest.NewRequest(http.MethodPost, memberResource, bytes.NewReader([]byte("{}")))
 		req.Header.Set("Content-Type", "text/plain")
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.AddMember().ServeHTTP(rec, req)
+		mAddMemberUseCase := new(mockGroupAddMemberUseCase)
+
+		AddGroupMember(mJWT, mAddMemberUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnsupportedMediaType, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnprocessableEntity", func(t *testing.T) {
+	t.Run("when handler.AddGroupMember return StatusUnprocessableEntity", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodPost, resourceMember, bytes.NewReader([]byte("{[}")))
+		req := httptest.NewRequest(http.MethodPost, memberResource, bytes.NewReader([]byte("{[}")))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -760,16 +741,16 @@ func TestController_AddMember(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.AddMember().ServeHTTP(rec, req)
+		mAddMemberUseCase := new(mockGroupAddMemberUseCase)
+
+		AddGroupMember(mJWT, mAddMemberUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnauthorized", func(t *testing.T) {
+	t.Run("when handler.AddGroupMember return StatusUnauthorized", func(t *testing.T) {
 		//t.Parallel()
-		p := &MemberPresenter{
+		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
 			UserID: "+5518988888888",
 			Admin: false,
@@ -778,7 +759,7 @@ func TestController_AddMember(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, resourceMember, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPost, memberResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -786,19 +767,19 @@ func TestController_AddMember(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("AddMember", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrOperationNotAllowed).
+		mAddMemberUseCase := new(mockGroupAddMemberUseCase)
+		mAddMemberUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(group.ErrOperationNotAllowed).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.AddMember().ServeHTTP(rec, req)
+
+		AddGroupMember(mJWT, mAddMemberUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	})
 
-	t.Run("when controller return StatusBadRequest", func(t *testing.T) {
+	t.Run("when handler.AddGroupMember return StatusBadRequest", func(t *testing.T) {
 		//t.Parallel()
-		p := &MemberPresenter{
+		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
 			UserID: "",
 			Admin: false,
@@ -807,7 +788,7 @@ func TestController_AddMember(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, resourceMember, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPost, memberResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -815,19 +796,19 @@ func TestController_AddMember(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("AddMember", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrUserIDValidateModel).
+		mAddMemberUseCase := new(mockGroupAddMemberUseCase)
+		mAddMemberUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(group.ErrUserIDValidateModel).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.AddMember().ServeHTTP(rec, req)
+
+		AddGroupMember(mJWT, mAddMemberUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when handler.AddGroupMember return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
-		p := &MemberPresenter{
+		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
 			UserID: "+5518988888888",
 			Admin: false,
@@ -836,7 +817,7 @@ func TestController_AddMember(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, resourceMember, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPost, memberResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -844,19 +825,19 @@ func TestController_AddMember(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("AddMember", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrGroupNotFound).
+		mAddMemberUseCase := new(mockGroupAddMemberUseCase)
+		mAddMemberUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(group.ErrGroupNotFound).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.AddMember().ServeHTTP(rec, req)
+
+		AddGroupMember(mJWT, mAddMemberUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
-	t.Run("when controller return StatusConflict", func(t *testing.T) {
+	t.Run("when handler.AddGroupMember return StatusConflict", func(t *testing.T) {
 		//t.Parallel()
-		p := &MemberPresenter{
+		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
 			UserID: "+5518988888888",
 			Admin: false,
@@ -865,7 +846,7 @@ func TestController_AddMember(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, resourceMember, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPost, memberResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -873,19 +854,19 @@ func TestController_AddMember(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("AddMember", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrMemberAlreadyExists).
+		mAddMemberUseCase := new(mockGroupAddMemberUseCase)
+		mAddMemberUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(group.ErrMemberAlreadyExists).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.AddMember().ServeHTTP(rec, req)
+
+		AddGroupMember(mJWT, mAddMemberUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusConflict, rec.Code)
 	})
 
-	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
+	t.Run("when handler.AddGroupMember return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		p := &MemberPresenter{
+		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
 			UserID: "+5518988888888",
 			Admin: false,
@@ -894,7 +875,7 @@ func TestController_AddMember(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, resourceMember, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPost, memberResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -902,19 +883,19 @@ func TestController_AddMember(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("AddMember", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		mAddMemberUseCase := new(mockGroupAddMemberUseCase)
+		mAddMemberUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.AddMember().ServeHTTP(rec, req)
+
+		AddGroupMember(mJWT, mAddMemberUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusCreated", func(t *testing.T) {
+	t.Run("when handler.AddGroupMember return StatusCreated", func(t *testing.T) {
 		//t.Parallel()
-		p := &MemberPresenter{
+		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
 			UserID: "+5518988888888",
 			Admin: false,
@@ -923,7 +904,7 @@ func TestController_AddMember(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPost, resourceMember, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPost, memberResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -931,136 +912,141 @@ func TestController_AddMember(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("AddMember", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		mAddMemberUseCase := new(mockGroupAddMemberUseCase)
+		mAddMemberUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.AddMember().ServeHTTP(rec, req)
+
+		AddGroupMember(mJWT, mAddMemberUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusCreated, rec.Code)
 	})
 }
 
-func TestController_RemoveMember(t *testing.T) {
+func TestHandler_RemoveGroupMember(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
 		req := httptest.NewRequest(http.MethodDelete,
 			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751/+5518988888888",
-				resourceMember), nil)
+				memberResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
+		mRemoveMemberUseCase := new(mockGroupRemoveMemberUseCase)
+
+		handler := RemoveGroupMember(mJWT, mRemoveMemberUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{group}/{user}", resourceMember), ctrl.RemoveMember()).
+		router.Handle(fmt.Sprintf("%s/{group}/{user}", memberResource), handler).
 			Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnauthorized", func(t *testing.T) {
+	t.Run("when handler.RemoveGroupMember return StatusUnauthorized", func(t *testing.T) {
 		//t.Parallel()
 		req := httptest.NewRequest(http.MethodDelete,
 			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751/+5518988888888",
-				resourceMember), nil)
+				memberResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("RemoveMember", mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrGroupOwnerCannotRemoved).
+		mRemoveMemberUseCase := new(mockGroupRemoveMemberUseCase)
+		mRemoveMemberUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
+			Return(group.ErrGroupOwnerCannotRemoved).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := RemoveGroupMember(mJWT, mRemoveMemberUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{group}/{user}", resourceMember), ctrl.RemoveMember()).
+		router.Handle(fmt.Sprintf("%s/{group}/{user}", memberResource), handler).
 			Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when handler.RemoveGroupMember return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
 		req := httptest.NewRequest(http.MethodDelete,
 			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751/+5518988888888",
-				resourceMember), nil)
+				memberResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("RemoveMember", mock.Anything, mock.Anything, mock.Anything).
-			Return(ErrMemberNotFound).
+		mRemoveMemberUseCase := new(mockGroupRemoveMemberUseCase)
+		mRemoveMemberUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
+			Return(group.ErrMemberNotFound).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := RemoveGroupMember(mJWT, mRemoveMemberUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{group}/{user}", resourceMember), ctrl.RemoveMember()).
+		router.Handle(fmt.Sprintf("%s/{group}/{user}", memberResource), handler).
 			Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
-	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
+	t.Run("when handler.RemoveGroupMember return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
 		req := httptest.NewRequest(http.MethodDelete,
 			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751/+5518988888888",
-				resourceMember), nil)
+				memberResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("RemoveMember", mock.Anything, mock.Anything, mock.Anything).
+		mRemoveMemberUseCase := new(mockGroupRemoveMemberUseCase)
+		mRemoveMemberUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := RemoveGroupMember(mJWT, mRemoveMemberUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{group}/{user}", resourceMember), ctrl.RemoveMember()).
+		router.Handle(fmt.Sprintf("%s/{group}/{user}", memberResource), handler).
 			Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusOK", func(t *testing.T) {
+	t.Run("when handler.RemoveGroupMember return StatusOK", func(t *testing.T) {
 		//t.Parallel()
 		req := httptest.NewRequest(http.MethodDelete,
 			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751/+5518988888888",
-				resourceMember), nil)
+				memberResource), nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("RemoveMember", mock.Anything, mock.Anything, mock.Anything).
+		mRemoveMemberUseCase := new(mockGroupRemoveMemberUseCase)
+		mRemoveMemberUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
-		ctrl := NewController(mJWT, mService)
+
+		handler := RemoveGroupMember(mJWT, mRemoveMemberUseCase)
 
 		router := mux.NewRouter()
-		router.Handle(fmt.Sprintf("%s/{group}/{user}", resourceMember), ctrl.RemoveMember()).
+		router.Handle(fmt.Sprintf("%s/{group}/{user}", memberResource), handler).
 			Methods(http.MethodDelete)
 		router.ServeHTTP(rec, req)
 
@@ -1068,12 +1054,12 @@ func TestController_RemoveMember(t *testing.T) {
 	})
 }
 
-func TestController_SetAdmin(t *testing.T) {
+func TestHandler_SetGroupAdmin(t *testing.T) {
 	//t.Parallel()
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodPut, resourceMember, bytes.NewReader([]byte("{}")))
+		req := httptest.NewRequest(http.MethodPut, memberResource, bytes.NewReader([]byte("{}")))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -1081,30 +1067,30 @@ func TestController_SetAdmin(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.SetAdmin().ServeHTTP(rec, req)
+		mSetAdminUseCase := new(mockGroupSetAdminUseCase)
+
+		SetGroupAdmin(mJWT, mSetAdminUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnsupportedMediaType", func(t *testing.T) {
+	t.Run("when handler.SetGroupAdmin return StatusUnsupportedMediaType", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodPut, resourceMember, bytes.NewReader([]byte("{}")))
+		req := httptest.NewRequest(http.MethodPut, memberResource, bytes.NewReader([]byte("{}")))
 		req.Header.Set("Content-Type", "text/plain")
 		rec := httptest.NewRecorder()
 
 		mJWT := new(common.MockJWT)
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.SetAdmin().ServeHTTP(rec, req)
+		mSetAdminUseCase := new(mockGroupSetAdminUseCase)
+
+		SetGroupAdmin(mJWT, mSetAdminUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnsupportedMediaType, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnprocessableEntity", func(t *testing.T) {
+	t.Run("when handler.SetGroupAdmin return StatusUnprocessableEntity", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodPut, resourceMember, bytes.NewReader([]byte("{[}")))
+		req := httptest.NewRequest(http.MethodPut, memberResource, bytes.NewReader([]byte("{[}")))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -1112,16 +1098,16 @@ func TestController_SetAdmin(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		ctrl := NewController(mJWT, mService)
-		ctrl.SetAdmin().ServeHTTP(rec, req)
+		mSetAdminUseCase := new(mockGroupSetAdminUseCase)
+
+		SetGroupAdmin(mJWT, mSetAdminUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
 	})
 
-	t.Run("when controller return StatusBadRequest", func(t *testing.T) {
+	t.Run("when handler.SetGroupAdmin return StatusBadRequest", func(t *testing.T) {
 		//t.Parallel()
-		p := &MemberPresenter{
+		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
 			UserID: "",
 			Admin: true,
@@ -1130,7 +1116,7 @@ func TestController_SetAdmin(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPut, resourceMember, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPut, memberResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -1138,19 +1124,19 @@ func TestController_SetAdmin(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("SetAdmin", mock.Anything, mock.Anything).
-			Return(ErrUserIDValidateModel).
+		mSetAdminUseCase := new(mockGroupSetAdminUseCase)
+		mSetAdminUseCase.On("Execute", mock.Anything, mock.Anything).
+			Return(group.ErrUserIDValidateModel).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.SetAdmin().ServeHTTP(rec, req)
+
+		SetGroupAdmin(mJWT, mSetAdminUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
-	t.Run("when controller return StatusUnauthorized", func(t *testing.T) {
+	t.Run("when handler.SetGroupAdmin return StatusUnauthorized", func(t *testing.T) {
 		//t.Parallel()
-		p := &MemberPresenter{
+		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
 			UserID: "+5518977777777",
 			Admin: true,
@@ -1159,7 +1145,7 @@ func TestController_SetAdmin(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPut, resourceMember, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPut, memberResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -1167,19 +1153,19 @@ func TestController_SetAdmin(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("SetAdmin", mock.Anything, mock.Anything).
-			Return(ErrOperationNotAllowed).
+		mSetAdminUseCase := new(mockGroupSetAdminUseCase)
+		mSetAdminUseCase.On("Execute", mock.Anything, mock.Anything).
+			Return(group.ErrOperationNotAllowed).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.SetAdmin().ServeHTTP(rec, req)
+
+		SetGroupAdmin(mJWT, mSetAdminUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	})
 
-	t.Run("when controller return StatusNotFound", func(t *testing.T) {
+	t.Run("when handler.SetGroupAdmin return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
-		p := &MemberPresenter{
+		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
 			UserID: "+5518977777777",
 			Admin: true,
@@ -1188,7 +1174,7 @@ func TestController_SetAdmin(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPut, resourceMember, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPut, memberResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -1196,19 +1182,19 @@ func TestController_SetAdmin(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("SetAdmin", mock.Anything, mock.Anything).
-			Return(ErrMemberNotFound).
+		mSetAdminUseCase := new(mockGroupSetAdminUseCase)
+		mSetAdminUseCase.On("Execute", mock.Anything, mock.Anything).
+			Return(group.ErrMemberNotFound).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.SetAdmin().ServeHTTP(rec, req)
+
+		SetGroupAdmin(mJWT, mSetAdminUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 	})
 
-	t.Run("when controller return StatusInternalServerError", func(t *testing.T) {
+	t.Run("when handler.SetGroupAdmin return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
-		p := &MemberPresenter{
+		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
 			UserID: "+5518977777777",
 			Admin: true,
@@ -1217,7 +1203,7 @@ func TestController_SetAdmin(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPut, resourceMember, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPut, memberResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -1225,19 +1211,19 @@ func TestController_SetAdmin(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("SetAdmin", mock.Anything, mock.Anything).
+		mSetAdminUseCase := new(mockGroupSetAdminUseCase)
+		mSetAdminUseCase.On("Execute", mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.SetAdmin().ServeHTTP(rec, req)
+
+		SetGroupAdmin(mJWT, mSetAdminUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when controller return StatusOK", func(t *testing.T) {
+	t.Run("when handler.SetGroupAdmin return StatusOK", func(t *testing.T) {
 		//t.Parallel()
-		p := &MemberPresenter{
+		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
 			UserID: "+5518977777777",
 			Admin: true,
@@ -1246,7 +1232,7 @@ func TestController_SetAdmin(t *testing.T) {
 		pj, err := json.Marshal(p)
 		assert.Nil(t, err)
 
-		req := httptest.NewRequest(http.MethodPut, resourceMember, bytes.NewReader(pj))
+		req := httptest.NewRequest(http.MethodPut, memberResource, bytes.NewReader(pj))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -1254,12 +1240,12 @@ func TestController_SetAdmin(t *testing.T) {
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518999999999", nil).
 			Once()
-		mService := new(mockService)
-		mService.On("SetAdmin", mock.Anything, mock.Anything).
+		mSetAdminUseCase := new(mockGroupSetAdminUseCase)
+		mSetAdminUseCase.On("Execute", mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
-		ctrl := NewController(mJWT, mService)
-		ctrl.SetAdmin().ServeHTTP(rec, req)
+
+		SetGroupAdmin(mJWT, mSetAdminUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)
 	})

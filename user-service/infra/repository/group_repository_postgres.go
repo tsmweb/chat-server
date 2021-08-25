@@ -1,26 +1,27 @@
-package group
+package repository
 
 import (
 	"context"
 	"database/sql"
 	"github.com/lib/pq"
 	"github.com/tsmweb/go-helper-api/cerror"
-	"github.com/tsmweb/user-service/helper/database"
+	"github.com/tsmweb/user-service/group"
+	"github.com/tsmweb/user-service/infra/db"
 	"time"
 )
 
-// repositoryPostgres implementation for Repository interface.
-type repositoryPostgres struct {
-	dataBase database.Database
+// groupRepositoryPostgres implementation for group.Repository interface.
+type groupRepositoryPostgres struct {
+	dataBase db.Database
 }
 
-// NewRepositoryPostgres creates a new instance of Repository.
-func NewRepositoryPostgres(db database.Database) Repository {
-	return &repositoryPostgres{dataBase: db}
+// NewGroupRepositoryPostgres creates a new instance of group.Repository.
+func NewGroupRepositoryPostgres(db db.Database) group.Repository {
+	return &groupRepositoryPostgres{dataBase: db}
 }
 
 // Get returns group by groupID and userID.
-func (r *repositoryPostgres) Get(ctx context.Context, groupID, userID string) (*Group, error) {
+func (r *groupRepositoryPostgres) Get(ctx context.Context, groupID, userID string) (*group.Group, error) {
 	stmt, err := r.dataBase.DB().PrepareContext(ctx, `
 		SELECT g.id,
 			g.owner_id,
@@ -38,15 +39,15 @@ func (r *repositoryPostgres) Get(ctx context.Context, groupID, userID string) (*
 	}
 	defer stmt.Close()
 
-	var group Group
+	var grp group.Group
 	err = stmt.QueryRowContext(ctx, groupID, userID).
-		Scan(&group.ID,
-			&group.Owner,
-			&group.Name,
-			&group.Description,
-			&group.CreatedAt,
-			&group.UpdatedAt,
-			&group.UpdatedBy)
+		Scan(&grp.ID,
+			&grp.Owner,
+			&grp.Name,
+			&grp.Description,
+			&grp.CreatedAt,
+			&grp.UpdatedAt,
+			&grp.UpdatedBy)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, cerror.ErrNotFound
@@ -58,13 +59,13 @@ func (r *repositoryPostgres) Get(ctx context.Context, groupID, userID string) (*
 	if err != nil {
 		return nil, err
 	}
-	group.Members = members
+	grp.Members = members
 
-	return &group, nil
+	return &grp, nil
 }
 
 // GetAll returns groups by userID.
-func (r *repositoryPostgres) GetAll(ctx context.Context, userID string) ([]*Group, error) {
+func (r *groupRepositoryPostgres) GetAll(ctx context.Context, userID string) ([]*group.Group, error) {
 	stmt, err := r.dataBase.DB().PrepareContext(ctx, `
 		SELECT g.id,
 			g.owner_id,
@@ -81,7 +82,7 @@ func (r *repositoryPostgres) GetAll(ctx context.Context, userID string) ([]*Grou
 	}
 	defer stmt.Close()
 
-	groups := make([]*Group, 0)
+	groups := make([]*group.Group, 0)
 
 	rows, err := stmt.QueryContext(ctx, userID)
 	if err != nil {
@@ -90,14 +91,14 @@ func (r *repositoryPostgres) GetAll(ctx context.Context, userID string) ([]*Grou
 	defer rows.Close()
 
 	for rows.Next() {
-		var group Group
-		err = rows.Scan(&group.ID,
-			&group.Owner,
-			&group.Name,
-			&group.Description,
-			&group.CreatedAt,
-			&group.UpdatedAt,
-			&group.UpdatedBy)
+		var grp group.Group
+		err = rows.Scan(&grp.ID,
+			&grp.Owner,
+			&grp.Name,
+			&grp.Description,
+			&grp.CreatedAt,
+			&grp.UpdatedAt,
+			&grp.UpdatedBy)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				return nil, cerror.ErrNotFound
@@ -105,13 +106,13 @@ func (r *repositoryPostgres) GetAll(ctx context.Context, userID string) ([]*Grou
 			return nil, err
 		}
 
-		members, err := r.getAllMembers(ctx, group.ID)
-		if err != nil {
-			return nil, err
-		}
-		group.Members = members
+		//members, err := r.getAllMembers(ctx, grp.ID)
+		//if err != nil {
+		//	return nil, err
+		//}
+		//grp.Members = members
 
-		groups = append(groups, &group)
+		groups = append(groups, &grp)
 	}
 
 	if rows.Err() != nil {
@@ -122,7 +123,7 @@ func (r *repositoryPostgres) GetAll(ctx context.Context, userID string) ([]*Grou
 }
 
 // ExistsUser returns true if the user exists in the database.
-func (r *repositoryPostgres) ExistsUser(ctx context.Context, userID string) (bool, error) {
+func (r *groupRepositoryPostgres) ExistsUser(ctx context.Context, userID string) (bool, error) {
 	stmt, err := r.dataBase.DB().PrepareContext(ctx, `
 		SELECT u.id 
 		FROM "user" u 
@@ -142,7 +143,7 @@ func (r *repositoryPostgres) ExistsUser(ctx context.Context, userID string) (boo
 }
 
 // ExistsGroup returns true if the group exists in the database.
-func (r *repositoryPostgres) ExistsGroup(ctx context.Context, groupID string) (bool, error) {
+func (r *groupRepositoryPostgres) ExistsGroup(ctx context.Context, groupID string) (bool, error) {
 	stmt, err := r.dataBase.DB().PrepareContext(ctx, `
 		SELECT g.id 
 		FROM "group" g 
@@ -162,7 +163,7 @@ func (r *repositoryPostgres) ExistsGroup(ctx context.Context, groupID string) (b
 }
 
 // IsGroupAdmin returns true if the user is a group administrator.
-func (r *repositoryPostgres) IsGroupAdmin(ctx context.Context, groupID, userID string) (bool, error) {
+func (r *groupRepositoryPostgres) IsGroupAdmin(ctx context.Context, groupID, userID string) (bool, error) {
 	stmt, err := r.dataBase.DB().PrepareContext(ctx, `
 		SELECT gm.admin 
 		FROM group_member gm 
@@ -183,7 +184,7 @@ func (r *repositoryPostgres) IsGroupAdmin(ctx context.Context, groupID, userID s
 }
 
 // IsGroupOwner returns true if the user owns the group.
-func (r *repositoryPostgres) IsGroupOwner(ctx context.Context, groupID, userID string) (bool, error) {
+func (r *groupRepositoryPostgres) IsGroupOwner(ctx context.Context, groupID, userID string) (bool, error) {
 	stmt, err := r.dataBase.DB().PrepareContext(ctx, `
 		SELECT true 
 		FROM "group" g 
@@ -204,7 +205,7 @@ func (r *repositoryPostgres) IsGroupOwner(ctx context.Context, groupID, userID s
 }
 
 // Create creates a new group in the database.
-func (r *repositoryPostgres) Create(ctx context.Context, group *Group) error {
+func (r *groupRepositoryPostgres) Create(ctx context.Context, grp *group.Group) error {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return err
@@ -220,7 +221,7 @@ func (r *repositoryPostgres) Create(ctx context.Context, group *Group) error {
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
-		group.ID, group.Owner, group.Name, group.Description, group.CreatedAt)
+		grp.ID, grp.Owner, grp.Name, grp.Description, grp.CreatedAt)
 	if err != nil {
 		txn.Rollback()
 		// "23505": "unique_violation"
@@ -232,7 +233,7 @@ func (r *repositoryPostgres) Create(ctx context.Context, group *Group) error {
 	}
 
 	// insert member, the group owner is also a permanent member.
-	member, err := NewMember(group.ID, group.Owner, true)
+	member, err := group.NewMember(grp.ID, grp.Owner, true)
 	if err != nil {
 		return err
 	}
@@ -252,7 +253,7 @@ func (r *repositoryPostgres) Create(ctx context.Context, group *Group) error {
 }
 
 // Update updates the group data in the database.
-func (r *repositoryPostgres) Update(ctx context.Context, group *Group) (bool, error) {
+func (r *groupRepositoryPostgres) Update(ctx context.Context, group *group.Group) (bool, error) {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return false, err
@@ -292,7 +293,7 @@ func (r *repositoryPostgres) Update(ctx context.Context, group *Group) (bool, er
 }
 
 // Delete deletes a group from the database.
-func (r *repositoryPostgres) Delete(ctx context.Context, groupID string) (bool, error) {
+func (r *groupRepositoryPostgres) Delete(ctx context.Context, groupID string) (bool, error) {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return false, err
@@ -337,7 +338,7 @@ func (r *repositoryPostgres) Delete(ctx context.Context, groupID string) (bool, 
 }
 
 // AddMember add a member to the group.
-func (r *repositoryPostgres) AddMember(ctx context.Context, member *Member) error {
+func (r *groupRepositoryPostgres) AddMember(ctx context.Context, member *group.Member) error {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return err
@@ -362,7 +363,7 @@ func (r *repositoryPostgres) AddMember(ctx context.Context, member *Member) erro
 }
 
 // SetAdmin elevates a member to administrator status.
-func (r *repositoryPostgres) SetAdmin(ctx context.Context, member *Member) (bool, error) {
+func (r *groupRepositoryPostgres) SetAdmin(ctx context.Context, member *group.Member) (bool, error) {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return false, err
@@ -402,7 +403,7 @@ func (r *repositoryPostgres) SetAdmin(ctx context.Context, member *Member) (bool
 }
 
 // RemoveMember removes a member from the group.
-func (r *repositoryPostgres) RemoveMember(ctx context.Context, groupID, userID string) (bool, error) {
+func (r *groupRepositoryPostgres) RemoveMember(ctx context.Context, groupID, userID string) (bool, error) {
 	txn, err := r.dataBase.DB().Begin()
 	if err != nil {
 		return false, err
@@ -437,7 +438,7 @@ func (r *repositoryPostgres) RemoveMember(ctx context.Context, groupID, userID s
 	return true, nil
 }
 
-func (r *repositoryPostgres) addMember(ctx context.Context, txn *sql.Tx, member *Member) error {
+func (r *groupRepositoryPostgres) addMember(ctx context.Context, txn *sql.Tx, member *group.Member) error {
 	stmt, err := txn.PrepareContext(ctx, `
 		INSERT INTO group_member(group_id, user_id, admin, created_at)
 		VALUES($1, $2, $3, $4)`)
@@ -452,7 +453,7 @@ func (r *repositoryPostgres) addMember(ctx context.Context, txn *sql.Tx, member 
 	return err
 }
 
-func (r *repositoryPostgres) removeAllMembers(ctx context.Context, txn *sql.Tx, groupID string) error {
+func (r *groupRepositoryPostgres) removeAllMembers(ctx context.Context, txn *sql.Tx, groupID string) error {
 	stmt, err := txn.PrepareContext(ctx, `
 		DELETE FROM group_member
 		WHERE group_id = $1`)
@@ -466,7 +467,7 @@ func (r *repositoryPostgres) removeAllMembers(ctx context.Context, txn *sql.Tx, 
 	return err
 }
 
-func (r *repositoryPostgres) getAllMembers(ctx context.Context, groupID string) ([]*Member, error) {
+func (r *groupRepositoryPostgres) getAllMembers(ctx context.Context, groupID string) ([]*group.Member, error) {
 	stmt, err := r.dataBase.DB().PrepareContext(ctx, `
 		SELECT gm.group_id,
 			gm.user_id,
@@ -481,7 +482,7 @@ func (r *repositoryPostgres) getAllMembers(ctx context.Context, groupID string) 
 	}
 	defer stmt.Close()
 
-	members := make([]*Member, 0)
+	members := make([]*group.Member, 0)
 
 	rows, err := stmt.QueryContext(ctx, groupID)
 	if err != nil {
@@ -490,7 +491,7 @@ func (r *repositoryPostgres) getAllMembers(ctx context.Context, groupID string) 
 	defer rows.Close()
 
 	for rows.Next() {
-		var member Member
+		var member group.Member
 		err = rows.Scan(
 			&member.GroupID,
 			&member.UserID,
@@ -515,7 +516,7 @@ func (r *repositoryPostgres) getAllMembers(ctx context.Context, groupID string) 
 	return members, nil
 }
 
-func (r *repositoryPostgres) addAllMembersToNotify(ctx context.Context, txn *sql.Tx, groupID string) error {
+func (r *groupRepositoryPostgres) addAllMembersToNotify(ctx context.Context, txn *sql.Tx, groupID string) error {
 	members, err := r.getAllMembers(ctx, groupID)
 	if err != nil {
 		return err

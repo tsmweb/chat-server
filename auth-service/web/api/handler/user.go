@@ -18,7 +18,7 @@ import (
 	"net/http"
 )
 
-// Execute a user by ID.
+// GetUser a user by ID.
 func GetUser(jwt auth.JWT, getUseCase user.GetUseCase) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		data, err := jwt.GetDataToken(r, "id")

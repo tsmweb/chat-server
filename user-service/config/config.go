@@ -1,4 +1,4 @@
-package setting
+package config
 
 import (
 	"log"
@@ -37,8 +37,8 @@ func Load(workDir string) {
 
 	serverPort, _ = strconv.Atoi(os.Getenv("SERVER_PORT"))
 
-	privateKey = workDir + "/helper/setting/keys/private-key"
-	publicKey = workDir + "/helper/setting/keys/public-key.pub"
+	privateKey = workDir + "/config/keys/private-key"
+	publicKey = workDir + "/config/keys/public-key.pub"
 
 	expireToken = 24 //hour
 }
