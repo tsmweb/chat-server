@@ -13,20 +13,20 @@ const (
 )
 
 type memoryRepository struct {
-	users           map[string]struct{}
-	usersOnline     map[string]string
-	blockedUser     map[string]string
-	groups          map[string]struct{}
-	groupMembers    map[string][]string
+	users        map[string]struct{}
+	usersOnline  map[string]string
+	blockedUser  map[string]string
+	groups       map[string]struct{}
+	groupMembers map[string][]string
 }
 
 func NewMemoryRepository() server.Repository {
 	mr := &memoryRepository{
-		users:           make(map[string]struct{}),
-		usersOnline:     make(map[string]string),
-		blockedUser:     make(map[string]string),
-		groups:          make(map[string]struct{}),
-		groupMembers:    make(map[string][]string),
+		users:        make(map[string]struct{}),
+		usersOnline:  make(map[string]string),
+		blockedUser:  make(map[string]string),
+		groups:       make(map[string]struct{}),
+		groupMembers: make(map[string][]string),
 	}
 
 	mr.users[UserTest1] = struct{}{}

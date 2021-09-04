@@ -370,7 +370,7 @@ func SetGroupAdmin(jwt auth.JWT, setAdminUseCase group.SetAdminUseCase) http.Han
 const groupApiVersion string = "v1"
 
 var (
-	groupResource string
+	groupResource  string
 	memberResource string
 )
 

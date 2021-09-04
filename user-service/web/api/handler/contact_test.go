@@ -88,8 +88,8 @@ func TestHandler_GetContact(t *testing.T) {
 	t.Run("when handler.GetContacts return StatusOK", func(t *testing.T) {
 		//t.Parallel()
 		contact := &contact.Contact{
-			ID: "+5518977777777",
-			Name: "Bill",
+			ID:       "+5518977777777",
+			Name:     "Bill",
 			LastName: "Gates",
 		}
 
@@ -183,13 +183,13 @@ func TestHandler_GetAllContacts(t *testing.T) {
 		//t.Parallel()
 		contacts := []*contact.Contact{
 			{
-				ID: "+5518977777777",
-				Name: "Bill",
+				ID:       "+5518977777777",
+				Name:     "Bill",
 				LastName: "Gates",
 			},
 			{
-				ID: "+5518966666666",
-				Name: "Elon",
+				ID:       "+5518966666666",
+				Name:     "Elon",
 				LastName: "Musk",
 			},
 		}
@@ -293,7 +293,7 @@ func TestHandler_GetContactPresence(t *testing.T) {
 		//t.Parallel()
 		var presence contact.PresenceType = contact.Online
 		p := &dto.Presence{
-			ID: "+5518977777777",
+			ID:       "+5518977777777",
 			Presence: "online",
 		}
 
@@ -381,8 +381,8 @@ func TestHandler_CreateContact(t *testing.T) {
 	t.Run("when handler.CreateContact return StatusBadRequest", func(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Contact{
-			ID: "",
-			Name: "Bill",
+			ID:       "",
+			Name:     "Bill",
 			LastName: "Gates",
 		}
 
@@ -410,8 +410,8 @@ func TestHandler_CreateContact(t *testing.T) {
 	t.Run("when handler.CreateContact return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Contact{
-			ID: "+5518977777777",
-			Name: "Bill",
+			ID:       "+5518977777777",
+			Name:     "Bill",
 			LastName: "Gates",
 		}
 
@@ -439,8 +439,8 @@ func TestHandler_CreateContact(t *testing.T) {
 	t.Run("when handler.CreateContact return StatusConflict", func(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Contact{
-			ID: "+5518977777777",
-			Name: "Bill",
+			ID:       "+5518977777777",
+			Name:     "Bill",
 			LastName: "Gates",
 		}
 
@@ -468,8 +468,8 @@ func TestHandler_CreateContact(t *testing.T) {
 	t.Run("when handler.CreateContact return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Contact{
-			ID: "+5518977777777",
-			Name: "Bill",
+			ID:       "+5518977777777",
+			Name:     "Bill",
 			LastName: "Gates",
 		}
 
@@ -497,8 +497,8 @@ func TestHandler_CreateContact(t *testing.T) {
 	t.Run("when handler.CreateContact return StatusCreated", func(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Contact{
-			ID: "+5518977777777",
-			Name: "Bill",
+			ID:       "+5518977777777",
+			Name:     "Bill",
 			LastName: "Gates",
 		}
 
@@ -578,8 +578,8 @@ func TestHandler_UpdateContact(t *testing.T) {
 	t.Run("when handler.UpdateContact return StatusBadRequest", func(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Contact{
-			ID: "",
-			Name: "Bill",
+			ID:       "",
+			Name:     "Bill",
 			LastName: "Gates",
 		}
 
@@ -607,8 +607,8 @@ func TestHandler_UpdateContact(t *testing.T) {
 	t.Run("when handler.UpdateContact return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Contact{
-			ID: "+5518977777777",
-			Name: "Bill",
+			ID:       "+5518977777777",
+			Name:     "Bill",
 			LastName: "Gates",
 		}
 
@@ -636,8 +636,8 @@ func TestHandler_UpdateContact(t *testing.T) {
 	t.Run("when handler.UpdateContact return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Contact{
-			ID: "+5518977777777",
-			Name: "Bill",
+			ID:       "+5518977777777",
+			Name:     "Bill",
 			LastName: "Gates",
 		}
 
@@ -665,8 +665,8 @@ func TestHandler_UpdateContact(t *testing.T) {
 	t.Run("when handler.UpdateContact return StatusOK", func(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Contact{
-			ID: "+5518977777777",
-			Name: "Bill",
+			ID:       "+5518977777777",
+			Name:     "Bill",
 			LastName: "Gates",
 		}
 

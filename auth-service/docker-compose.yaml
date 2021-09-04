@@ -10,11 +10,12 @@ services:
       - .:/go/src/
     environment:
       SERVER_PORT: 8081
-      PGHOST: 172.17.0.1
-      PGPORT: 5432
-      PGDATABASE: chat_db
-      PGSCHEMA: chat_db
-      PGUSER: salesapi
+      DB_HOST: host.docker.internal
+      DB_PORT: 5432
+      DB_DATABASE: chat_db
+      DB_SCHEMA: chat_db
+      DB_USER: salesapi
+      DB_PASSWORD: password
     extra_hosts:
       - "host.docker.internal:172.17.0.1"
 

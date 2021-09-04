@@ -11,9 +11,9 @@ const (
 	NotFound
 )
 
-var presenceTypeText = map[PresenceType]string {
-	Online: "online",
-	Offline: "offline",
+var presenceTypeText = map[PresenceType]string{
+	Online:   "online",
+	Offline:  "offline",
 	NotFound: "not_found",
 }
 

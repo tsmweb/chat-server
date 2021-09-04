@@ -24,13 +24,13 @@ func MessageUnmarshal(in []byte, m *message.Message) error {
 }
 
 func protobufFromMessage(m *message.Message) *protobuf.Message {
-	return &protobuf.Message {
-		Id: m.ID,
-		From: m.From,
-		To: m.To,
-		Date: m.Date.Unix(),
+	return &protobuf.Message{
+		Id:          m.ID,
+		From:        m.From,
+		To:          m.To,
+		Date:        m.Date.Unix(),
 		ContentType: protobuf.ContentType(protobuf.ContentType_value[m.ContentType]),
-		Content: m.Content,
+		Content:     m.Content,
 	}
 }
 

@@ -13,6 +13,14 @@ func TestRemoveMemberUseCase_Execute(t *testing.T) {
 	//t.Parallel()
 	ctx := context.WithValue(context.Background(), common.AuthContextKey, "+5518999999999")
 
+	encode := new(mockEventEncoder)
+	encode.On("Marshal", mock.Anything).
+		Return([]byte{}, nil)
+
+	producer := new(mockProducer)
+	producer.On("Publish", mock.Anything, mock.Anything, mock.Anything).
+		Return(nil)
+
 	t.Run("when use case fails with ErrGroupOwnerCannotRemoved", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
@@ -20,7 +28,7 @@ func TestRemoveMemberUseCase_Execute(t *testing.T) {
 			Return(true, nil).
 			Once()
 
-		uc := NewRemoveMemberUseCase(r)
+		uc := NewRemoveMemberUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518977777777")
 		assert.Equal(t, ErrGroupOwnerCannotRemoved, err)
 	})
@@ -35,7 +43,7 @@ func TestRemoveMemberUseCase_Execute(t *testing.T) {
 			Return(false, nil).
 			Once()
 
-		uc := NewRemoveMemberUseCase(r)
+		uc := NewRemoveMemberUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518977777777")
 		assert.Equal(t, ErrOperationNotAllowed, err)
 	})
@@ -53,7 +61,7 @@ func TestRemoveMemberUseCase_Execute(t *testing.T) {
 			Return(false, nil).
 			Once()
 
-		uc := NewRemoveMemberUseCase(r)
+		uc := NewRemoveMemberUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518977777777")
 		assert.Equal(t, ErrMemberNotFound, err)
 	})
@@ -65,32 +73,38 @@ func TestRemoveMemberUseCase_Execute(t *testing.T) {
 			Return(false, errors.New("error")).
 			Once()
 
-		uc := NewRemoveMemberUseCase(r)
+		uc := NewRemoveMemberUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518977777777")
 		assert.NotNil(t, err)
 
 		r.On("IsGroupOwner", mock.Anything, mock.Anything, mock.Anything).
-			Return(false, nil).
-			Once()
+			Return(false, nil)
 		r.On("IsGroupAdmin", mock.Anything, mock.Anything, mock.Anything).
 			Return(false, errors.New("error")).
 			Once()
 
-		uc = NewRemoveMemberUseCase(r)
+		uc = NewRemoveMemberUseCase(r, encode, producer)
 		err = uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518977777777")
 		assert.NotNil(t, err)
 
-		r.On("IsGroupOwner", mock.Anything, mock.Anything, mock.Anything).
-			Return(false, nil).
-			Once()
 		r.On("IsGroupAdmin", mock.Anything, mock.Anything, mock.Anything).
-			Return(true, nil).
-			Once()
+			Return(true, nil)
 		r.On("RemoveMember", mock.Anything, mock.Anything, mock.Anything).
 			Return(false, errors.New("error")).
 			Once()
 
-		uc = NewRemoveMemberUseCase(r)
+		uc = NewRemoveMemberUseCase(r, encode, producer)
+		err = uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518977777777")
+		assert.NotNil(t, err)
+
+		r.On("RemoveMember", mock.Anything, mock.Anything, mock.Anything).
+			Return(true, nil)
+		p := new(mockProducer)
+		p.On("Publish", mock.Anything, mock.Anything, mock.Anything).
+			Return(errors.New("error")).
+			Once()
+
+		uc = NewRemoveMemberUseCase(r, encode, p)
 		err = uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518977777777")
 		assert.NotNil(t, err)
 	})
@@ -105,7 +119,7 @@ func TestRemoveMemberUseCase_Execute(t *testing.T) {
 			Return(true, nil).
 			Once()
 
-		uc := NewRemoveMemberUseCase(r)
+		uc := NewRemoveMemberUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518999999999")
 		assert.Nil(t, err)
 	})
@@ -123,7 +137,7 @@ func TestRemoveMemberUseCase_Execute(t *testing.T) {
 			Return(true, nil).
 			Once()
 
-		uc := NewRemoveMemberUseCase(r)
+		uc := NewRemoveMemberUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518977777777")
 		assert.Nil(t, err)
 	})

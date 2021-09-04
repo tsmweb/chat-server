@@ -18,14 +18,14 @@ func init() {
 
 // Router for server end points.
 type Router struct {
-	auth   middleware.Auth
+	auth     middleware.Auth
 	handleWS http.Handler
 }
 
 // NewRouter creates a router for Chat.
 func NewRouter(a middleware.Auth, handleWS http.Handler) *Router {
 	return &Router{
-		auth:   a,
+		auth:     a,
 		handleWS: handleWS,
 	}
 }

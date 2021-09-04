@@ -22,7 +22,6 @@ type Writer interface {
 	AddMember(ctx context.Context, member *Member) error
 	SetAdmin(ctx context.Context, member *Member) (bool, error)
 	RemoveMember(ctx context.Context, groupID, userID string) (bool, error)
-
 }
 
 // Repository interface for Group data source.

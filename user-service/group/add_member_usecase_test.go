@@ -14,6 +14,14 @@ func TestAddMemberUseCase_Execute(t *testing.T) {
 	//t.Parallel()
 	ctx := context.WithValue(context.Background(), common.AuthContextKey, "+5518999999999")
 
+	encode := new(mockEventEncoder)
+	encode.On("Marshal", mock.Anything).
+		Return([]byte{}, nil)
+
+	producer := new(mockProducer)
+	producer.On("Publish", mock.Anything, mock.Anything, mock.Anything).
+		Return(nil)
+
 	t.Run("when use case fails with ErrGroupNotFound", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
@@ -21,7 +29,7 @@ func TestAddMemberUseCase_Execute(t *testing.T) {
 			Return(false, nil).
 			Once()
 
-		uc := NewAddMemberUseCase(r)
+		uc := NewAddMemberUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518977777777", false)
 		assert.Equal(t, ErrGroupNotFound, err)
 	})
@@ -36,7 +44,7 @@ func TestAddMemberUseCase_Execute(t *testing.T) {
 			Return(false, nil).
 			Once()
 
-		uc := NewAddMemberUseCase(r)
+		uc := NewAddMemberUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518977777777", false)
 		assert.Equal(t, ErrUserNotFound, err)
 	})
@@ -54,7 +62,7 @@ func TestAddMemberUseCase_Execute(t *testing.T) {
 			Return(false, nil).
 			Once()
 
-		uc := NewAddMemberUseCase(r)
+		uc := NewAddMemberUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518977777777", false)
 		assert.Equal(t, ErrOperationNotAllowed, err)
 	})
@@ -72,7 +80,7 @@ func TestAddMemberUseCase_Execute(t *testing.T) {
 			Return(true, nil).
 			Once()
 
-		uc := NewAddMemberUseCase(r)
+		uc := NewAddMemberUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "", "+5518977777777", false)
 		assert.Equal(t, ErrGroupIDValidateModel, err)
 	})
@@ -93,7 +101,7 @@ func TestAddMemberUseCase_Execute(t *testing.T) {
 			Return(cerror.ErrRecordAlreadyRegistered).
 			Once()
 
-		uc := NewAddMemberUseCase(r)
+		uc := NewAddMemberUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518977777777", false)
 		assert.Equal(t, ErrMemberAlreadyExists, err)
 	})
@@ -101,55 +109,53 @@ func TestAddMemberUseCase_Execute(t *testing.T) {
 	t.Run("when use case fails with Error", func(t *testing.T) {
 		//t.Parallel()
 		r := new(mockRepository)
-
 		r.On("ExistsGroup", mock.Anything, mock.Anything).
 			Return(false, errors.New("error")).
 			Once()
 
-		uc := NewAddMemberUseCase(r)
+		uc := NewAddMemberUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518977777777", false)
 		assert.NotNil(t, err)
 
 		r.On("ExistsGroup", mock.Anything, mock.Anything).
-			Return(true, nil).
-			Once()
+			Return(true, nil)
 		r.On("ExistsUser", mock.Anything, mock.Anything).
 			Return(false, errors.New("error")).
 			Once()
 
-		uc = NewAddMemberUseCase(r)
+		uc = NewAddMemberUseCase(r, encode, producer)
 		err = uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518977777777", false)
 		assert.NotNil(t, err)
 
-		r.On("ExistsGroup", mock.Anything, mock.Anything).
-			Return(true, nil).
-			Once()
 		r.On("ExistsUser", mock.Anything, mock.Anything).
-			Return(true, nil).
-			Once()
-
+			Return(true, nil)
 		r.On("IsGroupAdmin", mock.Anything, mock.Anything, mock.Anything).
 			Return(false, errors.New("error")).
 			Once()
 
-		uc = NewAddMemberUseCase(r)
+		uc = NewAddMemberUseCase(r, encode, producer)
 		err = uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518977777777", false)
 		assert.NotNil(t, err)
 
 		r.On("IsGroupAdmin", mock.Anything, mock.Anything, mock.Anything).
-			Return(true, nil).
-			Once()
-		r.On("ExistsGroup", mock.Anything, mock.Anything).
-			Return(true, nil).
-			Once()
-		r.On("ExistsUser", mock.Anything, mock.Anything).
-			Return(true, nil).
-			Once()
+			Return(true, nil)
 		r.On("AddMember", mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
 
-		uc = NewAddMemberUseCase(r)
+		uc = NewAddMemberUseCase(r, encode, producer)
+		err = uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518977777777", false)
+		assert.NotNil(t, err)
+
+		r.On("AddMember", mock.Anything, mock.Anything).
+			Return(nil).
+			Once()
+		p := new(mockProducer)
+		p.On("Publish", mock.Anything, mock.Anything, mock.Anything).
+			Return(errors.New("error")).
+			Once()
+
+		uc = NewAddMemberUseCase(r, encode, p)
 		err = uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518977777777", false)
 		assert.NotNil(t, err)
 	})
@@ -170,7 +176,7 @@ func TestAddMemberUseCase_Execute(t *testing.T) {
 			Return(nil).
 			Once()
 
-		uc := NewAddMemberUseCase(r)
+		uc := NewAddMemberUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "be49afd2ee890805c21ddd55879db1387aec9751", "+5518977777777", false)
 		assert.Nil(t, err)
 	})

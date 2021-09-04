@@ -25,10 +25,10 @@ func UserUnmarshal(in []byte, u *user.User) error {
 
 func protobufFromUser(u *user.User) *protobuf.User {
 	return &protobuf.User{
-		Id: u.ID,
-		Status: protobuf.UserStatus(protobuf.UserStatus_value[u.Status]),
+		Id:       u.ID,
+		Status:   protobuf.UserStatus(protobuf.UserStatus_value[u.Status]),
 		ServerID: u.ServerID,
-		Date: u.Date.Unix(),
+		Date:     u.Date.Unix(),
 	}
 }
 

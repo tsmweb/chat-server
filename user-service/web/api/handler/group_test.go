@@ -88,25 +88,25 @@ func TestHandler_GetGroup(t *testing.T) {
 	t.Run("when handler.GetGroup return StatusOK", func(t *testing.T) {
 		//t.Parallel()
 		group := &group.Group{
-			ID: "be49afd2ee890805c21ddd55879db1387aec9751",
-			Name: "Churrasco na Piscina",
+			ID:          "be49afd2ee890805c21ddd55879db1387aec9751",
+			Name:        "Churrasco na Piscina",
 			Description: "Amigos do churrasco.",
-			Owner: "+5518999999999",
+			Owner:       "+5518999999999",
 			Members: []*group.Member{
 				{
 					GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-					UserID: "+5518999999999",
-					Admin: true,
+					UserID:  "+5518999999999",
+					Admin:   true,
 				},
 				{
 					GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-					UserID: "+5518988888888",
-					Admin: false,
+					UserID:  "+5518988888888",
+					Admin:   false,
 				},
 				{
 					GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-					UserID: "+5518977777777",
-					Admin: false,
+					UserID:  "+5518977777777",
+					Admin:   false,
 				},
 			},
 		}
@@ -293,7 +293,7 @@ func TestHandler_CreateGroup(t *testing.T) {
 	t.Run("when handler.CreateGroup return StatusBadRequest", func(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Group{
-			Name: "",
+			Name:        "",
 			Description: "Exemplo de Grupo",
 		}
 
@@ -321,7 +321,7 @@ func TestHandler_CreateGroup(t *testing.T) {
 	t.Run("when handler.CreateGroup return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Group{
-			Name: "Grupo Teste",
+			Name:        "Grupo Teste",
 			Description: "Exemplo de Grupo",
 		}
 
@@ -352,7 +352,7 @@ func TestHandler_CreateGroup(t *testing.T) {
 		location := fmt.Sprintf("%s/%s", groupResource, groupID)
 
 		p := &dto.Group{
-			Name: "Grupo Teste",
+			Name:        "Grupo Teste",
 			Description: "Exemplo de Grupo",
 		}
 
@@ -434,8 +434,8 @@ func TestHandler_UpdateGroup(t *testing.T) {
 	t.Run("when handler.UpdateGroup return StatusBadRequest", func(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Group{
-			ID: "be49afd2ee890805c21ddd55879db1387aec9751",
-			Name: "Grupo Teste",
+			ID:          "be49afd2ee890805c21ddd55879db1387aec9751",
+			Name:        "Grupo Teste",
 			Description: "Exemplo de Grupo",
 		}
 
@@ -463,8 +463,8 @@ func TestHandler_UpdateGroup(t *testing.T) {
 	t.Run("when handler.UpdateGroup return StatusUnauthorized", func(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Group{
-			ID: "be49afd2ee890805c21ddd55879db1387aec9751",
-			Name: "Grupo Teste",
+			ID:          "be49afd2ee890805c21ddd55879db1387aec9751",
+			Name:        "Grupo Teste",
 			Description: "Exemplo de Grupo",
 		}
 
@@ -492,8 +492,8 @@ func TestHandler_UpdateGroup(t *testing.T) {
 	t.Run("when handler.UpdateGroup return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Group{
-			ID: "be49afd2ee890805c21ddd55879db1387aec9751",
-			Name: "Grupo Teste",
+			ID:          "be49afd2ee890805c21ddd55879db1387aec9751",
+			Name:        "Grupo Teste",
 			Description: "Exemplo de Grupo",
 		}
 
@@ -521,8 +521,8 @@ func TestHandler_UpdateGroup(t *testing.T) {
 	t.Run("when handler.UpdateGroup return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Group{
-			ID: "be49afd2ee890805c21ddd55879db1387aec9751",
-			Name: "Grupo Teste",
+			ID:          "be49afd2ee890805c21ddd55879db1387aec9751",
+			Name:        "Grupo Teste",
 			Description: "Exemplo de Grupo",
 		}
 
@@ -550,8 +550,8 @@ func TestHandler_UpdateGroup(t *testing.T) {
 	t.Run("when handler.UpdateGroup return StatusOK", func(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Group{
-			ID: "be49afd2ee890805c21ddd55879db1387aec9751",
-			Name: "Grupo Teste",
+			ID:          "be49afd2ee890805c21ddd55879db1387aec9751",
+			Name:        "Grupo Teste",
 			Description: "Exemplo de Grupo",
 		}
 
@@ -752,8 +752,8 @@ func TestHandler_AddGroupMember(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-			UserID: "+5518988888888",
-			Admin: false,
+			UserID:  "+5518988888888",
+			Admin:   false,
 		}
 
 		pj, err := json.Marshal(p)
@@ -781,8 +781,8 @@ func TestHandler_AddGroupMember(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-			UserID: "",
-			Admin: false,
+			UserID:  "",
+			Admin:   false,
 		}
 
 		pj, err := json.Marshal(p)
@@ -810,8 +810,8 @@ func TestHandler_AddGroupMember(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-			UserID: "+5518988888888",
-			Admin: false,
+			UserID:  "+5518988888888",
+			Admin:   false,
 		}
 
 		pj, err := json.Marshal(p)
@@ -839,8 +839,8 @@ func TestHandler_AddGroupMember(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-			UserID: "+5518988888888",
-			Admin: false,
+			UserID:  "+5518988888888",
+			Admin:   false,
 		}
 
 		pj, err := json.Marshal(p)
@@ -868,8 +868,8 @@ func TestHandler_AddGroupMember(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-			UserID: "+5518988888888",
-			Admin: false,
+			UserID:  "+5518988888888",
+			Admin:   false,
 		}
 
 		pj, err := json.Marshal(p)
@@ -897,8 +897,8 @@ func TestHandler_AddGroupMember(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-			UserID: "+5518988888888",
-			Admin: false,
+			UserID:  "+5518988888888",
+			Admin:   false,
 		}
 
 		pj, err := json.Marshal(p)
@@ -1109,8 +1109,8 @@ func TestHandler_SetGroupAdmin(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-			UserID: "",
-			Admin: true,
+			UserID:  "",
+			Admin:   true,
 		}
 
 		pj, err := json.Marshal(p)
@@ -1138,8 +1138,8 @@ func TestHandler_SetGroupAdmin(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-			UserID: "+5518977777777",
-			Admin: true,
+			UserID:  "+5518977777777",
+			Admin:   true,
 		}
 
 		pj, err := json.Marshal(p)
@@ -1167,8 +1167,8 @@ func TestHandler_SetGroupAdmin(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-			UserID: "+5518977777777",
-			Admin: true,
+			UserID:  "+5518977777777",
+			Admin:   true,
 		}
 
 		pj, err := json.Marshal(p)
@@ -1196,8 +1196,8 @@ func TestHandler_SetGroupAdmin(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-			UserID: "+5518977777777",
-			Admin: true,
+			UserID:  "+5518977777777",
+			Admin:   true,
 		}
 
 		pj, err := json.Marshal(p)
@@ -1225,8 +1225,8 @@ func TestHandler_SetGroupAdmin(t *testing.T) {
 		//t.Parallel()
 		p := &dto.Member{
 			GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-			UserID: "+5518977777777",
-			Admin: true,
+			UserID:  "+5518977777777",
+			Admin:   true,
 		}
 
 		pj, err := json.Marshal(p)

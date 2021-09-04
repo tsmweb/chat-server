@@ -18,12 +18,11 @@ import (
 )
 
 type Providers struct {
-	ctx        context.Context
-	server     *server.Server
-	jwt        auth.JWT
-	dataBase   db.Database
-	repository server.Repository
-	kafka      kafka.Kafka
+	ctx      context.Context
+	server   *server.Server
+	jwt      auth.JWT
+	dataBase db.Database
+	kafka    kafka.Kafka
 }
 
 func CreateProvider(ctx context.Context) *Providers {
@@ -39,19 +38,41 @@ func (p *Providers) ServerProvider() (*server.Server, error) {
 			return nil, err
 		}
 
+		connReader := server.ConnReaderFunc(adapter.ReaderWS)
+		connWriter := server.ConnWriterFunc(adapter.WriterWS)
+
+		repository := repository.NewMemoryRepository()
+
+		messageDecoder := message.DecoderFunc(adapter.MessageUnmarshal)
+		messageEncoder := message.EncoderFunc(adapter.MessageMarshal)
+		userEncoder := user.EncoderFunc(adapter.UserMarshal)
+		errorEncoder := server.ErrorEventEncoderFunc(adapter.ErrorEventMarshal)
+
+		messageConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(), config.KafkaHostTopic())
+		messageProducer := p.KafkaProvider().NewProducer(config.KafkaNewMessagesTopic())
+		offMessageProducer := p.KafkaProvider().NewProducer(config.KafkaOffMessagesTopic())
+		userProducer := p.KafkaProvider().NewProducer(config.KafkaUsersTopic())
+		errorProducer := p.KafkaProvider().NewProducer(config.KafkaErrorsTopic())
+
+		handleMessage := server.NewHandleMessage(messageEncoder, messageProducer)
+		handleGroupMessage := server.NewHandleGroupMessage(repository)
+		handleOffMessage := server.NewHandleMessage(messageEncoder, offMessageProducer)
+		handleUserStatus := server.NewHandleUserStatus(userEncoder, userProducer, repository)
+		handleError := server.NewHandleError(errorEncoder, errorProducer)
+
 		p.server = server.NewServer(
 			p.ctx,
 			epoll,
-			p.ConnReaderProvider(),
-			p.ConnWriterProvider(),
-			p.MessageDecoderProvider(),
-			p.RepositoryProvider(),
-			p.KafkaProvider().NewConsumer(config.KafkaGroupID(), config.KafkaHostTopic()),
-			p.HandleMessageProvider(),
-			p.HandleGroupMessageProvider(),
-			p.HandleOffMessageProvider(),
-			p.HandleUserStatusProvider(),
-			p.HandleErrorProvider(),
+			connReader,
+			connWriter,
+			messageDecoder,
+			repository,
+			messageConsumer,
+			handleMessage,
+			handleGroupMessage,
+			handleOffMessage,
+			handleUserStatus,
+			handleError,
 		)
 	}
 	return p.server, nil
@@ -63,51 +84,6 @@ func (p *Providers) EpollProvider() (epoll.EPoll, error) {
 		return nil, err
 	}
 	return epoll.NewEPoll(poller), nil
-}
-
-func (p *Providers) ConnReaderProvider() server.ConnReader {
-	return server.ConnReaderFunc(adapter.ReaderWS)
-}
-
-func (p *Providers) ConnWriterProvider() server.ConnWriter {
-	return server.ConnWriterFunc(adapter.WriterWS)
-}
-
-func (p *Providers) MessageEncoderProvider() message.Encoder {
-	return message.EncoderFunc(adapter.MessageMarshal)
-}
-
-func (p *Providers) MessageDecoderProvider() message.Decoder {
-	return message.DecoderFunc(adapter.MessageUnmarshal)
-}
-
-func (p *Providers) UserEncoderProvider() user.Encoder {
-	return user.EncoderFunc(adapter.UserMarshal)
-}
-
-func (p *Providers) EventErrorEncoderProvider() server.ErrorEventEncoder {
-	return server.ErrorEventEncoderFunc(adapter.ErrorEventMarshal)
-}
-
-func (p *Providers) RepositoryProvider() server.Repository {
-	if p.repository == nil {
-		p.repository = repository.NewMemoryRepository()
-	}
-	return p.repository
-}
-
-func (p *Providers) DataBaseProvider() db.Database {
-	if p.dataBase == nil {
-		p.dataBase = db.NewPostgresDatabase()
-	}
-	return p.dataBase
-}
-
-func (p *Providers) KafkaProvider() kafka.Kafka {
-	if p.kafka == nil {
-		p.kafka = kafka.New([]string{config.KafkaBootstrapServers()}, config.KafkaClientID())
-	}
-	return p.kafka
 }
 
 // Poller OnWaitError will be called from goroutine, waiting for events.
@@ -124,39 +100,18 @@ func (p *Providers) PollerConfigProvider() *netpoll.Config {
 	}
 }
 
-func (p *Providers) HandleMessageProvider() server.HandleMessage {
-	return server.NewHandleMessage(
-		p.MessageEncoderProvider(),
-		p.KafkaProvider().NewProducer(config.KafkaNewMessagesTopic()),
-	)
+func (p *Providers) DataBaseProvider() db.Database {
+	if p.dataBase == nil {
+		p.dataBase = db.NewPostgresDatabase()
+	}
+	return p.dataBase
 }
 
-func (p *Providers) HandleGroupMessageProvider() server.HandleGroupMessage {
-	return server.NewHandleGroupMessage(
-		p.RepositoryProvider(),
-	)
-}
-
-func (p *Providers) HandleOffMessageProvider() server.HandleMessage {
-	return server.NewHandleMessage(
-		p.MessageEncoderProvider(),
-		p.KafkaProvider().NewProducer(config.KafkaOffMessagesTopic()),
-	)
-}
-
-func (p *Providers) HandleUserStatusProvider() server.HandleUserStatus {
-	return server.NewHandleUserStatus(
-		p.UserEncoderProvider(),
-		p.KafkaProvider().NewProducer(config.KafkaUsersTopic()),
-		p.RepositoryProvider(),
-	)
-}
-
-func (p *Providers) HandleErrorProvider() server.HandleError {
-	return server.NewHandleError(
-		p.EventErrorEncoderProvider(),
-		p.KafkaProvider().NewProducer(config.KafkaErrorsTopic()),
-	)
+func (p *Providers) KafkaProvider() kafka.Kafka {
+	if p.kafka == nil {
+		p.kafka = kafka.New([]string{config.KafkaBootstrapServers()}, config.KafkaClientID())
+	}
+	return p.kafka
 }
 
 func (p *Providers) JwtProvider() auth.JWT {

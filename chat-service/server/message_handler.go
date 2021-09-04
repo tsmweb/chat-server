@@ -16,7 +16,7 @@ type HandleMessage interface {
 }
 
 type handleMessage struct {
-	encoder message.Encoder
+	encoder  message.Encoder
 	producer kafka.Producer
 }
 
@@ -26,7 +26,7 @@ func NewHandleMessage(
 	producer kafka.Producer,
 ) HandleMessage {
 	return &handleMessage{
-		encoder: encoder,
+		encoder:  encoder,
 		producer: producer,
 	}
 }

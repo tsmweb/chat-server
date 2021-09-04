@@ -107,7 +107,7 @@ func GetContactPresence(jwt auth.JWT, getPresenceUseCase contact.GetPresenceUseC
 		}
 
 		p := &dto.Presence{
-			ID: contactID,
+			ID:       contactID,
 			Presence: contact.PresenceTypeText(presence),
 		}
 

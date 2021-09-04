@@ -17,3 +17,13 @@ var ErrMemberAlreadyExists = errors.New("member already exists")
 var ErrOperationNotAllowed = errors.New("operation not allowed")
 var ErrGroupOwnerCannotRemoved = errors.New("group owner cannot be removed")
 var ErrGroupOwnerCannotChanged = errors.New("group owner cannot be changed")
+
+// ErrEventNotification error thrown if publishing an event results in an error.
+type ErrEventNotification struct {
+	Msg string
+}
+
+// Error implements interface Error
+func (e *ErrEventNotification) Error() string {
+	return e.Msg
+}

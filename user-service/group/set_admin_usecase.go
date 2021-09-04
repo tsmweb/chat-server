@@ -2,6 +2,8 @@ package group
 
 import (
 	"context"
+	"fmt"
+	"github.com/tsmweb/go-helper-api/kafka"
 	"github.com/tsmweb/user-service/common"
 	"time"
 )
@@ -13,14 +15,24 @@ type SetAdminUseCase interface {
 
 type setAdminUseCase struct {
 	repository Repository
+	encoder    EventEncoder
+	producer   kafka.Producer
 }
 
 // NewSetAdminUseCase create a new instance of SetAdminUseCase.
-func NewSetAdminUseCase(r Repository) SetAdminUseCase {
-	return &setAdminUseCase{repository: r}
+func NewSetAdminUseCase(
+	repository Repository,
+	encoder EventEncoder,
+	producer kafka.Producer,
+) SetAdminUseCase {
+	return &setAdminUseCase{
+		repository: repository,
+		encoder:    encoder,
+		producer:   producer,
+	}
 }
 
-// Execute performs the creation use case.
+// Execute performs the set administrator use case.
 func (u *setAdminUseCase) Execute(ctx context.Context, member *Member) error {
 	err := member.Validate()
 	if err != nil {
@@ -43,7 +55,9 @@ func (u *setAdminUseCase) Execute(ctx context.Context, member *Member) error {
 		return ErrMemberNotFound
 	}
 
-	// TODO notify member
+	if err = u.notifyMember(ctx, member.GroupID, member.UserID, member.Admin); err != nil {
+		return &ErrEventNotification{Msg: err.Error()}
+	}
 
 	return nil
 }
@@ -74,4 +88,23 @@ func (u *setAdminUseCase) checkPermission(ctx context.Context, groupID, userID s
 	}
 
 	return authID, nil
+}
+
+func (u *setAdminUseCase) notifyMember(ctx context.Context, groupID, userID string, isAdmin bool) error {
+	var evt EventType = EventAddAdmin
+	if isAdmin == false {
+		evt = EventRemoveAdmin
+	}
+
+	event := NewEvent(groupID, userID, evt)
+	epb, err := u.encoder.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	key := fmt.Sprintf("%s:%s", groupID, userID)
+	if err = u.producer.Publish(ctx, []byte(key), epb); err != nil {
+		return err
+	}
+	return nil
 }

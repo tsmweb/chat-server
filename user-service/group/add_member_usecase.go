@@ -3,7 +3,9 @@ package group
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/tsmweb/go-helper-api/cerror"
+	"github.com/tsmweb/go-helper-api/kafka"
 	"github.com/tsmweb/user-service/common"
 )
 
@@ -14,14 +16,24 @@ type AddMemberUseCase interface {
 
 type addMemberUseCase struct {
 	repository Repository
+	encoder    EventEncoder
+	producer   kafka.Producer
 }
 
 // NewAddMemberUseCase create a new instance of AddMemberUseCase.
-func NewAddMemberUseCase(r Repository) AddMemberUseCase {
-	return &addMemberUseCase{repository: r}
+func NewAddMemberUseCase(
+	repository Repository,
+	encoder EventEncoder,
+	producer kafka.Producer,
+) AddMemberUseCase {
+	return &addMemberUseCase{
+		repository: repository,
+		encoder:    encoder,
+		producer:   producer,
+	}
 }
 
-// Execute performs the creation use case.
+// Execute performs the add member use case.
 func (u *addMemberUseCase) Execute(ctx context.Context, groupID string, userID string, admin bool) error {
 	ok, err := u.repository.ExistsGroup(ctx, groupID)
 	if err != nil {
@@ -57,7 +69,9 @@ func (u *addMemberUseCase) Execute(ctx context.Context, groupID string, userID s
 		return err
 	}
 
-	// TODO notify member
+	if err = u.notifyMember(ctx, groupID, userID); err != nil {
+		return &ErrEventNotification{Msg: err.Error()}
+	}
 
 	return nil
 }
@@ -73,5 +87,19 @@ func (u *addMemberUseCase) checkPermission(ctx context.Context, groupID string) 
 		return ErrOperationNotAllowed
 	}
 
+	return nil
+}
+
+func (u *addMemberUseCase) notifyMember(ctx context.Context, groupID, userID string) error {
+	event := NewEvent(groupID, userID, EventAddMember)
+	epb, err := u.encoder.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	key := fmt.Sprintf("%s:%s", groupID, userID)
+	if err = u.producer.Publish(ctx, []byte(key), epb); err != nil {
+		return err
+	}
 	return nil
 }

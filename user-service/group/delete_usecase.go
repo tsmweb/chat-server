@@ -2,6 +2,7 @@ package group
 
 import (
 	"context"
+	"github.com/tsmweb/go-helper-api/kafka"
 	"github.com/tsmweb/user-service/common"
 )
 
@@ -12,11 +13,21 @@ type DeleteUseCase interface {
 
 type deleteUseCase struct {
 	repository Repository
+	encoder    EventEncoder
+	producer   kafka.Producer
 }
 
 // NewDeleteUseCase create a new instance of DeleteUseCase.
-func NewDeleteUseCase(r Repository) DeleteUseCase {
-	return &deleteUseCase{repository: r}
+func NewDeleteUseCase(
+	repository Repository,
+	encoder EventEncoder,
+	producer kafka.Producer,
+) DeleteUseCase {
+	return &deleteUseCase{
+		repository: repository,
+		encoder:    encoder,
+		producer:   producer,
+	}
 }
 
 // Execute performs the delete use case.
@@ -39,7 +50,22 @@ func (u *deleteUseCase) Execute(ctx context.Context, groupID string) error {
 		return ErrGroupNotFound
 	}
 
-	// TODO notify member
+	if err = u.notifyMember(ctx, groupID); err != nil {
+		return &ErrEventNotification{Msg: err.Error()}
+	}
 
+	return nil
+}
+
+func (u *deleteUseCase) notifyMember(ctx context.Context, groupID string) error {
+	event := NewEvent(groupID, "", EventDeleteGroup)
+	epb, err := u.encoder.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	if err = u.producer.Publish(ctx, []byte(groupID), epb); err != nil {
+		return err
+	}
 	return nil
 }

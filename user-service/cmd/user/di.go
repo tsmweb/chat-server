@@ -3,7 +3,9 @@ package main
 import (
 	"github.com/gorilla/mux"
 	"github.com/tsmweb/go-helper-api/auth"
+	"github.com/tsmweb/go-helper-api/kafka"
 	"github.com/tsmweb/go-helper-api/middleware"
+	"github.com/tsmweb/user-service/adapter"
 	"github.com/tsmweb/user-service/config"
 	"github.com/tsmweb/user-service/contact"
 	"github.com/tsmweb/user-service/group"
@@ -16,6 +18,7 @@ type Provider struct {
 	jwt      auth.JWT
 	mAuth    middleware.Auth
 	dataBase db.Database
+	kafka    kafka.Kafka
 }
 
 func CreateProvider() *Provider {
@@ -51,14 +54,17 @@ func (p *Provider) ContactRouter(mr *mux.Router) {
 func (p *Provider) GroupRouter(mr *mux.Router) {
 	database := p.DatabaseProvider()
 	repo := repository.NewGroupRepositoryPostgres(database)
+	encoder := group.EventEncoderFunc(adapter.EventMarshal)
+	producer := p.KafkaProvider().NewProducer(config.KafkaGroupEventTopic())
+
 	getUseCase := group.NewGetUseCase(repo)
 	getAllUseCase := group.NewGetAllUseCase(repo)
 	createUseCase := group.NewCreateUseCase(repo)
-	updateUseCase := group.NewUpdateUseCase(repo)
-	deleteUseCase := group.NewDeleteUseCase(repo)
-	addMemberUseCase := group.NewAddMemberUseCase(repo)
-	removeMemberUseCase := group.NewRemoveMemberUseCase(repo)
-	setAdminUseCase := group.NewSetAdminUseCase(repo)
+	updateUseCase := group.NewUpdateUseCase(repo, encoder, producer)
+	deleteUseCase := group.NewDeleteUseCase(repo, encoder, producer)
+	addMemberUseCase := group.NewAddMemberUseCase(repo, encoder, producer)
+	removeMemberUseCase := group.NewRemoveMemberUseCase(repo, encoder, producer)
+	setAdminUseCase := group.NewSetAdminUseCase(repo, encoder, producer)
 
 	handler.MakeGroupRouters(
 		mr,
@@ -93,4 +99,11 @@ func (p *Provider) DatabaseProvider() db.Database {
 		p.dataBase = db.NewPostgresDatabase()
 	}
 	return p.dataBase
+}
+
+func (p *Provider) KafkaProvider() kafka.Kafka {
+	if p.kafka == nil {
+		p.kafka = kafka.New([]string{config.KafkaBootstrapServers()}, config.KafkaClientID())
+	}
+	return p.kafka
 }

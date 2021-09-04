@@ -16,7 +16,7 @@ type HandleError interface {
 }
 
 type handleError struct {
-	encoder ErrorEventEncoder
+	encoder  ErrorEventEncoder
 	producer kafka.Producer
 }
 

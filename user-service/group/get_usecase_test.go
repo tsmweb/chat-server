@@ -48,13 +48,13 @@ func TestGetUseCase_Execute(t *testing.T) {
 			Members: []*Member{
 				{
 					GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-					UserID: "+5518999999999",
-					Admin: true,
+					UserID:  "+5518999999999",
+					Admin:   true,
 				},
 				{
 					GroupID: "be49afd2ee890805c21ddd55879db1387aec9751",
-					UserID: "+5518977777777",
-					Admin: false,
+					UserID:  "+5518977777777",
+					Admin:   false,
 				},
 			},
 		}

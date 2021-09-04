@@ -13,6 +13,14 @@ func TestSetAdminUseCase_Execute(t *testing.T) {
 	//t.Parallel()
 	ctx := context.WithValue(context.Background(), common.AuthContextKey, "+5518999999999")
 
+	encode := new(mockEventEncoder)
+	encode.On("Marshal", mock.Anything).
+		Return([]byte{}, nil)
+
+	producer := new(mockProducer)
+	producer.On("Publish", mock.Anything, mock.Anything, mock.Anything).
+		Return(nil)
+
 	t.Run("when use case fails with ErrValidateModel", func(t *testing.T) {
 		//t.Parallel()
 		member := &Member{
@@ -22,7 +30,7 @@ func TestSetAdminUseCase_Execute(t *testing.T) {
 		}
 
 		r := new(mockRepository)
-		uc := NewSetAdminUseCase(r)
+		uc := NewSetAdminUseCase(r, encode, producer)
 		err := uc.Execute(ctx, member)
 		assert.Equal(t, ErrGroupIDValidateModel, err)
 	})
@@ -40,7 +48,7 @@ func TestSetAdminUseCase_Execute(t *testing.T) {
 			Return(false, nil).
 			Once()
 
-		uc := NewSetAdminUseCase(r)
+		uc := NewSetAdminUseCase(r, encode, producer)
 		err := uc.Execute(ctx, member)
 		assert.Equal(t, ErrOperationNotAllowed, err)
 	})
@@ -61,7 +69,7 @@ func TestSetAdminUseCase_Execute(t *testing.T) {
 			Return(true, nil).
 			Once()
 
-		uc := NewSetAdminUseCase(r)
+		uc := NewSetAdminUseCase(r, encode, producer)
 		err := uc.Execute(ctx, member)
 		assert.Equal(t, ErrGroupOwnerCannotChanged, err)
 	})
@@ -85,7 +93,7 @@ func TestSetAdminUseCase_Execute(t *testing.T) {
 			Return(false, nil).
 			Once()
 
-		uc := NewSetAdminUseCase(r)
+		uc := NewSetAdminUseCase(r,encode, producer)
 		err := uc.Execute(ctx, member)
 		assert.Equal(t, ErrMemberNotFound, err)
 	})
@@ -103,32 +111,37 @@ func TestSetAdminUseCase_Execute(t *testing.T) {
 			Return(false, errors.New("error")).
 			Once()
 
-		uc := NewSetAdminUseCase(r)
+		uc := NewSetAdminUseCase(r, encode, producer)
 		err := uc.Execute(ctx, member)
 		assert.NotNil(t, err)
 
 		r.On("IsGroupAdmin", mock.Anything, mock.Anything, mock.Anything).
-			Return(true, nil).
-			Once()
+			Return(true, nil)
 		r.On("IsGroupOwner", mock.Anything, mock.Anything, mock.Anything).
 			Return(false, errors.New("error")).
 			Once()
 
-		uc = NewSetAdminUseCase(r)
+		uc = NewSetAdminUseCase(r, encode, producer)
 		err = uc.Execute(ctx, member)
 		assert.NotNil(t, err)
 
-		r.On("IsGroupAdmin", mock.Anything, mock.Anything, mock.Anything).
-			Return(true, nil).
-			Once()
 		r.On("IsGroupOwner", mock.Anything, mock.Anything, mock.Anything).
-			Return(false, nil).
-			Once()
+			Return(false, nil)
 		r.On("SetAdmin", mock.Anything, mock.Anything).
 			Return(false, errors.New("error")).
 			Once()
 
-		uc = NewSetAdminUseCase(r)
+		uc = NewSetAdminUseCase(r, encode, producer)
+		err = uc.Execute(ctx, member)
+		assert.NotNil(t, err)
+
+		r.On("SetAdmin", mock.Anything, mock.Anything).
+			Return(true, nil)
+		p := new(mockProducer)
+		p.On("Publish", mock.Anything, mock.Anything, mock.Anything).
+			Return(errors.New("error"))
+
+		uc = NewSetAdminUseCase(r, encode, p)
 		err = uc.Execute(ctx, member)
 		assert.NotNil(t, err)
 	})
@@ -152,7 +165,7 @@ func TestSetAdminUseCase_Execute(t *testing.T) {
 			Return(true, nil).
 			Once()
 
-		uc := NewSetAdminUseCase(r)
+		uc := NewSetAdminUseCase(r, encode, producer)
 		err := uc.Execute(ctx, member)
 		assert.Nil(t, err)
 	})

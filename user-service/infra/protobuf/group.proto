@@ -1,0 +1,20 @@
+syntax = "proto3";
+package group;
+
+option go_package = "/protobuf";
+
+enum EventType {
+  DeleteGroup = 0;
+  UpdateGroup = 1;
+  AddAdmin = 2;
+  RemoveAdmin = 3;
+  AddMember = 4;
+  RemoveMember = 5;
+}
+
+message GroupEvent {
+  string group_id = 1;
+  string member_id = 2;
+  EventType event = 3;
+  int64 event_date = 4;
+}

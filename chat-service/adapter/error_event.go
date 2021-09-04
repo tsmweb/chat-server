@@ -27,9 +27,9 @@ func protobufFromErrorEvent(e *server.ErrorEvent) *protobuf.Error {
 	return &protobuf.Error{
 		HostID: e.HostID,
 		UserID: e.UserID,
-		Title: e.Title,
+		Title:  e.Title,
 		Detail: e.Detail,
-		Date: e.Timestamp.Unix(),
+		Date:   e.Timestamp.Unix(),
 	}
 }
 

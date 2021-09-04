@@ -35,7 +35,3 @@ func HandleWS(jwt auth.JWT, server *server.Server) http.Handler {
 		}
 	})
 }
-
-
-
-

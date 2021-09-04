@@ -13,6 +13,14 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 	//t.Parallel()
 	ctx := context.WithValue(context.Background(), common.AuthContextKey, "+5518999999999")
 
+	encode := new(mockEventEncoder)
+	encode.On("Marshal", mock.Anything).
+		Return([]byte{}, nil)
+
+	producer := new(mockProducer)
+	producer.On("Publish", mock.Anything, mock.Anything, mock.Anything).
+		Return(nil)
+
 	t.Run("when use case fails with ErrValidateModel", func(t *testing.T) {
 		//t.Parallel()
 		group := &Group{
@@ -23,7 +31,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 		}
 
 		r := new(mockRepository)
-		uc := NewUpdateUseCase(r)
+		uc := NewUpdateUseCase(r, encode, producer)
 		err := uc.Execute(ctx, group)
 		assert.Equal(t, ErrNameValidateModel, err)
 	})
@@ -42,7 +50,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 			Return(false, nil).
 			Once()
 
-		uc := NewUpdateUseCase(r)
+		uc := NewUpdateUseCase(r, encode, producer)
 		err := uc.Execute(ctx, group)
 		assert.Equal(t, ErrOperationNotAllowed, err)
 	})
@@ -64,7 +72,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 			Return(false, nil).
 			Once()
 
-		uc := NewUpdateUseCase(r)
+		uc := NewUpdateUseCase(r, encode, producer)
 		err := uc.Execute(ctx, group)
 		assert.Equal(t, ErrGroupNotFound, err)
 	})
@@ -83,18 +91,27 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 			Return(false, errors.New("error")).
 			Once()
 
-		uc := NewUpdateUseCase(r)
+		uc := NewUpdateUseCase(r, encode, producer)
 		err := uc.Execute(ctx, group)
 		assert.NotNil(t, err)
 
 		r.On("IsGroupAdmin", mock.Anything, mock.Anything, mock.Anything).
-			Return(true, nil).
-			Once()
+			Return(true, nil)
 		r.On("Update", mock.Anything, mock.Anything).
 			Return(false, errors.New("error")).
 			Once()
 
-		uc = NewUpdateUseCase(r)
+		uc = NewUpdateUseCase(r, encode, producer)
+		err = uc.Execute(ctx, group)
+		assert.NotNil(t, err)
+
+		r.On("Update", mock.Anything, mock.Anything).
+			Return(true, nil)
+		p := new(mockProducer)
+		p.On("Publish", mock.Anything, mock.Anything, mock.Anything).
+			Return(errors.New("error"))
+
+		uc = NewUpdateUseCase(r, encode, p)
 		err = uc.Execute(ctx, group)
 		assert.NotNil(t, err)
 	})
@@ -116,7 +133,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 			Return(true, nil).
 			Once()
 
-		uc := NewUpdateUseCase(r)
+		uc := NewUpdateUseCase(r, encode, producer)
 		err := uc.Execute(ctx, group)
 		assert.Nil(t, err)
 	})

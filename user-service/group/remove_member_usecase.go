@@ -2,6 +2,8 @@ package group
 
 import (
 	"context"
+	"fmt"
+	"github.com/tsmweb/go-helper-api/kafka"
 	"github.com/tsmweb/user-service/common"
 )
 
@@ -12,14 +14,24 @@ type RemoveMemberUseCase interface {
 
 type removeMemberUseCase struct {
 	repository Repository
+	encoder    EventEncoder
+	producer   kafka.Producer
 }
 
 // NewRemoveMemberUseCase create a new instance of RemoveMemberUseCase.
-func NewRemoveMemberUseCase(r Repository) RemoveMemberUseCase {
-	return &removeMemberUseCase{repository: r}
+func NewRemoveMemberUseCase(
+	repository Repository,
+	encoder EventEncoder,
+	producer kafka.Producer,
+) RemoveMemberUseCase {
+	return &removeMemberUseCase{
+		repository: repository,
+		encoder:    encoder,
+		producer:   producer,
+	}
 }
 
-// Execute performs the creation use case.
+// Execute performs the remove member use case.
 func (u *removeMemberUseCase) Execute(ctx context.Context, groupID, userID string) error {
 	err := u.checkPermission(ctx, groupID, userID)
 	if err != nil {
@@ -34,7 +46,9 @@ func (u *removeMemberUseCase) Execute(ctx context.Context, groupID, userID strin
 		return ErrMemberNotFound
 	}
 
-	// TODO notify member
+	if err = u.notifyMember(ctx, groupID, userID); err != nil {
+		return &ErrEventNotification{Msg: err.Error()}
+	}
 
 	return nil
 }
@@ -65,5 +79,19 @@ func (u *removeMemberUseCase) checkPermission(ctx context.Context, groupID, user
 		return ErrOperationNotAllowed
 	}
 
+	return nil
+}
+
+func (u *removeMemberUseCase) notifyMember(ctx context.Context, groupID, userID string) error {
+	event := NewEvent(groupID, userID, EventRemoveMember)
+	epb, err := u.encoder.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	key := fmt.Sprintf("%s:%s", groupID, userID)
+	if err = u.producer.Publish(ctx, []byte(key), epb); err != nil {
+		return err
+	}
 	return nil
 }

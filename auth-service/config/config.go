@@ -27,12 +27,12 @@ func Load(workDir string) {
 		log.Fatalf("Error loading .env file [%s]", workDir)
 	}
 
-	host = os.Getenv("PGHOST")
-	port, _ = strconv.Atoi(os.Getenv("PGPORT"))
-	user = os.Getenv("PGUSER")
-	password = os.Getenv("PGPASSWORD")
-	dbname = os.Getenv("PGDATABASE")
-	dbschema = os.Getenv("PGSCHEMA")
+	host = os.Getenv("DB_HOST")
+	port, _ = strconv.Atoi(os.Getenv("DB_PORT"))
+	user = os.Getenv("DB_USER")
+	password = os.Getenv("DB_PASSWORD")
+	dbname = os.Getenv("DB_DATABASE")
+	dbschema = os.Getenv("DB_SCHEMA")
 
 	serverPort, _ = strconv.Atoi(os.Getenv("SERVER_PORT"))
 
