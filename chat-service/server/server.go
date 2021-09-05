@@ -81,7 +81,7 @@ func NewServer(
 
 // Register registers the user's net.Conn connection and handles the data received and sent over the connection.
 func (s *Server) Register(userID string, conn net.Conn) error {
-	user := &UserConn{
+	userConn := &UserConn{
 		userID: userID,
 		conn:   conn,
 		reader: s.connReader,
@@ -90,41 +90,41 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 
 	observer, err := s.poller.ObservableRead(conn)
 	if err != nil {
-		s.chError <- *NewErrorEvent(user.userID, "Server.Register()", err.Error())
+		s.chError <- *NewErrorEvent(userConn.userID, "Server.Register()", err.Error())
 		return err
 	}
 
 	err = observer.Start(func(closed bool, err error) {
 		if closed || err != nil {
 			observer.Stop()
-			s.chUserOUT <- user.userID
+			s.chUserOUT <- userConn.userID
 			if err != nil {
-				s.chError <- *NewErrorEvent(user.userID, "Server.Register():poller", err.Error())
+				s.chError <- *NewErrorEvent(userConn.userID, "Server.Register():poller", err.Error())
 			}
 			return
 		}
 
 		s.executor.Schedule(func(ctx context.Context) {
 			sendResponse := func(msgID string, contentType message.ContentType, content string) {
-				if err := user.WriteResponse(msgID, contentType, content); err != nil {
-					s.chError <- *NewErrorEvent(user.userID, "UserConn.WriteACK()", err.Error())
+				if err := userConn.WriteResponse(msgID, contentType, content); err != nil {
+					s.chError <- *NewErrorEvent(userConn.userID, "UserConn.WriteACK()", err.Error())
 				}
 			}
 
-			msg, err := user.Receive() // receive message from user connection
+			msg, err := userConn.Receive() // receive message from userConn connection
 			if err != nil {
 				observer.Stop()
-				s.chUserOUT <- user.userID
-				s.chError <- *NewErrorEvent(user.userID, "UserConn.Receive()", err.Error())
+				s.chUserOUT <- userConn.userID
+				s.chError <- *NewErrorEvent(userConn.userID, "UserConn.Receive()", err.Error())
 				return
 			}
 			if msg != nil {
 				if msg.IsGroupMessage() {
 					s.chGroupMessage <- *msg
 				} else {
-					ok, err := s.repository.IsValidUser(msg.From, msg.To) // checks if the message recipient is a valid user
+					ok, err := s.repository.IsValidUser(msg.From, msg.To) // checks if the message recipient is a valid userConn
 					if err != nil {
-						s.chError <- *NewErrorEvent(user.userID, "Repository.IsValidUser()", err.Error())
+						s.chError <- *NewErrorEvent(userConn.userID, "Repository.IsValidUser()", err.Error())
 						return
 					}
 					if !ok {
@@ -141,11 +141,11 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 	})
 
 	if err != nil {
-		s.chError <- *NewErrorEvent(user.userID, "Server.Register()", err.Error())
+		s.chError <- *NewErrorEvent(userConn.userID, "Server.Register()", err.Error())
 		return err
 	}
 
-	s.chUserIN <- user
+	s.chUserIN <- userConn
 	return nil
 }
 
@@ -180,8 +180,8 @@ loop:
 			s.executor.Schedule(s.groupMessageTask(msg))
 
 		case msg := <-s.chSendMessage:
-			user := users[msg.To]
-			s.executor.Schedule(s.sendMessageTask(msg, user))
+			userConn := users[msg.To]
+			s.executor.Schedule(s.sendMessageTask(msg, userConn))
 
 		case u := <-s.chUserIN:
 			users[u.userID] = u
@@ -239,11 +239,11 @@ func (s *Server) groupMessageTask(msg message.Message) func(ctx context.Context)
 	}
 }
 
-func (s *Server) sendMessageTask(msg message.Message, user *UserConn) func(ctx context.Context) {
+func (s *Server) sendMessageTask(msg message.Message, userConn *UserConn) func(ctx context.Context) {
 	return func(ctx context.Context) {
-		if user != nil {
+		if userConn != nil {
 			// write a message on user connection
-			if err := user.WriteMessage(&msg); err != nil {
+			if err := userConn.WriteMessage(&msg); err != nil {
 				s.sendOffMessage(ctx, msg)
 			}
 		} else {
@@ -253,7 +253,7 @@ func (s *Server) sendMessageTask(msg message.Message, user *UserConn) func(ctx c
 }
 
 func (s *Server) sendOffMessage(ctx context.Context, msg message.Message) {
-	var contentStatus message.ContentType = message.ContentTypeStatus
+	var contentStatus = message.ContentTypeStatus
 	if msg.ContentType == contentStatus.String() {
 		return
 	}

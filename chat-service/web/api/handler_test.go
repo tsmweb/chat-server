@@ -16,7 +16,7 @@ func TestHandleWS(t *testing.T) {
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodGet, resource, nil)
+		req := httptest.NewRequest(http.MethodGet, chatResource, nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(MockJWT)
@@ -30,18 +30,16 @@ func TestHandleWS(t *testing.T) {
 
 	t.Run("when Router return StatusUnauthorized", func(t *testing.T) {
 		//t.Parallel()
-		req := httptest.NewRequest(http.MethodGet, resource, nil)
+		req := httptest.NewRequest(http.MethodGet, chatResource, nil)
 		rec := httptest.NewRecorder()
 
 		mJWT := new(MockJWT)
 		mJWT.On("ExtractToken", mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		handle := HandleWS(mJWT, nil)
 
 		router := mux.NewRouter()
-		server := NewRouter(middleware.NewAuth(mJWT), handle)
-		server.MakeRouters(router)
+		MakeChatRouter(router, mJWT, middleware.NewAuth(mJWT), nil)
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)

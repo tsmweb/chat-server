@@ -49,19 +49,17 @@ func main() {
 	}(ctx, stop)
 
 	// Working directory
-	// workDir, _ := os.Getwd()
+	//workDir, _ := os.Getwd()
+	//config.Load(workDir)
 	config.Load("../../")
+
+	router := mux.NewRouter()
 
 	// starts API server
 	providers := CreateProvider(ctx)
-
-	chatRouter, err := providers.RouterProvider()
-	if err != nil {
+	if err := providers.ChatRouter(router); err != nil {
 		log.Fatalf("[!] error when starting server: %s\n", err.Error())
 	}
-
-	router := mux.NewRouter()
-	chatRouter.MakeRouters(router)
 
 	handler := middleware.GZIP(router)
 	handler = middleware.CORS(handler)

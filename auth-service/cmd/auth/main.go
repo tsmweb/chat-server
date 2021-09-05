@@ -14,6 +14,7 @@ func main() {
 
 	// Working directory
 	//workDir, _ := os.Getwd()
+	//config.Load(workDir)
 	config.Load("../../")
 
 	router := mux.NewRouter()

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/gorilla/mux"
 	"github.com/tsmweb/chat-service/adapter"
 	"github.com/tsmweb/chat-service/config"
 	"github.com/tsmweb/chat-service/infra/db"
@@ -21,6 +22,7 @@ type Providers struct {
 	ctx      context.Context
 	server   *server.Server
 	jwt      auth.JWT
+	mAuth middleware.Auth
 	dataBase db.Database
 	kafka    kafka.Kafka
 }
@@ -33,7 +35,7 @@ func CreateProvider(ctx context.Context) *Providers {
 
 func (p *Providers) ServerProvider() (*server.Server, error) {
 	if p.server == nil {
-		epoll, err := p.EpollProvider()
+		poll, err := p.EpollProvider()
 		if err != nil {
 			return nil, err
 		}
@@ -41,7 +43,7 @@ func (p *Providers) ServerProvider() (*server.Server, error) {
 		connReader := server.ConnReaderFunc(adapter.ReaderWS)
 		connWriter := server.ConnWriterFunc(adapter.WriterWS)
 
-		repository := repository.NewMemoryRepository()
+		repo := repository.NewMemoryRepository()
 
 		messageDecoder := message.DecoderFunc(adapter.MessageUnmarshal)
 		messageEncoder := message.EncoderFunc(adapter.MessageMarshal)
@@ -55,18 +57,18 @@ func (p *Providers) ServerProvider() (*server.Server, error) {
 		errorProducer := p.KafkaProvider().NewProducer(config.KafkaErrorsTopic())
 
 		handleMessage := server.NewHandleMessage(messageEncoder, messageProducer)
-		handleGroupMessage := server.NewHandleGroupMessage(repository)
+		handleGroupMessage := server.NewHandleGroupMessage(repo)
 		handleOffMessage := server.NewHandleMessage(messageEncoder, offMessageProducer)
-		handleUserStatus := server.NewHandleUserStatus(userEncoder, userProducer, repository)
+		handleUserStatus := server.NewHandleUserStatus(userEncoder, userProducer, repo)
 		handleError := server.NewHandleError(errorEncoder, errorProducer)
 
 		p.server = server.NewServer(
 			p.ctx,
-			epoll,
+			poll,
 			connReader,
 			connWriter,
 			messageDecoder,
-			repository,
+			repo,
 			messageConsumer,
 			handleMessage,
 			handleGroupMessage,
@@ -121,15 +123,24 @@ func (p *Providers) JwtProvider() auth.JWT {
 	return p.jwt
 }
 
-func (p *Providers) RouterProvider() (*api.Router, error) {
-	server, err := p.ServerProvider()
+func (p *Providers) AuthProvider() middleware.Auth {
+	if p.mAuth == nil {
+		p.mAuth = middleware.NewAuth(p.JwtProvider())
+	}
+	return p.mAuth
+}
+
+func (p *Providers) ChatRouter(mr *mux.Router) error {
+	serv, err := p.ServerProvider()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	jwt := p.JwtProvider()
-	handler := api.HandleWS(jwt, server)
-	router := api.NewRouter(middleware.NewAuth(jwt), handler)
+	api.MakeChatRouter(
+		mr,
+		p.JwtProvider(),
+		p.AuthProvider(),
+		serv)
 
-	return router, nil
+	return nil
 }

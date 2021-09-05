@@ -17,9 +17,6 @@
 # IDE
 .idea
 
-# Environment variable
-.env
-
 # Keys
 config/keys/*
 
