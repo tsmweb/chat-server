@@ -10,13 +10,13 @@ import (
 )
 
 var (
+	serverPort  int
 	dbHost      string
 	dbPort      int
 	dbUser      string
 	dbPassword  string
 	dbName      string
 	dbSchema    string
-	serverPort  int
 	privateKey  string
 	publicKey   string
 	expireToken int
@@ -38,16 +38,7 @@ func Load(workDir string) {
 
 	privateKey = workDir + "/config/keys/private-key"
 	publicKey = workDir + "/config/keys/public-key.pub"
-
-	expireToken = 24 //hour
-}
-
-func PathPrivateKey() string {
-	return privateKey
-}
-
-func PathPublicKey() string {
-	return publicKey
+	expireToken, _ = strconv.Atoi(os.Getenv("EXPIRE_TOKEN")) //hour
 }
 
 func ServerPort() int {
@@ -76,6 +67,14 @@ func DBName() string {
 
 func DBSchema() string {
 	return dbSchema
+}
+
+func PathPrivateKey() string {
+	return privateKey
+}
+
+func PathPublicKey() string {
+	return publicKey
 }
 
 func ExpireToken() int {

@@ -10,6 +10,7 @@ services:
       - .:/go/src/
     environment:
       SERVER_PORT: 8081
+      EXPIRE_TOKEN: 24
       DB_HOST: host.docker.internal
       DB_PORT: 5432
       DB_DATABASE: chat_db
