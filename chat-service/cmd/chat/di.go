@@ -5,8 +5,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/tsmweb/chat-service/adapter"
 	"github.com/tsmweb/chat-service/config"
-	"github.com/tsmweb/chat-service/infra/db"
-	"github.com/tsmweb/chat-service/infra/repository"
 	"github.com/tsmweb/chat-service/pkg/epoll"
 	"github.com/tsmweb/chat-service/server"
 	"github.com/tsmweb/chat-service/server/message"
@@ -19,12 +17,11 @@ import (
 )
 
 type Providers struct {
-	ctx      context.Context
-	server   *server.Server
-	jwt      auth.JWT
-	mAuth middleware.Auth
-	dataBase db.Database
-	kafka    kafka.Kafka
+	ctx    context.Context
+	server *server.Server
+	jwt    auth.JWT
+	mAuth  middleware.Auth
+	kafka  kafka.Kafka
 }
 
 func CreateProvider(ctx context.Context) *Providers {
@@ -43,8 +40,6 @@ func (p *Providers) ServerProvider() (*server.Server, error) {
 		connReader := server.ConnReaderFunc(adapter.ReaderWS)
 		connWriter := server.ConnWriterFunc(adapter.WriterWS)
 
-		repo := repository.NewMemoryRepository()
-
 		messageDecoder := message.DecoderFunc(adapter.MessageUnmarshal)
 		messageEncoder := message.EncoderFunc(adapter.MessageMarshal)
 		userEncoder := user.EncoderFunc(adapter.UserMarshal)
@@ -57,9 +52,8 @@ func (p *Providers) ServerProvider() (*server.Server, error) {
 		errorProducer := p.KafkaProvider().NewProducer(config.KafkaErrorsTopic())
 
 		handleMessage := server.NewHandleMessage(messageEncoder, messageProducer)
-		handleGroupMessage := server.NewHandleGroupMessage(repo)
 		handleOffMessage := server.NewHandleMessage(messageEncoder, offMessageProducer)
-		handleUserStatus := server.NewHandleUserStatus(userEncoder, userProducer, repo)
+		handleUserStatus := server.NewHandleUserStatus(userEncoder, userProducer)
 		handleError := server.NewHandleError(errorEncoder, errorProducer)
 
 		p.server = server.NewServer(
@@ -68,10 +62,8 @@ func (p *Providers) ServerProvider() (*server.Server, error) {
 			connReader,
 			connWriter,
 			messageDecoder,
-			repo,
 			messageConsumer,
 			handleMessage,
-			handleGroupMessage,
 			handleOffMessage,
 			handleUserStatus,
 			handleError,
@@ -100,13 +92,6 @@ func (p *Providers) PollerConfigProvider() *netpoll.Config {
 			}(err)
 		},
 	}
-}
-
-func (p *Providers) DataBaseProvider() db.Database {
-	if p.dataBase == nil {
-		p.dataBase = db.NewPostgresDatabase()
-	}
-	return p.dataBase
 }
 
 func (p *Providers) KafkaProvider() kafka.Kafka {

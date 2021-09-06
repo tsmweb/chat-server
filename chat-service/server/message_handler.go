@@ -49,36 +49,3 @@ func (h *handleMessage) Execute(ctx context.Context, msg message.Message) *Error
 func (h *handleMessage) Close() {
 	h.producer.Close()
 }
-
-// HandleGroupMessage handles group messages.
-type HandleGroupMessage interface {
-	// Execute performs group message handling.
-	Execute(msg message.Message, chMessage chan<- message.Message) *ErrorEvent
-}
-
-type handleGroupMessage struct {
-	repository Repository
-}
-
-// NewHandleGroupMessage implements the HandleGroupMessage interface.
-func NewHandleGroupMessage(repository Repository) HandleGroupMessage {
-	return &handleGroupMessage{
-		repository: repository,
-	}
-}
-
-// Execute performs group message handling.
-// Load group members into database and send in message channel.
-func (h *handleGroupMessage) Execute(msg message.Message, chMessage chan<- message.Message) *ErrorEvent {
-	users, err := h.repository.GetGroupMembers(msg.Group)
-	if err != nil {
-		return NewErrorEvent(msg.From, "HandleGroupMessage.Execute()", err.Error())
-	}
-
-	for _, user := range users {
-		m, _ := msg.ReplicateTo(user)
-		chMessage <- *m
-	}
-
-	return nil
-}

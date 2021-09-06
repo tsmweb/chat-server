@@ -28,14 +28,12 @@ type Server struct {
 	connReader     ConnReader
 	connWriter     ConnWriter
 	msgDecoder     message.Decoder
-	repository     Repository
 	consumeMessage kafka.Consumer
 
-	handleMessage      HandleMessage
-	handleGroupMessage HandleGroupMessage
-	handleOffMessage   HandleMessage
-	handleUserStatus   HandleUserStatus
-	handleError        HandleError
+	handleMessage    HandleMessage
+	handleOffMessage HandleMessage
+	handleUserStatus HandleUserStatus
+	handleError      HandleError
 }
 
 // NewServer creates an instance of Server.
@@ -45,33 +43,29 @@ func NewServer(
 	connReader ConnReader,
 	connWriter ConnWriter,
 	msgDecoder message.Decoder,
-	repo Repository,
 	consumeMessage kafka.Consumer,
 	handleMessage HandleMessage,
-	handleGroupMessage HandleGroupMessage,
 	handleOffMessage HandleMessage,
 	handleUserStatus HandleUserStatus,
 	handleError HandleError,
 ) *Server {
 	server := &Server{
-		ctx:                ctx,
-		poller:             poll,
-		chUserIN:           make(chan *UserConn),
-		chUserOUT:          make(chan string),
-		chMessage:          make(chan message.Message),
-		chGroupMessage:     make(chan message.Message),
-		chSendMessage:      make(chan message.Message),
-		chError:            make(chan ErrorEvent),
-		connReader:         connReader,
-		connWriter:         connWriter,
-		msgDecoder:         msgDecoder,
-		repository:         repo,
-		consumeMessage:     consumeMessage,
-		handleMessage:      handleMessage,
-		handleGroupMessage: handleGroupMessage,
-		handleOffMessage:   handleOffMessage,
-		handleUserStatus:   handleUserStatus,
-		handleError:        handleError,
+		ctx:              ctx,
+		poller:           poll,
+		chUserIN:         make(chan *UserConn),
+		chUserOUT:        make(chan string),
+		chMessage:        make(chan message.Message),
+		chGroupMessage:   make(chan message.Message),
+		chSendMessage:    make(chan message.Message),
+		chError:          make(chan ErrorEvent),
+		connReader:       connReader,
+		connWriter:       connWriter,
+		msgDecoder:       msgDecoder,
+		consumeMessage:   consumeMessage,
+		handleMessage:    handleMessage,
+		handleOffMessage: handleOffMessage,
+		handleUserStatus: handleUserStatus,
+		handleError:      handleError,
 	}
 
 	server.run()
@@ -94,23 +88,17 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 		return err
 	}
 
-	err = observer.Start(func(closed bool, err error) {
-		if closed || err != nil {
+	err = observer.Start(func(closed bool, errPoller error) {
+		if closed || errPoller != nil {
 			observer.Stop()
 			s.chUserOUT <- userConn.userID
-			if err != nil {
-				s.chError <- *NewErrorEvent(userConn.userID, "Server.Register():poller", err.Error())
+			if errPoller != nil {
+				s.chError <- *NewErrorEvent(userConn.userID, "Server.Register():poller", errPoller.Error())
 			}
 			return
 		}
 
 		s.executor.Schedule(func(ctx context.Context) {
-			sendResponse := func(msgID string, contentType message.ContentType, content string) {
-				if err := userConn.WriteResponse(msgID, contentType, content); err != nil {
-					s.chError <- *NewErrorEvent(userConn.userID, "UserConn.WriteACK()", err.Error())
-				}
-			}
-
 			msg, err := userConn.Receive() // receive message from userConn connection
 			if err != nil {
 				observer.Stop()
@@ -119,23 +107,11 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 				return
 			}
 			if msg != nil {
-				if msg.IsGroupMessage() {
-					s.chGroupMessage <- *msg
-				} else {
-					ok, err := s.repository.IsValidUser(msg.From, msg.To) // checks if the message recipient is a valid userConn
-					if err != nil {
-						s.chError <- *NewErrorEvent(userConn.userID, "Repository.IsValidUser()", err.Error())
-						return
-					}
-					if !ok {
-						sendResponse(msg.ID, message.ContentTypeInfo, message.InvalidMessage)
-						return
-					}
+				s.chMessage <- *msg
 
-					s.chMessage <- *msg
+				if err = userConn.WriteResponse(msg.ID, message.ContentTypeACK, message.AckMessage); err != nil {
+					s.chError <- *NewErrorEvent(userConn.userID, "UserConn.WriteACK()", err.Error())
 				}
-
-				sendResponse(msg.ID, message.ContentTypeACK, message.AckMessage)
 			}
 		})
 	})
@@ -175,9 +151,6 @@ loop:
 		select {
 		case msg := <-s.chMessage:
 			s.executor.Schedule(s.messageTask(msg))
-
-		case msg := <-s.chGroupMessage:
-			s.executor.Schedule(s.groupMessageTask(msg))
 
 		case msg := <-s.chSendMessage:
 			userConn := users[msg.To]
@@ -231,14 +204,6 @@ func (s *Server) messageTask(msg message.Message) func(ctx context.Context) {
 	}
 }
 
-func (s *Server) groupMessageTask(msg message.Message) func(ctx context.Context) {
-	return func(ctx context.Context) {
-		if err := s.handleGroupMessage.Execute(msg, s.chMessage); err != nil {
-			s.chError <- *err
-		}
-	}
-}
-
 func (s *Server) sendMessageTask(msg message.Message, userConn *UserConn) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		if userConn != nil {
@@ -265,7 +230,7 @@ func (s *Server) sendOffMessage(ctx context.Context, msg message.Message) {
 
 func (s *Server) userStatusTask(userID string, status user.Status) func(ctx context.Context) {
 	return func(ctx context.Context) {
-		if err := s.handleUserStatus.Execute(ctx, userID, status, s.chMessage, s.chSendMessage); err != nil {
+		if err := s.handleUserStatus.Execute(ctx, userID, status); err != nil {
 			s.chError <- *err
 		}
 	}

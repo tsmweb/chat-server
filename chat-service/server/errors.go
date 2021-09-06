@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/tsmweb/chat-service/config"
+	"strings"
 	"time"
 )
 
@@ -20,6 +21,10 @@ type ErrorEvent struct {
 }
 
 func NewErrorEvent(userID, title, detail string) *ErrorEvent {
+	if strings.TrimSpace(userID) == "" {
+		userID = config.HostID()
+	}
+
 	return &ErrorEvent{
 		HostID:    config.HostID(),
 		UserID:    userID,
