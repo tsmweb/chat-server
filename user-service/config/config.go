@@ -10,16 +10,15 @@ import (
 )
 
 var (
-	host                  string
-	port                  int
-	user                  string
-	password              string
-	dbname                string
-	dbschema              string
+	dbHost                string
+	dbPort                int
+	dbUser                string
+	dbPassword            string
+	dbName                string
+	dbSchema              string
 	serverPort            int
 	privateKey            string
 	publicKey             string
-	expireToken           int
 	kafkaBootstrapServers string
 	kafkaClientID         string
 	kafkaGroupEventTopic  string
@@ -31,19 +30,17 @@ func Load(workDir string) {
 		log.Fatalf("Error loading .env file [%s]", workDir)
 	}
 
-	host = os.Getenv("DB_HOST")
-	port, _ = strconv.Atoi(os.Getenv("DB_PORT"))
-	user = os.Getenv("DB_USER")
-	password = os.Getenv("DB_PASSWORD")
-	dbname = os.Getenv("DB_DATABASE")
-	dbschema = os.Getenv("DB_SCHEMA")
+	dbHost = os.Getenv("DB_HOST")
+	dbPort, _ = strconv.Atoi(os.Getenv("DB_PORT"))
+	dbUser = os.Getenv("DB_USER")
+	dbPassword = os.Getenv("DB_PASSWORD")
+	dbName = os.Getenv("DB_DATABASE")
+	dbSchema = os.Getenv("DB_SCHEMA")
 
 	serverPort, _ = strconv.Atoi(os.Getenv("SERVER_PORT"))
 
 	privateKey = workDir + "/config/keys/private-key"
 	publicKey = workDir + "/config/keys/public-key.pub"
-
-	expireToken = 24 //hour
 
 	kafkaBootstrapServers = os.Getenv("KAFKA_BOOTSTRAP_SERVERS")
 	kafkaClientID = os.Getenv("KAFKA_CLIENT_ID")
@@ -63,31 +60,27 @@ func ServerPort() int {
 }
 
 func DBHost() string {
-	return host
+	return dbHost
 }
 
 func DBPort() int {
-	return port
+	return dbPort
 }
 
 func DBUser() string {
-	return user
+	return dbUser
 }
 
 func DBPassword() string {
-	return password
+	return dbPassword
 }
 
 func DBName() string {
-	return dbname
+	return dbName
 }
 
 func DBSchema() string {
-	return dbschema
-}
-
-func ExpireToken() int {
-	return expireToken
+	return dbSchema
 }
 
 func KafkaBootstrapServers() string {
