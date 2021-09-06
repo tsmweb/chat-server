@@ -1,0 +1,16 @@
+syntax = "proto3";
+package user;
+
+option go_package = "/protobuf";
+
+enum UserStatus {
+  online = 0;
+  offline = 1;
+}
+
+message User {
+  string id = 1;
+  UserStatus status = 2;
+  string serverID = 3;
+  int64 date = 4;
+}

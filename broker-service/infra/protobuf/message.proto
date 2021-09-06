@@ -1,0 +1,22 @@
+syntax = "proto3";
+package message;
+
+option go_package = "/protobuf";
+
+enum ContentType {
+  ack = 0;
+  text = 1;
+  media = 2;
+  status = 3;
+  info = 4;
+  error = 5;
+}
+
+message Message {
+  string id = 1;
+  string from = 2;
+  string to = 3;
+  int64 date = 4;
+  ContentType contentType = 5;
+  string content = 6;
+}

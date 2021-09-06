@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path"
@@ -11,21 +10,25 @@ import (
 )
 
 var (
-	hostID     string
-	goPoolSize int
-	serverPort int
-	privateKey string
-	publicKey  string
-
+	hostID                string
+	goPoolSize            int
+	privateKey            string
+	publicKey             string
+	dbHost                string
+	dbPort                int
+	dbUser                string
+	dbPassword            string
+	dbName                string
+	dbSchema              string
 	kafkaBootstrapServers string
 	kafkaClientID         string
+	kafkaGroupID          string
 	kafkaServersTopic     string
 	kafkaUsersTopic       string
 	kafkaNewMessagesTopic string
 	kafkaOffMessagesTopic string
-	kafkaHostTopic        string
 	kafkaErrorsTopic      string
-	kafkaGroupID          string
+	kafkaGroupEventTopic  string
 )
 
 func Load(workDir string) {
@@ -36,20 +39,26 @@ func Load(workDir string) {
 
 	hostID = os.Getenv("HOST_ID")
 	goPoolSize, _ = strconv.Atoi(os.Getenv("GOPOOL_SIZE"))
-	serverPort, _ = strconv.Atoi(os.Getenv("SERVER_PORT"))
 
 	privateKey = workDir + "/config/keys/private-key"
 	publicKey = workDir + "/config/keys/public-key.pub"
 
+	dbHost = os.Getenv("DB_HOST")
+	dbPort, _ = strconv.Atoi(os.Getenv("DB_PORT"))
+	dbUser = os.Getenv("DB_USER")
+	dbPassword = os.Getenv("DB_PASSWORD")
+	dbName = os.Getenv("DB_DATABASE")
+	dbSchema = os.Getenv("DB_SCHEMA")
+
 	kafkaBootstrapServers = os.Getenv("KAFKA_BOOTSTRAP_SERVERS")
 	kafkaClientID = os.Getenv("KAFKA_CLIENT_ID")
+	kafkaGroupID = os.Getenv("KAFKA_GROUP_ID")
 	kafkaServersTopic = os.Getenv("KAFKA_SERVERS_TOPIC")
 	kafkaUsersTopic = os.Getenv("KAFKA_USERS_TOPIC")
 	kafkaNewMessagesTopic = os.Getenv("KAFKA_NEW_MESSAGES_TOPIC")
 	kafkaOffMessagesTopic = os.Getenv("KAFKA_OFF_MESSAGES_TOPIC")
 	kafkaErrorsTopic = os.Getenv("KAFKA_ERRORS_TOPIC")
-	kafkaHostTopic = fmt.Sprintf("%s_MESSAGES", hostID)
-	kafkaGroupID = os.Getenv("KAFKA_GROUP_ID")
+	kafkaGroupEventTopic = os.Getenv("KAFKA_GROUP_EVENT_TOPIC")
 }
 
 func HostID() string {
@@ -68,8 +77,28 @@ func PathPublicKey() string {
 	return publicKey
 }
 
-func ServerPort() int {
-	return serverPort
+func DBHost() string {
+	return dbHost
+}
+
+func DBPort() int {
+	return dbPort
+}
+
+func DBUser() string {
+	return dbUser
+}
+
+func DBPassword() string {
+	return dbPassword
+}
+
+func DBName() string {
+	return dbName
+}
+
+func DBSchema() string {
+	return dbSchema
 }
 
 func KafkaBootstrapServers() string {
@@ -78,6 +107,10 @@ func KafkaBootstrapServers() string {
 
 func KafkaClientID() string {
 	return kafkaClientID
+}
+
+func KafkaGroupID() string {
+	return kafkaGroupID
 }
 
 func KafkaServersTopic() string {
@@ -100,10 +133,6 @@ func KafkaErrorsTopic() string {
 	return kafkaErrorsTopic
 }
 
-func KafkaHostTopic() string {
-	return kafkaHostTopic
-}
-
-func KafkaGroupID() string {
-	return kafkaGroupID
+func KafkaGroupEventTopic() string {
+	return kafkaGroupEventTopic
 }

@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/tsmweb/broker-service/config"
 	"time"
 
 	_ "github.com/lib/pq"
-	"github.com/tsmweb/user-service/config"
 )
 
 const (
