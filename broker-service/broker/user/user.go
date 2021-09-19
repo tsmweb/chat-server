@@ -1,6 +1,9 @@
 package user
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // Status type that represents the user's status as UserOnline and UserOffline.
 type Status int
@@ -29,6 +32,16 @@ func (s Status) String() (str string) {
 	return
 }
 
+// Repository represents an abstraction of the data persistence layer.
+type Repository interface {
+	AddUser(ctx context.Context, userID string, serverID string, createAt time.Time) error
+	DeleteUser(ctx context.Context, userID string, serverID string) error
+	GetUserServer(ctx context.Context, userID string) (string, error)
+	IsValidUser(ctx context.Context, fromID string, toID string) (bool, error)
+	GetAllContactsOnline(ctx context.Context, userID string) ([]string, error)
+	GetAllRelationshipsOnline(ctx context.Context, userID string) ([]string, error)
+}
+
 // User represents the status of the user's connection.
 type User struct {
 	ID       string
@@ -37,8 +50,8 @@ type User struct {
 	Date     time.Time
 }
 
-// NewUser create and return an User instance.
-func NewUser(id string, status Status, serverID string) *User {
+// New create and return an User instance.
+func New(id string, status Status, serverID string) *User {
 	return &User{
 		ID:       id,
 		Status:   status.String(),

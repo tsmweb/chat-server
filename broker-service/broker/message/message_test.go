@@ -8,7 +8,7 @@ import (
 
 func TestNewMessage(t *testing.T) {
 	//t.Parallel()
-	m, err := NewMessage("+5518977777777", "+5518966666666", "", ContentTypeText, "test")
+	m, err := New("+5518977777777", "+5518966666666", "", ContentTypeText, "test")
 
 	assert.Nil(t, err)
 	assert.NotNil(t, m.ID)
@@ -66,7 +66,7 @@ func TestMessage_Validate(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		_, err := NewMessage(tc.from, tc.to, "", tc.contenType, tc.content)
+		_, err := New(tc.from, tc.to, "", tc.contenType, tc.content)
 		assert.Equal(t, err, tc.want)
 	}
 }

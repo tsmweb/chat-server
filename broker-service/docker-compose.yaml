@@ -15,6 +15,7 @@ services:
       DB_SCHEMA: chat_db
       DB_USER: salesapi
       DB_PASSWORD: password
+      REDIS_HOST: host.docker.internal:6379
       KAFKA_BOOTSTRAP_SERVERS: host.docker.internal:9094
       KAFKA_CLIENT_ID: BROKER_SERVICE
       KAFKA_GROUP_ID: BROKER_SERVICE
@@ -24,5 +25,6 @@ services:
       KAFKA_OFF_MESSAGES_TOPIC: OFF_MESSAGES
       KAFKA_ERRORS_TOPIC: ERRORS
       KAFKA_GROUP_EVENT_TOPIC: GROUP_EVENTS
+      KAFKA_HOST_TOPIC: %s_MESSAGES
     extra_hosts:
       - "host.docker.internal:172.17.0.1"

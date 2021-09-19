@@ -1,6 +1,7 @@
 package message
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/tsmweb/go-helper-api/cerror"
 	"github.com/tsmweb/go-helper-api/util/hashutil"
@@ -59,6 +60,13 @@ func (ct ContentType) String() (str string) {
 	return
 }
 
+// Repository represents an abstraction of the data persistence layer.
+type Repository interface {
+	GetAllGroupMembers(ctx context.Context, groupID string) ([]string, error)
+	GetAllMessages(ctx context.Context, userID string) ([]*Message, error)
+	DeleteAllMessages(ctx context.Context, userID string) error
+}
+
 var (
 	ErrIDValidateModel          = &cerror.ErrValidateModel{Msg: "required id"}
 	ErrFromValidateModel        = &cerror.ErrValidateModel{Msg: "required from"}
@@ -79,18 +87,8 @@ type Message struct {
 	Content     string    `json:"content"`
 }
 
-// NewResponse creates and returns a new Message instance.
-func NewResponse(msgID string, contentType ContentType, content string) *Message {
-	return &Message{
-		ID:          msgID,
-		Date:        time.Now().UTC(),
-		ContentType: contentType.String(),
-		Content:     content,
-	}
-}
-
-// NewMessage creates and returns a new Message instance.
-func NewMessage(from string, to string, group string, contentType ContentType, content string) (*Message, error) {
+// New creates and returns a new Message instance.
+func New(from string, to string, group string, contentType ContentType, content string) (*Message, error) {
 	return newMessage(from, to, group, time.Now().UTC(), contentType.String(), content)
 }
 

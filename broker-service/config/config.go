@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path"
@@ -20,6 +21,7 @@ var (
 	dbPassword            string
 	dbName                string
 	dbSchema              string
+	redisHost             string
 	kafkaBootstrapServers string
 	kafkaClientID         string
 	kafkaGroupID          string
@@ -29,6 +31,7 @@ var (
 	kafkaOffMessagesTopic string
 	kafkaErrorsTopic      string
 	kafkaGroupEventTopic  string
+	kafkaHostTopic        string
 )
 
 func Load(workDir string) {
@@ -50,6 +53,8 @@ func Load(workDir string) {
 	dbName = os.Getenv("DB_DATABASE")
 	dbSchema = os.Getenv("DB_SCHEMA")
 
+	redisHost = os.Getenv("REDIS_HOST")
+
 	kafkaBootstrapServers = os.Getenv("KAFKA_BOOTSTRAP_SERVERS")
 	kafkaClientID = os.Getenv("KAFKA_CLIENT_ID")
 	kafkaGroupID = os.Getenv("KAFKA_GROUP_ID")
@@ -59,6 +64,7 @@ func Load(workDir string) {
 	kafkaOffMessagesTopic = os.Getenv("KAFKA_OFF_MESSAGES_TOPIC")
 	kafkaErrorsTopic = os.Getenv("KAFKA_ERRORS_TOPIC")
 	kafkaGroupEventTopic = os.Getenv("KAFKA_GROUP_EVENT_TOPIC")
+	kafkaHostTopic = os.Getenv("KAFKA_HOST_TOPIC")
 }
 
 func HostID() string {
@@ -101,6 +107,10 @@ func DBSchema() string {
 	return dbSchema
 }
 
+func RedisHost() string {
+	return redisHost
+}
+
 func KafkaBootstrapServers() string {
 	return kafkaBootstrapServers
 }
@@ -135,4 +145,8 @@ func KafkaErrorsTopic() string {
 
 func KafkaGroupEventTopic() string {
 	return kafkaGroupEventTopic
+}
+
+func KafkaHostTopic(hostID string) string {
+	return fmt.Sprintf(kafkaHostTopic, hostID)
 }
