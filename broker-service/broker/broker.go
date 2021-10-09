@@ -11,25 +11,57 @@ import (
 )
 
 type Broker struct {
-	ctx      context.Context
-	executor *executor.Executor
-
-	chUser    chan user.User
-	chMessage chan message.Message
-	chError   chan ErrorEvent
-
-	userDecoder user.Decoder
-	msgDecoder  message.Decoder
-
-	consumeUser    kafka.Consumer
-	consumeMessage kafka.Consumer
-
-	handleUser    HandleUser
-	handleMessage HandleMessage
-	handleError   HandleError
+	ctx                    context.Context
+	executor               *executor.Executor
+	chUser                 chan user.User
+	chMessage              chan message.Message
+	chOfflineMessage       chan message.Message
+	chError                chan ErrorEvent
+	userDecoder            user.Decoder
+	msgDecoder             message.Decoder
+	userConsumer           kafka.Consumer
+	messageConsumer        kafka.Consumer
+	offlineMessageConsumer kafka.Consumer
+	userHandler            UserHandler
+	messageHandler         MessageHandler
+	offlineMessageHandler  OfflineMessageHandler
+	errorHandler           ErrorHandler
 }
 
-func (b *Broker) run() {
+// NewBroker creates an instance of Broker.
+func NewBroker(
+	ctx context.Context,
+	userDecoder user.Decoder,
+	msgDecoder message.Decoder,
+	userConsumer kafka.Consumer,
+	messageConsumer kafka.Consumer,
+	offlineMessageConsumer kafka.Consumer,
+	userHandler UserHandler,
+	messageHandler MessageHandler,
+	offlineMessageHandler OfflineMessageHandler,
+	errorHandler ErrorHandler,
+) *Broker {
+	broker := &Broker{
+		ctx:                    ctx,
+		chUser:                 make(chan user.User),
+		chMessage:              make(chan message.Message),
+		chOfflineMessage:       make(chan message.Message),
+		chError:                make(chan ErrorEvent),
+		userDecoder:            userDecoder,
+		msgDecoder:             msgDecoder,
+		userConsumer:           userConsumer,
+		messageConsumer:        messageConsumer,
+		offlineMessageConsumer: offlineMessageConsumer,
+		userHandler:            userHandler,
+		messageHandler:         messageHandler,
+		offlineMessageHandler:  offlineMessageHandler,
+		errorHandler:           errorHandler,
+	}
+
+	return broker
+}
+
+func (b *Broker) Start() {
 	// Executor to perform background processing,
 	// limiting resource consumption when executing a collection of jobs.
 	b.executor = executor.New(config.GoPoolSize())
@@ -37,12 +69,13 @@ func (b *Broker) run() {
 	go b.messageProcessor()
 	go b.usersConsumer()
 	go b.messagesConsumer()
+	go b.offlineMessagesConsumer()
 }
 
 func (b *Broker) stop() {
 	b.executor.Shutdown()
 
-	b.handleError.Close()
+	b.errorHandler.Close()
 }
 
 func (b *Broker) messageProcessor() {
@@ -54,6 +87,9 @@ loop:
 
 		case msg := <-b.chMessage:
 			b.executor.Schedule(b.messageTask(msg))
+
+		case msg := <-b.chOfflineMessage:
+			b.executor.Schedule(b.offlineMessageTask(msg))
 
 		case err := <-b.chError:
 			b.executor.Schedule(b.errorTask(err))
@@ -67,7 +103,7 @@ loop:
 }
 
 func (b *Broker) usersConsumer() {
-	defer b.consumeUser.Close()
+	defer b.userConsumer.Close()
 
 	callbackFn := func(event *kafka.Event, err error) {
 		if err != nil {
@@ -75,20 +111,20 @@ func (b *Broker) usersConsumer() {
 			return
 		}
 
-		var u user.User
-		if err := b.userDecoder.Unmarshal(event.Value, &u); err != nil {
+		var usr user.User
+		if err := b.userDecoder.Unmarshal(event.Value, &usr); err != nil {
 			b.chError <- *NewErrorEvent("", "Broker.usersConsumer()", err.Error())
 			return
 		}
 
-		b.chUser <- u
+		b.chUser <- usr
 	}
 
-	b.consumeUser.Subscribe(b.ctx, callbackFn)
+	b.userConsumer.Subscribe(b.ctx, callbackFn)
 }
 
 func (b *Broker) messagesConsumer() {
-	defer b.consumeMessage.Close()
+	defer b.messageConsumer.Close()
 
 	callbackFn := func(event *kafka.Event, err error) {
 		if err != nil {
@@ -96,21 +132,42 @@ func (b *Broker) messagesConsumer() {
 			return
 		}
 
-		var m message.Message
-		if err := b.msgDecoder.Unmarshal(event.Value, &m); err != nil {
+		var msg message.Message
+		if err := b.msgDecoder.Unmarshal(event.Value, &msg); err != nil {
 			b.chError <- *NewErrorEvent("", "Broker.messagesConsumer()", err.Error())
 			return
 		}
 
-		b.chMessage <- m
+		b.chMessage <- msg
 	}
 
-	b.consumeMessage.Subscribe(b.ctx, callbackFn)
+	b.messageConsumer.Subscribe(b.ctx, callbackFn)
+}
+
+func (b *Broker) offlineMessagesConsumer() {
+	defer b.offlineMessageConsumer.Close()
+
+	callbackFn := func(event *kafka.Event, err error) {
+		if err != nil {
+			b.chError <- *NewErrorEvent("", "Broker.offlineMessagesConsumer()", err.Error())
+			return
+		}
+
+		var msg message.Message
+		if err := b.msgDecoder.Unmarshal(event.Value, &msg); err != nil {
+			b.chError <- *NewErrorEvent("", "Broker.offlineMessagesConsumer()", err.Error())
+			return
+		}
+
+		b.chOfflineMessage <- msg
+	}
+
+	b.offlineMessageConsumer.Subscribe(b.ctx, callbackFn)
 }
 
 func (b *Broker) userTask(usr user.User) func(ctx context.Context) {
 	return func(ctx context.Context) {
-		if err := b.handleUser.Execute(ctx, usr, b.chMessage); err != nil {
+		if err := b.userHandler.Execute(ctx, usr, b.chMessage); err != nil {
 			b.chError <- *err
 		}
 	}
@@ -118,7 +175,15 @@ func (b *Broker) userTask(usr user.User) func(ctx context.Context) {
 
 func (b *Broker) messageTask(msg message.Message) func(ctx context.Context) {
 	return func(ctx context.Context) {
-		if err := b.handleMessage.Execute(ctx, msg); err != nil {
+		if err := b.messageHandler.Execute(ctx, msg); err != nil {
+			b.chError <- *err
+		}
+	}
+}
+
+func (b *Broker) offlineMessageTask(msg message.Message) func(ctx context.Context) {
+	return func(ctx context.Context) {
+		if err := b.offlineMessageHandler.Execute(ctx, msg); err != nil {
 			b.chError <- *err
 		}
 	}
@@ -127,6 +192,6 @@ func (b *Broker) messageTask(msg message.Message) func(ctx context.Context) {
 func (b *Broker) errorTask(errEvent ErrorEvent) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		log.Println(string(errEvent.ToJSON()))
-		b.handleError.Execute(ctx, errEvent)
+		b.errorHandler.Execute(ctx, errEvent)
 	}
 }

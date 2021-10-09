@@ -34,11 +34,25 @@ func (s Status) String() (str string) {
 
 // Repository represents an abstraction of the data persistence layer.
 type Repository interface {
-	AddUser(ctx context.Context, userID string, serverID string, createAt time.Time) error
-	DeleteUser(ctx context.Context, userID string, serverID string) error
+	// AddUserPresence adds the user's presence to the database.
+	AddUserPresence(ctx context.Context, userID string, serverID string, createAt time.Time) error
+
+	// RemoveUserPresence removes user presence from database.
+	RemoveUserPresence(ctx context.Context, userID string) error
+
+	// GetUserServer returns the server the user is online.
 	GetUserServer(ctx context.Context, userID string) (string, error)
-	IsValidUser(ctx context.Context, fromID string, toID string) (bool, error)
+
+	// IsValidUser returns true if the user is valid and false otherwise.
+	IsValidUser(ctx context.Context, userID string) (bool, error)
+
+	// IsBlockedUser returns true if the message sending user was blocked and false otherwise.
+	IsBlockedUser(ctx context.Context, fromID string, toID string) (bool, error)
+
+	// GetAllContactsOnline returns all online contacts by userID.
 	GetAllContactsOnline(ctx context.Context, userID string) ([]string, error)
+
+	// GetAllRelationshipsOnline returns all online users for which I am a contact.
 	GetAllRelationshipsOnline(ctx context.Context, userID string) ([]string, error)
 }
 

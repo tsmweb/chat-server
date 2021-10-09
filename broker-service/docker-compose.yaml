@@ -16,6 +16,7 @@ services:
       DB_USER: salesapi
       DB_PASSWORD: password
       REDIS_HOST: host.docker.internal:6379
+      REDIS_PASSWORD: password
       KAFKA_BOOTSTRAP_SERVERS: host.docker.internal:9094
       KAFKA_CLIENT_ID: BROKER_SERVICE
       KAFKA_GROUP_ID: BROKER_SERVICE

@@ -14,10 +14,6 @@ const (
 	dbDriver = "postgres"
 )
 
-var (
-	instance Database
-)
-
 // Database read only interface to access database connection.
 type Database interface {
 	DB() *sql.DB

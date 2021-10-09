@@ -3,6 +3,7 @@ package broker
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/tsmweb/broker-service/config"
 	"strings"
 	"time"
@@ -40,6 +41,16 @@ func (e *ErrorEvent) ToJSON() []byte {
 		return nil
 	}
 	return b
+}
+
+type ErrorEvents []*ErrorEvent
+
+func (e ErrorEvents) String() string {
+	errDetail := ""
+	for _, err := range e {
+		errDetail = fmt.Sprintf("%s | %s", errDetail, err.Detail)
+	}
+	return errDetail
 }
 
 // ErrorEventEncoder is a ErrorEvent encoder for byte slice.

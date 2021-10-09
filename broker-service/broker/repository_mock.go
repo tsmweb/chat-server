@@ -13,13 +13,13 @@ type mockUserRepository struct {
 }
 
 // AddUser represents the simulated method for the AddUser feature in the user.Repository layer.
-func (m *mockUserRepository) AddUser(ctx context.Context, userID string, serverID string, createAt time.Time) error {
+func (m *mockUserRepository) AddUserPresence(ctx context.Context, userID string, serverID string, createAt time.Time) error {
 	args := m.Called(ctx, userID, serverID, createAt)
 	return args.Error(0)
 }
 
 // DeleteUser represents the simulated method for the DeleteUser feature in the user.Repository layer.
-func (m *mockUserRepository) DeleteUser(ctx context.Context, userID string, serverID string) error {
+func (m *mockUserRepository) RemoveUserPresence(ctx context.Context, userID string, serverID string) error {
 	args := m.Called(ctx, userID, serverID)
 	return args.Error(0)
 }
@@ -34,7 +34,16 @@ func (m *mockUserRepository) GetUserServer(ctx context.Context, userID string) (
 }
 
 // IsValidUser represents the simulated method for the IsValidUser feature in the user.Repository layer.
-func (m *mockUserRepository) IsValidUser(ctx context.Context, fromID string, toID string) (bool, error) {
+func (m *mockUserRepository) IsValidUser(ctx context.Context, userID string) (bool, error) {
+	args := m.Called(ctx, userID)
+	if args.Error(1) != nil {
+		return false, args.Error(1)
+	}
+	return args.Get(0).(bool), nil
+}
+
+// IsBlockedUser represents the simulated method for the IsBlockedUser feature in the user.Repository layer.
+func (m *mockUserRepository) IsBlockedUser(ctx context.Context, fromID string, toID string) (bool, error) {
 	args := m.Called(ctx, fromID, toID)
 	if args.Error(1) != nil {
 		return false, args.Error(1)
@@ -86,6 +95,13 @@ func (m *mockMessageRepository) GetAllMessages(ctx context.Context, userID strin
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]*message.Message), nil
+}
+
+// AddMessage represents the simulated method for the AddMessage
+// feature in the message.Repository layer.
+func (m *mockMessageRepository) AddMessage(ctx context.Context, msg message.Message) error {
+	args := m.Called(ctx, msg)
+	return args.Error(0)
 }
 
 // DeleteAllMessages represents the simulated method for the DeleteAllMessages

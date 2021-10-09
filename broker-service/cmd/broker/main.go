@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	log.Println("[>] starting server")
+	log.Println("[>] start broker service")
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	go func(ctx context.Context, fn context.CancelFunc) {
@@ -22,5 +22,8 @@ func main() {
 	//config.Load(workDir)
 	config.Load("../../")
 
-	//TODO
+	// start broker service
+	provider := CreateProvider(ctx)
+	brokerService := provider.BrokerProvider()
+	brokerService.Start()
 }

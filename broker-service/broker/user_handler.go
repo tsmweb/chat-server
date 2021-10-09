@@ -7,63 +7,62 @@ import (
 	"time"
 )
 
-// HandleUser handles user.
-type HandleUser interface {
+// UserHandler handles user.
+type UserHandler interface {
 	// Execute performs user handling.
 	Execute(ctx context.Context, usr user.User, chMessage chan<- message.Message) *ErrorEvent
 }
 
-type handleUser struct {
+type userHandler struct {
 	userRepository user.Repository
 	msgRepository  message.Repository
 }
 
-// NewHandleUser implements the HandleUser interface.
-func NewHandleUser(
+// NewUserHandler implements the UserHandler interface.
+func NewUserHandler(
 	userRepository user.Repository,
 	msgRepository message.Repository,
-) HandleUser {
-	return &handleUser{
+) UserHandler {
+	return &userHandler{
 		userRepository: userRepository,
 		msgRepository:  msgRepository,
 	}
 }
 
-// Execute performs user status handling as: register in the database,
-// publish in topic kafka and notifies contacts.
-func (h *handleUser) Execute(ctx context.Context, usr user.User, chMessage chan<- message.Message) *ErrorEvent {
+// Execute performs user status handling as: register in the database and notifies contacts.
+func (h *userHandler) Execute(ctx context.Context, usr user.User, chMessage chan<- message.Message) *ErrorEvent {
 	if err := h.setUserStatus(ctx, usr); err != nil {
-		return NewErrorEvent(usr.ID, "HandleUser.setUserStatus()", err.Error())
+		return NewErrorEvent(usr.ID, "UserHandler.setUserStatus()", err.Error())
 	}
 
 	if usr.Status == user.Online.String() {
 		if err := h.sendMessagesOffline(ctx, usr, chMessage); err != nil {
-			return NewErrorEvent(usr.ID, "HandleUser.sendMessagesOffline()", err.Error())
+			return NewErrorEvent(usr.ID, "UserHandler.sendMessagesOffline()", err.Error())
 		}
 
 		if err := h.notifyPresenceOfContactsToUser(ctx, usr, chMessage); err != nil {
-			return NewErrorEvent(usr.ID, "HandleUser.notifyPresenceOfContactsToUser()", err.Error())
+			return NewErrorEvent(usr.ID, "UserHandler.notifyPresenceOfContactsToUser()", err.Error())
 		}
 	}
 
 	if err := h.notifyUserPresenceToContacts(ctx, usr, chMessage); err != nil {
-		return NewErrorEvent(usr.ID, "HandleUser.notifyUserPresenceToContacts()", err.Error())
+		return NewErrorEvent(usr.ID, "UserHandler.notifyUserPresenceToContacts()", err.Error())
 	}
 
 	return nil
 }
 
 // setUserStatus logs user status in the data store.
-func (h *handleUser) setUserStatus(ctx context.Context, usr user.User) error {
+func (h *userHandler) setUserStatus(ctx context.Context, usr user.User) error {
 	if usr.Status == user.Online.String() {
-		return h.userRepository.AddUser(ctx, usr.ID, usr.ServerID, time.Now().UTC())
+		return h.userRepository.AddUserPresence(ctx, usr.ID, usr.ServerID, time.Now().UTC())
 	}
 
-	return h.userRepository.DeleteUser(ctx, usr.ID, usr.ServerID)
+	return h.userRepository.RemoveUserPresence(ctx, usr.ID)
 }
 
 // sendMessagesOffline send offline messages to user.
-func (h *handleUser) sendMessagesOffline(ctx context.Context, usr user.User,
+func (h *userHandler) sendMessagesOffline(ctx context.Context, usr user.User,
 	chMessage chan<- message.Message) error {
 	messages, err := h.msgRepository.GetAllMessages(ctx, usr.ID)
 	if err != nil {
@@ -78,7 +77,7 @@ func (h *handleUser) sendMessagesOffline(ctx context.Context, usr user.User,
 }
 
 // notifyPresenceOfContactsToUser sends presence message from contacts to user.
-func (h *handleUser) notifyPresenceOfContactsToUser(ctx context.Context, usr user.User,
+func (h *userHandler) notifyPresenceOfContactsToUser(ctx context.Context, usr user.User,
 	chMessage chan<- message.Message) error {
 	contacts, err := h.userRepository.GetAllContactsOnline(ctx, usr.ID)
 	if err != nil {
@@ -94,7 +93,7 @@ func (h *handleUser) notifyPresenceOfContactsToUser(ctx context.Context, usr use
 }
 
 // notifyUserPresenceToContacts sends user presence message to online contacts.
-func (h *handleUser) notifyUserPresenceToContacts(ctx context.Context, usr user.User,
+func (h *userHandler) notifyUserPresenceToContacts(ctx context.Context, usr user.User,
 	chMessage chan<- message.Message) error {
 	contacts, err := h.userRepository.GetAllRelationshipsOnline(ctx, usr.ID)
 	if err != nil {

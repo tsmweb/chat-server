@@ -13,8 +13,6 @@ import (
 var (
 	hostID                string
 	goPoolSize            int
-	privateKey            string
-	publicKey             string
 	dbHost                string
 	dbPort                int
 	dbUser                string
@@ -22,6 +20,7 @@ var (
 	dbName                string
 	dbSchema              string
 	redisHost             string
+	redisPassword string
 	kafkaBootstrapServers string
 	kafkaClientID         string
 	kafkaGroupID          string
@@ -43,9 +42,6 @@ func Load(workDir string) {
 	hostID = os.Getenv("HOST_ID")
 	goPoolSize, _ = strconv.Atoi(os.Getenv("GOPOOL_SIZE"))
 
-	privateKey = workDir + "/config/keys/private-key"
-	publicKey = workDir + "/config/keys/public-key.pub"
-
 	dbHost = os.Getenv("DB_HOST")
 	dbPort, _ = strconv.Atoi(os.Getenv("DB_PORT"))
 	dbUser = os.Getenv("DB_USER")
@@ -54,6 +50,7 @@ func Load(workDir string) {
 	dbSchema = os.Getenv("DB_SCHEMA")
 
 	redisHost = os.Getenv("REDIS_HOST")
+	redisPassword = os.Getenv("REDIS_PASSWORD")
 
 	kafkaBootstrapServers = os.Getenv("KAFKA_BOOTSTRAP_SERVERS")
 	kafkaClientID = os.Getenv("KAFKA_CLIENT_ID")
@@ -73,14 +70,6 @@ func HostID() string {
 
 func GoPoolSize() int {
 	return goPoolSize
-}
-
-func PathPrivateKey() string {
-	return privateKey
-}
-
-func PathPublicKey() string {
-	return publicKey
 }
 
 func DBHost() string {
@@ -109,6 +98,10 @@ func DBSchema() string {
 
 func RedisHost() string {
 	return redisHost
+}
+
+func RedisPassword() string {
+	return redisPassword
 }
 
 func KafkaBootstrapServers() string {
@@ -147,6 +140,6 @@ func KafkaGroupEventTopic() string {
 	return kafkaGroupEventTopic
 }
 
-func KafkaHostTopic(hostID string) string {
-	return fmt.Sprintf(kafkaHostTopic, hostID)
+func KafkaHostTopic(serverID string) string {
+	return fmt.Sprintf(kafkaHostTopic, serverID)
 }

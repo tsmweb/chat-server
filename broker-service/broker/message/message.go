@@ -3,6 +3,7 @@ package message
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/tsmweb/go-helper-api/cerror"
 	"github.com/tsmweb/go-helper-api/util/hashutil"
 	"strconv"
@@ -62,18 +63,29 @@ func (ct ContentType) String() (str string) {
 
 // Repository represents an abstraction of the data persistence layer.
 type Repository interface {
+	// GetAllGroupMembers returns all members of a group by groupID.
 	GetAllGroupMembers(ctx context.Context, groupID string) ([]string, error)
+
+	// GetAllMessages returns all offline messages by user ID.
 	GetAllMessages(ctx context.Context, userID string) ([]*Message, error)
+
+	// AddMessage add a message to the database.
+	AddMessage(ctx context.Context, msg Message) error
+
+	// DeleteAllMessages deletes all messages by userID.
 	DeleteAllMessages(ctx context.Context, userID string) error
 }
 
 var (
-	ErrIDValidateModel          = &cerror.ErrValidateModel{Msg: "required id"}
-	ErrFromValidateModel        = &cerror.ErrValidateModel{Msg: "required from"}
-	ErrReceiverValidateModel    = &cerror.ErrValidateModel{Msg: "required to or group"}
-	ErrDateValidateModel        = &cerror.ErrValidateModel{Msg: "required date"}
-	ErrContentTypeValidateModel = &cerror.ErrValidateModel{Msg: "required content_type"}
-	ErrContentValidateModel     = &cerror.ErrValidateModel{Msg: "required content"}
+	ErrIDValidateModel           = &cerror.ErrValidateModel{Msg: "required id"}
+	ErrFromValidateModel         = &cerror.ErrValidateModel{Msg: "required from"}
+	ErrReceiverValidateModel     = &cerror.ErrValidateModel{Msg: "required to or group"}
+	ErrDateValidateModel         = &cerror.ErrValidateModel{Msg: "required date"}
+	ErrContentTypeValidateModel  = &cerror.ErrValidateModel{Msg: "required content_type"}
+	ErrContentValidateModel      = &cerror.ErrValidateModel{Msg: "required content"}
+	ErrMessageRecipientIsInvalid = errors.New("message recipient is invalid")
+	ErrMessageSendingBlocked     = errors.New("you were blocked by the recipient of this message")
+	ErrGroupIsInvalid            = errors.New("group is invalid")
 )
 
 // Message represents data sent and received by users.
@@ -90,6 +102,20 @@ type Message struct {
 // New creates and returns a new Message instance.
 func New(from string, to string, group string, contentType ContentType, content string) (*Message, error) {
 	return newMessage(from, to, group, time.Now().UTC(), contentType.String(), content)
+}
+
+// NewResponse creates and returns a new Message instance.
+func NewResponse(msgID string, to string, group string, contentType ContentType, content string) *Message {
+	msg := &Message{
+		ID:          msgID,
+		From:        "server",
+		To:          to,
+		Group:       group,
+		Date:        time.Now().UTC(),
+		ContentType: contentType.String(),
+		Content:     content,
+	}
+	return msg
 }
 
 func newMessage(from string, to string, group string, date time.Time, contentType string, content string) (*Message, error) {
@@ -149,7 +175,7 @@ func (m *Message) Validate() error {
 
 // IsGroupMessage returns true if the message is addressed to a group of users.
 func (m *Message) IsGroupMessage() bool {
-	return strings.TrimSpace(m.Group) != ""
+	return strings.TrimSpace(m.To) == "" && strings.TrimSpace(m.Group) != ""
 }
 
 func (m *Message) String() string {

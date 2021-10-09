@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func TestHandleUser_Execute(t *testing.T) {
+func TestUserHandler_Execute(t *testing.T) {
 	ctx := context.Background()
 	chMessage := make(chan message.Message, 1)
 
@@ -27,7 +27,7 @@ func TestHandleUser_Execute(t *testing.T) {
 	msgs := []*message.Message {msg1, msg2, msg3}
 
 	userRepo := new(mockUserRepository)
-	userRepo.On("AddUser", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+	userRepo.On("AddUserPresence", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(nil).
 		Once()
 	userRepo.On("GetAllContactsOnline", mock.Anything, mock.Anything).
@@ -45,7 +45,7 @@ func TestHandleUser_Execute(t *testing.T) {
 		Return(nil).
 		Once()
 
-	handler := NewHandleUser(userRepo, msgRepo)
+	handler := NewUserHandler(userRepo, msgRepo)
 	err := handler.Execute(ctx, *usr, chMessage)
 	assert.Nil(t, err)
 

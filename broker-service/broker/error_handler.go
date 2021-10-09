@@ -6,8 +6,8 @@ import (
 	"log"
 )
 
-// HandleError handles errors.
-type HandleError interface {
+// ErrorHandler handles errors.
+type ErrorHandler interface {
 	// Execute performs errors handling.
 	Execute(ctx context.Context, err ErrorEvent)
 
@@ -15,36 +15,36 @@ type HandleError interface {
 	Close()
 }
 
-type handleError struct {
+type errorHandler struct {
 	encoder  ErrorEventEncoder
 	producer kafka.Producer
 }
 
-// NewHandleError implements the HandleError interface.
-func NewHandleError(
+// NewErrorHandler implements the ErrorHandler interface.
+func NewErrorHandler(
 	encoder ErrorEventEncoder,
 	producer kafka.Producer,
-) HandleError {
-	return &handleError{
+) ErrorHandler {
+	return &errorHandler{
 		encoder:  encoder,
 		producer: producer,
 	}
 }
 
 // Execute performs errors handling and publish in topic kafka.
-func (h *handleError) Execute(ctx context.Context, errEvent ErrorEvent) {
+func (h *errorHandler) Execute(ctx context.Context, errEvent ErrorEvent) {
 	epb, err := h.encoder.Marshal(&errEvent)
 	if err != nil {
-		log.Printf("[!] HandleError.Execute() \n Error: %v \n Data: %v", err.Error(), errEvent)
+		log.Printf("[!] ErrorHandler.Execute() \n Error: %v \n Data: %v", err.Error(), errEvent)
 		return
 	}
 
 	if err := h.producer.Publish(ctx, []byte(errEvent.HostID), epb); err != nil {
-		log.Printf("[!] HandleError.Execute() \n Error: %v \n Data: %v", err.Error(), errEvent)
+		log.Printf("[!] ErrorHandler.Execute() \n Error: %v \n Data: %v", err.Error(), errEvent)
 	}
 }
 
 // Close connection with kafka producer.
-func (h *handleError) Close() {
+func (h *errorHandler) Close() {
 	h.producer.Close()
 }
