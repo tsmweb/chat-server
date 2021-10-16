@@ -140,7 +140,9 @@ func initServer(t *testing.T) *server.Server {
 	consumeMessage := kaf.NewConsumer(config.KafkaGroupID(), config.KafkaHostTopic())
 	handleMessage := server.NewHandleMessage(msgEncoder, kaf.NewProducer(config.KafkaNewMessagesTopic()))
 	handleOffMessage := server.NewHandleMessage(msgEncoder, kaf.NewProducer(config.KafkaOffMessagesTopic()))
-	handleUserStatus := server.NewHandleUserStatus(userEncoder, kaf.NewProducer(config.KafkaUsersTopic()))
+	handleUserStatus := server.NewHandleUserStatus(userEncoder,
+		kaf.NewProducer(config.KafkaUsersTopic()),
+		kaf.NewProducer(config.KafkaUsersPresenceTopic()))
 	handleError := server.NewHandleError(eventErrorEncoder, kaf.NewProducer(config.KafkaErrorsTopic()))
 
 	serv := server.NewServer(

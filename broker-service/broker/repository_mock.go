@@ -19,8 +19,14 @@ func (m *mockUserRepository) AddUserPresence(ctx context.Context, userID string,
 }
 
 // DeleteUser represents the simulated method for the DeleteUser feature in the user.Repository layer.
-func (m *mockUserRepository) RemoveUserPresence(ctx context.Context, userID string, serverID string) error {
-	args := m.Called(ctx, userID, serverID)
+func (m *mockUserRepository) RemoveUserPresence(ctx context.Context, userID string) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
+
+// UpdateUserPresenceCache represents the simulated method for the UpdateUserPresenceCache feature in the user.Repository layer.
+func (m *mockUserRepository) UpdateUserPresenceCache(ctx context.Context, userID string, serverID string, status string) error {
+	args := m.Called(ctx, userID, serverID, status)
 	return args.Error(0)
 }
 

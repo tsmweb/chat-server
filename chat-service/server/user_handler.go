@@ -17,18 +17,21 @@ type HandleUserStatus interface {
 }
 
 type handleUserStatus struct {
-	encoder  user.Encoder
-	producer kafka.Producer
+	encoder              user.Encoder
+	userProducer         kafka.Producer
+	userPresenceProducer kafka.Producer
 }
 
 // NewHandleUserStatus implements the HandleUserStatus interface.
 func NewHandleUserStatus(
 	encoder user.Encoder,
-	producer kafka.Producer,
+	userProducer kafka.Producer,
+	userPresenceProducer kafka.Producer,
 ) HandleUserStatus {
 	return &handleUserStatus{
-		encoder:  encoder,
-		producer: producer,
+		encoder:              encoder,
+		userProducer:         userProducer,
+		userPresenceProducer: userPresenceProducer,
 	}
 }
 
@@ -45,14 +48,19 @@ func (h *handleUserStatus) Execute(ctx context.Context, userID string, status us
 		return NewErrorEvent(userID, "HandleUserStatus.Execute()", err.Error())
 	}
 
-	if err = h.producer.Publish(ctx, []byte(userID), upb); err != nil {
+	if err = h.userProducer.Publish(ctx, []byte(userID), upb); err != nil {
+		return NewErrorEvent(userID, "HandleUserStatus.Execute()", err.Error())
+	}
+
+	if err = h.userPresenceProducer.Publish(ctx, []byte(userID), upb); err != nil {
 		return NewErrorEvent(userID, "HandleUserStatus.Execute()", err.Error())
 	}
 
 	return nil
 }
 
-// Close connection with kafka producer.
+// Close connection with kafka userProducer.
 func (h *handleUserStatus) Close() {
-	h.producer.Close()
+	h.userProducer.Close()
+	h.userPresenceProducer.Close()
 }

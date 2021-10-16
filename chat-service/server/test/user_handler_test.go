@@ -17,27 +17,41 @@ func TestHandleUserStatus_Execute(t *testing.T) {
 	encode := user.EncoderFunc(adapter.UserMarshal)
 
 	t.Run("when publishUserStatus fails with error", func(t *testing.T) {
-		p := new(mockProducer)
-		p.On("Publish", mock.Anything, mock.Anything, mock.Anything).
+		userProducer := new(mockProducer)
+		userProducer.On("Publish", mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
-		p.On("Close").
+		userProducer.On("Close").
 			Once()
 
-		handler := server.NewHandleUserStatus(encode, p)
+		userPresenceProducer := new(mockProducer)
+		userPresenceProducer.On("Publish", mock.Anything, mock.Anything, mock.Anything).
+			Return(errors.New("error")).
+			Once()
+		userPresenceProducer.On("Close").
+			Once()
+
+		handler := server.NewHandleUserStatus(encode, userProducer, userPresenceProducer)
 		err := handler.Execute(ctx, userID, user.Online)
 		assert.Equal(t, userID, err.UserID)
 	})
 
 	t.Run("when user handler succeeds", func(t *testing.T) {
-		p := new(mockProducer)
-		p.On("Publish", mock.Anything, mock.Anything, mock.Anything).
+		userProducer := new(mockProducer)
+		userProducer.On("Publish", mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).
 			Once()
-		p.On("Close").
+		userProducer.On("Close").
 			Once()
 
-		handler := server.NewHandleUserStatus(encode, p)
+		userPresenceProducer := new(mockProducer)
+		userPresenceProducer.On("Publish", mock.Anything, mock.Anything, mock.Anything).
+			Return(nil).
+			Once()
+		userPresenceProducer.On("Close").
+			Once()
+
+		handler := server.NewHandleUserStatus(encode, userProducer, userPresenceProducer)
 		err := handler.Execute(ctx, userID, user.Online)
 		assert.Nil(t, err)
 	})

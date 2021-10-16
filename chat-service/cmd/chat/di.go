@@ -49,11 +49,12 @@ func (p *Providers) ServerProvider() (*server.Server, error) {
 		messageProducer := p.KafkaProvider().NewProducer(config.KafkaNewMessagesTopic())
 		offMessageProducer := p.KafkaProvider().NewProducer(config.KafkaOffMessagesTopic())
 		userProducer := p.KafkaProvider().NewProducer(config.KafkaUsersTopic())
+		userPresenceProducer := p.KafkaProvider().NewProducer(config.KafkaUsersPresenceTopic())
 		errorProducer := p.KafkaProvider().NewProducer(config.KafkaErrorsTopic())
 
 		handleMessage := server.NewHandleMessage(messageEncoder, messageProducer)
 		handleOffMessage := server.NewHandleMessage(messageEncoder, offMessageProducer)
-		handleUserStatus := server.NewHandleUserStatus(userEncoder, userProducer)
+		handleUserStatus := server.NewHandleUserStatus(userEncoder, userProducer, userPresenceProducer)
 		handleError := server.NewHandleError(errorEncoder, errorProducer)
 
 		p.server = server.NewServer(

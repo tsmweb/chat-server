@@ -70,13 +70,13 @@ func (h *messageHandler) processGroupMessage(ctx context.Context, msg message.Me
 	if err != nil {
 		return NewErrorEvent(msg.From, "MessageHandler.processGroupMessage()", err.Error())
 	}
-	if len(members) == 1 {
-		return nil
-	}
-	if len(members) < 1 {
+	if members == nil || len(members) < 1 {
 		msgResponse := message.NewResponse(msg.ID, msg.From, msg.Group, message.ContentTypeError,
 			message.ErrGroupIsInvalid.Error())
 		return h.sendMessage(ctx, *msgResponse)
+	}
+	if len(members) == 1 {
+		return nil
 	}
 
 	var errEvents ErrorEvents
@@ -113,7 +113,7 @@ func (h *messageHandler) isValidUser(ctx context.Context, msg message.Message) (
 
 // isBlockedUser check if the sender has been blocked by the recipient.
 func (h *messageHandler) isBlockedUser(ctx context.Context, msg message.Message) (bool, *ErrorEvent) {
-	ok, err := h.userRepository.IsBlockedUser(ctx, msg.From, msg.To)
+	ok, err := h.userRepository.IsBlockedUser(ctx, msg.To, msg.From)
 	if err != nil {
 		return false, NewErrorEvent(msg.From, "MessageHandler.isBlockedUser()", err.Error())
 	}

@@ -16,7 +16,7 @@ type offlineMessageHandler struct {
 }
 
 // NewOfflineMessageHandler implements the OfflineMessageHandler interface.
-func NewOfflineMessageHandler(msgRepository  message.Repository) OfflineMessageHandler {
+func NewOfflineMessageHandler(msgRepository message.Repository) OfflineMessageHandler {
 	return &offlineMessageHandler{
 		msgRepository: msgRepository,
 	}

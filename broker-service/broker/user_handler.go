@@ -31,8 +31,8 @@ func NewUserHandler(
 
 // Execute performs user status handling as: register in the database and notifies contacts.
 func (h *userHandler) Execute(ctx context.Context, usr user.User, chMessage chan<- message.Message) *ErrorEvent {
-	if err := h.setUserStatus(ctx, usr); err != nil {
-		return NewErrorEvent(usr.ID, "UserHandler.setUserStatus()", err.Error())
+	if err := h.setUserPresence(ctx, usr); err != nil {
+		return NewErrorEvent(usr.ID, "UserHandler.setUserPresence()", err.Error())
 	}
 
 	if usr.Status == user.Online.String() {
@@ -52,8 +52,8 @@ func (h *userHandler) Execute(ctx context.Context, usr user.User, chMessage chan
 	return nil
 }
 
-// setUserStatus logs user status in the data store.
-func (h *userHandler) setUserStatus(ctx context.Context, usr user.User) error {
+// setUserPresence logs user status in the data store.
+func (h *userHandler) setUserPresence(ctx context.Context, usr user.User) error {
 	if usr.Status == user.Online.String() {
 		return h.userRepository.AddUserPresence(ctx, usr.ID, usr.ServerID, time.Now().UTC())
 	}

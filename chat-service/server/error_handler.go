@@ -44,7 +44,7 @@ func (h *handleError) Execute(ctx context.Context, errEvent ErrorEvent) {
 	}
 }
 
-// Close connection with kafka producer.
+// Close connection with kafka userProducer.
 func (h *handleError) Close() {
 	h.producer.Close()
 }

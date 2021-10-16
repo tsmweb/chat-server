@@ -1,4 +1,4 @@
-package broker
+package main
 
 import (
 	"context"
@@ -32,7 +32,9 @@ func (p *Provider) BrokerProvider() *broker.Broker {
 		messageEncoder := message.EncoderFunc(adapter.MessageMarshal)
 		messageDecoder := message.DecoderFunc(adapter.MessageUnmarshal)
 		errorEncoder := broker.ErrorEventEncoderFunc(adapter.ErrorEventMarshal)
+
 		userConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(), config.KafkaUsersTopic())
+		userPresenceConsumer := p.KafkaProvider().NewConsumer("", config.KafkaUsersPresenceTopic())
 		messageConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(), config.KafkaNewMessagesTopic())
 		offMessageConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(), config.KafkaOffMessagesTopic())
 		errorProducer := p.KafkaProvider().NewProducer(config.KafkaErrorsTopic())
@@ -41,6 +43,7 @@ func (p *Provider) BrokerProvider() *broker.Broker {
 		messageRepository := repository.NewMessageRepository(p.DatabaseProvider(), p.CacheDBProvider())
 
 		userHandler := broker.NewUserHandler(userRepository, messageRepository)
+		userPresenceHandler := broker.NewUserPresenceHandler(userRepository)
 		messageHandler := broker.NewMessageHandler(userRepository, messageRepository, p.KafkaProvider(), messageEncoder)
 		offMessageHandler := broker.NewOfflineMessageHandler(messageRepository)
 		errorHandler := broker.NewErrorHandler(errorEncoder, errorProducer)
@@ -50,9 +53,11 @@ func (p *Provider) BrokerProvider() *broker.Broker {
 			userDecoder,
 			messageDecoder,
 			userConsumer,
+			userPresenceConsumer,
 			messageConsumer,
 			offMessageConsumer,
 			userHandler,
+			userPresenceHandler,
 			messageHandler,
 			offMessageHandler,
 			errorHandler,

@@ -40,6 +40,9 @@ type Repository interface {
 	// RemoveUserPresence removes user presence from database.
 	RemoveUserPresence(ctx context.Context, userID string) error
 
+	// UpdateUserPresenceCache updates user presence in cache.
+	UpdateUserPresenceCache(ctx context.Context, userID string, serverID string, status string) error
+
 	// GetUserServer returns the server the user is online.
 	GetUserServer(ctx context.Context, userID string) (string, error)
 
@@ -47,7 +50,7 @@ type Repository interface {
 	IsValidUser(ctx context.Context, userID string) (bool, error)
 
 	// IsBlockedUser returns true if the message sending user was blocked and false otherwise.
-	IsBlockedUser(ctx context.Context, fromID string, toID string) (bool, error)
+	IsBlockedUser(ctx context.Context, userID string, blockedUserID string) (bool, error)
 
 	// GetAllContactsOnline returns all online contacts by userID.
 	GetAllContactsOnline(ctx context.Context, userID string) ([]string, error)

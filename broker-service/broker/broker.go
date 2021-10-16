@@ -14,15 +14,18 @@ type Broker struct {
 	ctx                    context.Context
 	executor               *executor.Executor
 	chUser                 chan user.User
+	chUserPresence         chan user.User
 	chMessage              chan message.Message
 	chOfflineMessage       chan message.Message
 	chError                chan ErrorEvent
 	userDecoder            user.Decoder
 	msgDecoder             message.Decoder
 	userConsumer           kafka.Consumer
+	userPresenceConsumer   kafka.Consumer
 	messageConsumer        kafka.Consumer
 	offlineMessageConsumer kafka.Consumer
 	userHandler            UserHandler
+	userPresenceHandler    UserPresenceHandler
 	messageHandler         MessageHandler
 	offlineMessageHandler  OfflineMessageHandler
 	errorHandler           ErrorHandler
@@ -34,9 +37,11 @@ func NewBroker(
 	userDecoder user.Decoder,
 	msgDecoder message.Decoder,
 	userConsumer kafka.Consumer,
+	userPresenceConsumer kafka.Consumer,
 	messageConsumer kafka.Consumer,
 	offlineMessageConsumer kafka.Consumer,
 	userHandler UserHandler,
+	userPresenceHandler UserPresenceHandler,
 	messageHandler MessageHandler,
 	offlineMessageHandler OfflineMessageHandler,
 	errorHandler ErrorHandler,
@@ -44,15 +49,18 @@ func NewBroker(
 	broker := &Broker{
 		ctx:                    ctx,
 		chUser:                 make(chan user.User),
+		chUserPresence:         make(chan user.User),
 		chMessage:              make(chan message.Message),
 		chOfflineMessage:       make(chan message.Message),
 		chError:                make(chan ErrorEvent),
 		userDecoder:            userDecoder,
 		msgDecoder:             msgDecoder,
 		userConsumer:           userConsumer,
+		userPresenceConsumer:   userPresenceConsumer,
 		messageConsumer:        messageConsumer,
 		offlineMessageConsumer: offlineMessageConsumer,
 		userHandler:            userHandler,
+		userPresenceHandler:    userPresenceHandler,
 		messageHandler:         messageHandler,
 		offlineMessageHandler:  offlineMessageHandler,
 		errorHandler:           errorHandler,
@@ -68,6 +76,7 @@ func (b *Broker) Start() {
 
 	go b.messageProcessor()
 	go b.usersConsumer()
+	go b.usersPresenceConsumer()
 	go b.messagesConsumer()
 	go b.offlineMessagesConsumer()
 }
@@ -84,6 +93,9 @@ loop:
 		select {
 		case usr := <-b.chUser:
 			b.executor.Schedule(b.userTask(usr))
+
+		case userPresence := <-b.chUserPresence:
+			b.executor.Schedule(b.userPresenceTask(userPresence))
 
 		case msg := <-b.chMessage:
 			b.executor.Schedule(b.messageTask(msg))
@@ -121,6 +133,27 @@ func (b *Broker) usersConsumer() {
 	}
 
 	b.userConsumer.Subscribe(b.ctx, callbackFn)
+}
+
+func (b *Broker) usersPresenceConsumer() {
+	defer b.userPresenceConsumer.Close()
+
+	callbackFn := func(event *kafka.Event, err error) {
+		if err != nil {
+			b.chError <- *NewErrorEvent("", "Broker.usersPresenceConsumer()", err.Error())
+			return
+		}
+
+		var usr user.User
+		if err := b.userDecoder.Unmarshal(event.Value, &usr); err != nil {
+			b.chError <- *NewErrorEvent("", "Broker.usersPresenceConsumer()", err.Error())
+			return
+		}
+
+		b.chUserPresence <- usr
+	}
+
+	b.userPresenceConsumer.Subscribe(b.ctx, callbackFn)
 }
 
 func (b *Broker) messagesConsumer() {
@@ -168,6 +201,14 @@ func (b *Broker) offlineMessagesConsumer() {
 func (b *Broker) userTask(usr user.User) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		if err := b.userHandler.Execute(ctx, usr, b.chMessage); err != nil {
+			b.chError <- *err
+		}
+	}
+}
+
+func (b *Broker) userPresenceTask(usr user.User) func(ctx context.Context) {
+	return func(ctx context.Context) {
+		if err := b.userPresenceHandler.Execute(ctx, usr); err != nil {
 			b.chError <- *err
 		}
 	}
