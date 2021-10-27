@@ -14,6 +14,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	go func(ctx context.Context, fn context.CancelFunc) {
 		<-ctx.Done()
+		log.Println("[>] stop broker service")
 		fn()
 	}(ctx, stop)
 

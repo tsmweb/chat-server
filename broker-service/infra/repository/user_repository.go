@@ -45,7 +45,7 @@ func (r *userRepository) AddUserPresence(ctx context.Context, userID string, ser
 
 	stmt, err := txn.PrepareContext(ctx, `
 		INSERT INTO online_user(user_id, server_id, created_at)
-		VALUES($1, $2, $2)`)
+		VALUES($1, $2, $3)`)
 	if err != nil {
 		return err
 	}
@@ -118,7 +118,7 @@ func (r *userRepository) IsValidUser(ctx context.Context, userID string) (bool, 
 		return true, nil
 	}
 	if isValidStr == validUserFalse {
-		return false, err
+		return false, nil
 	}
 
 	isValid, err := r.isValidUser(ctx, userID)
@@ -160,7 +160,7 @@ func (r *userRepository) IsBlockedUser(ctx context.Context, userID string, block
 		return true, nil
 	}
 	if isBlockedStr == blockedUserFalse {
-		return false, err
+		return false, nil
 	}
 
 	isBlocked, err := r.isBlockedUser(ctx, userID, blockedUserID)
@@ -239,7 +239,7 @@ func (r *userRepository) GetAllRelationshipsOnline(ctx context.Context, userID s
 	stmt, err := r.database.DB().PrepareContext(ctx, `
 		SELECT c.user_id
 		FROM contact c
-		INNER JOIN online_user u ON u.user_id = c.contact_id
+		INNER JOIN online_user ou ON ou.user_id = c.user_id
 		WHERE c.contact_id = $1`)
 	if err != nil {
 		return nil, err

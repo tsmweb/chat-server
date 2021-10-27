@@ -63,7 +63,15 @@ func (c *RedisCacheDB) Set(ctx context.Context, key string, value interface{}, e
 }
 
 func (c *RedisCacheDB) Get(ctx context.Context, key string) (string, error) {
-	return c.db.Get(ctx, key).Result()
+	val, err := c.db.Get(ctx, key).Result()
+	if err != nil {
+		if err.Error() == "redis: nil" {
+			return "", nil
+		}
+		return "", err
+	}
+
+	return val, nil
 }
 
 func (c *RedisCacheDB) Del(ctx context.Context, keys ...string) error {

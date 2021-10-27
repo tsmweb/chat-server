@@ -74,11 +74,11 @@ func (b *Broker) Start() {
 	// limiting resource consumption when executing a collection of jobs.
 	b.executor = executor.New(config.GoPoolSize())
 
-	go b.messageProcessor()
 	go b.usersConsumer()
 	go b.usersPresenceConsumer()
 	go b.messagesConsumer()
 	go b.offlineMessagesConsumer()
+	b.messageProcessor()
 }
 
 func (b *Broker) stop() {

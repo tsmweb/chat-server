@@ -13,8 +13,8 @@ const (
 	groupMembersKey        = "group:members:%s"
 	groupMembersExpiration = time.Minute * 15
 
-	insertedStatusMessage  = 'I'
-	processedStatusMessage = 'P'
+	insertedStatusMessage  = "I"
+	processedStatusMessage = "P"
 )
 
 // userRepository implementation for message.Repository interface.
@@ -34,15 +34,12 @@ func NewMessageRepository(database db.Database, cache db.CacheDB) message.Reposi
 // GetAllGroupMembers returns all members of a group by groupID.
 func (r *messageRepository) GetAllGroupMembers(ctx context.Context, groupID string) ([]string, error) {
 	_groupMembersKey := fmt.Sprintf(groupMembersKey, groupID)
-	members, err := r.cache.SMembers(ctx, _groupMembersKey)
-	if err != nil {
-		return nil, err
-	}
+	members, _ := r.cache.SMembers(ctx, _groupMembersKey)
 	if members != nil {
 		return members, nil
 	}
 
-	members, err = r.getAllGroupMembers(ctx, groupID)
+	members, err := r.getAllGroupMembers(ctx, groupID)
 	if err != nil {
 		return nil, err
 	}

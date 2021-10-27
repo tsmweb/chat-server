@@ -147,5 +147,5 @@ func KafkaGroupEventTopic() string {
 }
 
 func KafkaHostTopic(serverID string) string {
-	return fmt.Sprintf(kafkaHostTopic, serverID)
+	return fmt.Sprintf("%s_%s", serverID, kafkaHostTopic)
 }
