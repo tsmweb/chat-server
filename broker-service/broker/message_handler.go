@@ -82,6 +82,9 @@ func (h *messageHandler) processGroupMessage(ctx context.Context, msg message.Me
 	var errEvents ErrorEvents
 
 	for _, member := range members {
+		if member == msg.From {
+			continue
+		}
 		m, _ := msg.ReplicateTo(member)
 		if err := h.sendMessage(ctx, *m); err != nil {
 			errEvents = append(errEvents, err)
@@ -138,7 +141,7 @@ func (h *messageHandler) sendMessage(ctx context.Context, msg message.Message) *
 		if err != nil {
 			return NewErrorEvent(msg.From, "MessageHandler.dispatchMessagesToHosts()", err.Error())
 		}
-	} else { // offline
+	} else if msg.ContentType != message.ContentTypeStatus.String() { // offline
 		err = h.dispatchToOfflineMessages(ctx, msg)
 		if err != nil {
 			return NewErrorEvent(msg.From, "MessageHandler.dispatchToOfflineMessages()", err.Error())

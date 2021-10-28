@@ -103,7 +103,7 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 			if err != nil {
 				observer.Stop()
 				s.chUserOUT <- userConn.userID
-				s.chError <- *NewErrorEvent(userConn.userID, "UserConn.Receive()", err.Error())
+				//s.chError <- *NewErrorEvent(userConn.userID, "UserConn.Receive()", err.Error())
 				return
 			}
 			if msg != nil {

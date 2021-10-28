@@ -28,6 +28,7 @@ func protobufFromMessage(m *message.Message) *protobuf.Message {
 		Id:          m.ID,
 		From:        m.From,
 		To:          m.To,
+		Group:       m.Group,
 		Date:        m.Date.Unix(),
 		ContentType: protobuf.ContentType(protobuf.ContentType_value[m.ContentType]),
 		Content:     m.Content,
@@ -38,6 +39,7 @@ func protobufToMessage(mpb *protobuf.Message, m *message.Message) {
 	m.ID = mpb.GetId()
 	m.From = mpb.GetFrom()
 	m.To = mpb.GetTo()
+	m.Group = mpb.GetGroup()
 	m.Date = time.Unix(mpb.GetDate(), 0)
 	m.ContentType = mpb.GetContentType().String()
 	m.Content = mpb.GetContent()

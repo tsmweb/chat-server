@@ -16,7 +16,8 @@ message Message {
   string id = 1;
   string from = 2;
   string to = 3;
-  int64 date = 4;
-  ContentType contentType = 5;
-  string content = 6;
+  string group = 4;
+  int64 date = 5;
+  ContentType contentType = 6;
+  string content = 7;
 }

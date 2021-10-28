@@ -45,7 +45,11 @@ func (r *userRepository) AddUserPresence(ctx context.Context, userID string, ser
 
 	stmt, err := txn.PrepareContext(ctx, `
 		INSERT INTO online_user(user_id, server_id, created_at)
-		VALUES($1, $2, $3)`)
+		VALUES($1, $2, $3)
+		ON CONFLICT(user_id)
+		DO UPDATE SET
+			server_id = $2,
+			created_at = $3`)
 	if err != nil {
 		return err
 	}

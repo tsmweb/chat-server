@@ -35,7 +35,7 @@ func NewMessageRepository(database db.Database, cache db.CacheDB) message.Reposi
 func (r *messageRepository) GetAllGroupMembers(ctx context.Context, groupID string) ([]string, error) {
 	_groupMembersKey := fmt.Sprintf(groupMembersKey, groupID)
 	members, _ := r.cache.SMembers(ctx, _groupMembersKey)
-	if members != nil {
+	if len(members) > 0 {
 		return members, nil
 	}
 
