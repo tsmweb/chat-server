@@ -66,6 +66,15 @@ type Repository interface {
 	// GetAllGroupMembers returns all members of a group by groupID.
 	GetAllGroupMembers(ctx context.Context, groupID string) ([]string, error)
 
+	// RemoveGroupFromCache removes the group from cache.
+	RemoveGroupFromCache(ctx context.Context, groupID string) error
+
+	// AddGroupMemberToCache add a member to the group.
+	AddGroupMemberToCache(ctx context.Context, groupID, memberID string) error
+
+	// RemoveGroupMemberFromCache remove a member from the group.
+	RemoveGroupMemberFromCache(ctx context.Context, groupID, memberID string) error
+
 	// GetAllMessages returns all offline messages by user ID.
 	GetAllMessages(ctx context.Context, userID string) ([]*Message, error)
 

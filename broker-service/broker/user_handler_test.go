@@ -14,14 +14,6 @@ func TestUserHandler_Execute(t *testing.T) {
 	ctx := context.Background()
 	chMessage := make(chan message.Message, 1)
 
-	encoder := new(mockUserEncoder)
-	encoder.On("Marshal", mock.Anything).
-		Return([]byte{}, nil)
-
-	producer := new(mockProducer)
-	producer.On("Publish", mock.Anything, mock.Anything, mock.Anything).
-		Return(nil)
-
 	go func(chMsg <-chan message.Message) {
 		for msg := range chMsg {
 			t.Log(msg.String())
@@ -53,7 +45,7 @@ func TestUserHandler_Execute(t *testing.T) {
 		Return(nil).
 		Once()
 
-	handler := NewUserHandler(userRepo, msgRepo, producer, encoder)
+	handler := NewUserHandler(userRepo, msgRepo)
 	err := handler.Execute(ctx, *usr, chMessage)
 	assert.Nil(t, err)
 

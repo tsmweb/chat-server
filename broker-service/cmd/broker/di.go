@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/tsmweb/broker-service/adapter"
 	"github.com/tsmweb/broker-service/broker"
+	"github.com/tsmweb/broker-service/broker/group"
 	"github.com/tsmweb/broker-service/broker/message"
 	"github.com/tsmweb/broker-service/broker/user"
 	"github.com/tsmweb/broker-service/config"
@@ -31,12 +32,14 @@ func (p *Provider) BrokerProvider() *broker.Broker {
 		userDecoder := user.DecoderFunc(adapter.UserUnmarshal)
 		messageEncoder := message.EncoderFunc(adapter.MessageMarshal)
 		messageDecoder := message.DecoderFunc(adapter.MessageUnmarshal)
+		groupEventDecoder := group.EventDecoderFunc(adapter.EventUnmarshal)
 		errorEncoder := broker.ErrorEventEncoderFunc(adapter.ErrorEventMarshal)
 
 		userConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(), config.KafkaUsersTopic())
 		userPresenceConsumer := p.KafkaProvider().NewConsumer("", config.KafkaUsersPresenceTopic())
 		messageConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(), config.KafkaNewMessagesTopic())
 		offMessageConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(), config.KafkaOffMessagesTopic())
+		groupEventConsumer := p.KafkaProvider().NewConsumer("", config.KafkaGroupEventTopic())
 		errorProducer := p.KafkaProvider().NewProducer(config.KafkaErrorsTopic())
 
 		userRepository := repository.NewUserRepository(p.DatabaseProvider(), p.CacheDBProvider())
@@ -46,20 +49,24 @@ func (p *Provider) BrokerProvider() *broker.Broker {
 		userPresenceHandler := broker.NewUserPresenceHandler(userRepository)
 		messageHandler := broker.NewMessageHandler(userRepository, messageRepository, p.KafkaProvider(), messageEncoder)
 		offMessageHandler := broker.NewOfflineMessageHandler(messageRepository)
+		groupEventHandler := broker.NewGroupEventHandler(messageRepository)
 		errorHandler := broker.NewErrorHandler(errorEncoder, errorProducer)
 
 		p.broker = broker.NewBroker(
 			p.ctx,
 			userDecoder,
 			messageDecoder,
+			groupEventDecoder,
 			userConsumer,
 			userPresenceConsumer,
 			messageConsumer,
+			groupEventConsumer,
 			offMessageConsumer,
 			userHandler,
 			userPresenceHandler,
 			messageHandler,
 			offMessageHandler,
+			groupEventHandler,
 			errorHandler,
 		)
 	}

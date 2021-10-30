@@ -94,6 +94,27 @@ func (r *messageRepository) getAllGroupMembers(ctx context.Context, groupID stri
 	return members, nil
 }
 
+// RemoveGroupFromCache removes the group from cache.
+func (r *messageRepository) RemoveGroupFromCache(ctx context.Context, groupID string) error {
+	_groupMembersKey := fmt.Sprintf(groupMembersKey, groupID)
+	return r.cache.Expire(ctx, _groupMembersKey, 0)
+}
+
+// AddGroupMemberToCache add a member to the group.
+func (r *messageRepository) AddGroupMemberToCache(ctx context.Context, groupID, memberID string) error {
+	_groupMembersKey := fmt.Sprintf(groupMembersKey, groupID)
+	if r.cache.Key(ctx, _groupMembersKey) {
+		return r.cache.SAdd(ctx, _groupMembersKey, memberID)
+	}
+	return nil
+}
+
+// RemoveGroupMemberFromCache remove a member from the group.
+func (r *messageRepository) RemoveGroupMemberFromCache(ctx context.Context, groupID, memberID string) error {
+	_groupMembersKey := fmt.Sprintf(groupMembersKey, groupID)
+	return r.cache.SRem(ctx, _groupMembersKey, memberID)
+}
+
 // GetAllMessages returns all offline messages by user ID.
 func (r *messageRepository) GetAllMessages(ctx context.Context, userID string) ([]*message.Message, error) {
 	if err := r.updateMessageStatusToProcessed(ctx, userID); err != nil {

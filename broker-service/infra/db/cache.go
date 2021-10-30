@@ -9,6 +9,9 @@ import (
 
 // CacheDB interface with methods for manipulating data in the cache.
 type CacheDB interface {
+	// Key returns true if the key exists and false otherwise.
+	Key(ctx context.Context, key string) bool
+
 	// Set Redis `SET key value [expiration]` command.
 	// Zero expiration means the key has no expiration time.
 	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error
@@ -34,6 +37,9 @@ type CacheDB interface {
 	// SAdd Redis `SADD key member` command.
 	SAdd(ctx context.Context, key string, members ...interface{}) error
 
+	// SRem Redis `SREM key member` command.
+	SRem(ctx context.Context, key string, members ...interface{}) error
+
 	// SMembers Redis `SMEMBERS key` command.
 	SMembers(ctx context.Context, key string) ([]string, error)
 
@@ -57,6 +63,14 @@ func NewRedisCacheDB(addr string, password string) CacheDB {
 	return &RedisCacheDB{db: db}
 }
 
+func (c *RedisCacheDB) Key(ctx context.Context, key string) bool {
+	keys, err := c.db.Keys(ctx, key).Result()
+	if err != nil || len(keys) <= 0 {
+		return false
+	}
+	return true
+}
+
 func (c *RedisCacheDB) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
 	_, err := c.db.Set(ctx, key, value, expiration).Result()
 	return err
@@ -65,7 +79,7 @@ func (c *RedisCacheDB) Set(ctx context.Context, key string, value interface{}, e
 func (c *RedisCacheDB) Get(ctx context.Context, key string) (string, error) {
 	val, err := c.db.Get(ctx, key).Result()
 	if err != nil {
-		if err.Error() == "redis: nil" {
+		if err == redis.Nil {
 			return "", nil
 		}
 		return "", err
@@ -85,7 +99,15 @@ func (c *RedisCacheDB) HSet(ctx context.Context, key string, values ...interface
 }
 
 func (c *RedisCacheDB) HGet(ctx context.Context, key, field string) (string, error) {
-	return c.db.HGet(ctx, key, field).Result()
+	val, err := c.db.HGet(ctx, key, field).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return "", nil
+		}
+		return "", err
+	}
+
+	return val, nil
 }
 
 func (c *RedisCacheDB) HDel(ctx context.Context, key string, fields ...string) error {
@@ -95,6 +117,11 @@ func (c *RedisCacheDB) HDel(ctx context.Context, key string, fields ...string) e
 
 func (c *RedisCacheDB) SAdd(ctx context.Context, key string, members ...interface{}) error {
 	_, err := c.db.SAdd(ctx, key, members...).Result()
+	return err
+}
+
+func (c *RedisCacheDB) SRem(ctx context.Context, key string, members ...interface{}) error {
+	_, err := c.db.SRem(ctx, key, members...).Result()
 	return err
 }
 

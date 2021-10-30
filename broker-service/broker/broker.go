@@ -2,6 +2,7 @@ package broker
 
 import (
 	"context"
+	"github.com/tsmweb/broker-service/broker/group"
 	"github.com/tsmweb/broker-service/broker/message"
 	"github.com/tsmweb/broker-service/broker/user"
 	"github.com/tsmweb/broker-service/config"
@@ -17,17 +18,21 @@ type Broker struct {
 	chUserPresence         chan user.User
 	chMessage              chan message.Message
 	chOfflineMessage       chan message.Message
+	chGroupEvent           chan group.Event
 	chError                chan ErrorEvent
 	userDecoder            user.Decoder
 	msgDecoder             message.Decoder
+	groupEventDecoder      group.EventDecoder
 	userConsumer           kafka.Consumer
 	userPresenceConsumer   kafka.Consumer
 	messageConsumer        kafka.Consumer
 	offlineMessageConsumer kafka.Consumer
+	groupEventConsumer     kafka.Consumer
 	userHandler            UserHandler
 	userPresenceHandler    UserPresenceHandler
 	messageHandler         MessageHandler
 	offlineMessageHandler  OfflineMessageHandler
+	groupEventHandler      GroupEventHandler
 	errorHandler           ErrorHandler
 }
 
@@ -36,14 +41,17 @@ func NewBroker(
 	ctx context.Context,
 	userDecoder user.Decoder,
 	msgDecoder message.Decoder,
+	groupEventDecoder group.EventDecoder,
 	userConsumer kafka.Consumer,
 	userPresenceConsumer kafka.Consumer,
 	messageConsumer kafka.Consumer,
 	offlineMessageConsumer kafka.Consumer,
+	groupEventConsumer kafka.Consumer,
 	userHandler UserHandler,
 	userPresenceHandler UserPresenceHandler,
 	messageHandler MessageHandler,
 	offlineMessageHandler OfflineMessageHandler,
+	groupEventHandler GroupEventHandler,
 	errorHandler ErrorHandler,
 ) *Broker {
 	broker := &Broker{
@@ -52,17 +60,21 @@ func NewBroker(
 		chUserPresence:         make(chan user.User),
 		chMessage:              make(chan message.Message),
 		chOfflineMessage:       make(chan message.Message),
+		chGroupEvent:           make(chan group.Event),
 		chError:                make(chan ErrorEvent),
 		userDecoder:            userDecoder,
 		msgDecoder:             msgDecoder,
+		groupEventDecoder:      groupEventDecoder,
 		userConsumer:           userConsumer,
 		userPresenceConsumer:   userPresenceConsumer,
 		messageConsumer:        messageConsumer,
 		offlineMessageConsumer: offlineMessageConsumer,
+		groupEventConsumer:     groupEventConsumer,
 		userHandler:            userHandler,
 		userPresenceHandler:    userPresenceHandler,
 		messageHandler:         messageHandler,
 		offlineMessageHandler:  offlineMessageHandler,
+		groupEventHandler:      groupEventHandler,
 		errorHandler:           errorHandler,
 	}
 
@@ -78,6 +90,7 @@ func (b *Broker) Start() {
 	go b.usersPresenceConsumer()
 	go b.messagesConsumer()
 	go b.offlineMessagesConsumer()
+	go b.groupEventsConsumer()
 	b.messageProcessor()
 }
 
@@ -102,6 +115,9 @@ loop:
 
 		case msg := <-b.chOfflineMessage:
 			b.executor.Schedule(b.offlineMessageTask(msg))
+
+		case evt := <-b.chGroupEvent:
+			b.executor.Schedule(b.groupEventTask(evt))
 
 		case err := <-b.chError:
 			b.executor.Schedule(b.errorTask(err))
@@ -198,6 +214,27 @@ func (b *Broker) offlineMessagesConsumer() {
 	b.offlineMessageConsumer.Subscribe(b.ctx, callbackFn)
 }
 
+func (b *Broker) groupEventsConsumer() {
+	defer b.groupEventConsumer.Close()
+
+	callbackFn := func(event *kafka.Event, err error) {
+		if err != nil {
+			b.chError <- *NewErrorEvent("", "Broker.groupEventsConsumer()", err.Error())
+			return
+		}
+
+		var groupEvent group.Event
+		if err := b.groupEventDecoder.Unmarshal(event.Value, &groupEvent); err != nil {
+			b.chError <- *NewErrorEvent("", "Broker.groupEventsConsumer()", err.Error())
+			return
+		}
+
+		b.chGroupEvent <- groupEvent
+	}
+
+	b.groupEventConsumer.Subscribe(b.ctx, callbackFn)
+}
+
 func (b *Broker) userTask(usr user.User) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		if err := b.userHandler.Execute(ctx, usr, b.chMessage); err != nil {
@@ -225,6 +262,14 @@ func (b *Broker) messageTask(msg message.Message) func(ctx context.Context) {
 func (b *Broker) offlineMessageTask(msg message.Message) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		if err := b.offlineMessageHandler.Execute(ctx, msg); err != nil {
+			b.chError <- *err
+		}
+	}
+}
+
+func (b *Broker) groupEventTask(evt group.Event) func(ctx context.Context) {
+	return func(ctx context.Context) {
+		if err := b.groupEventHandler.Execute(ctx, evt); err != nil {
 			b.chError <- *err
 		}
 	}

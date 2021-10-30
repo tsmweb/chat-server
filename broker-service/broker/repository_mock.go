@@ -93,6 +93,27 @@ func (m *mockMessageRepository) GetAllGroupMembers(ctx context.Context, groupID 
 	return args.Get(0).([]string), nil
 }
 
+// RemoveGroupFromCache represents the simulated method for the RemoveGroupFromCache
+// feature in the message.Repository layer.
+func (m *mockMessageRepository) RemoveGroupFromCache(ctx context.Context, groupID string) error {
+	args := m.Called(ctx, groupID)
+	return args.Error(0)
+}
+
+// AddGroupMemberToCache represents the simulated method for the AddGroupMemberToCache
+// feature in the message.Repository layer.
+func (m *mockMessageRepository) AddGroupMemberToCache(ctx context.Context, groupID, memberID string) error {
+	args := m.Called(ctx, groupID, memberID)
+	return args.Error(0)
+}
+
+// RemoveGroupMemberFromCache represents the simulated method for the RemoveGroupMemberFromCache
+// feature in the message.Repository layer.
+func (m *mockMessageRepository) RemoveGroupMemberFromCache(ctx context.Context, groupID, memberID string) error {
+	args := m.Called(ctx, groupID, memberID)
+	return args.Error(0)
+}
+
 // GetAllMessages represents the simulated method for the GetAllMessages
 // feature in the message.Repository layer.
 func (m *mockMessageRepository) GetAllMessages(ctx context.Context, userID string) ([]*message.Message, error){

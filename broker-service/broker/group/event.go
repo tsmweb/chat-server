@@ -55,26 +55,17 @@ type Event struct {
 	EventDate time.Time
 }
 
-// NewEvent return an instance of Event.
-func NewEvent(groupID, memberID string, event EventType) *Event {
-	return &Event{
-		GroupID:   groupID,
-		MemberID:  memberID,
-		Event:     event.String(),
-		EventDate: time.Now().UTC(),
-	}
+// EventDecoder is a byte slice decoder for group.Event.
+type EventDecoder interface {
+	Unmarshal(in []byte, evt *Event) error
 }
 
-// EventEncoder is a Event encoder for byte slice
-type EventEncoder interface {
-	Marshal(e *Event) ([]byte, error)
-}
+// The EventDecoderFunc type is an adapter to allow the use of ordinary functions as decoders of
+// byte slice for group.Event.
+// If f is a function with the appropriate signature, EventDecoderFunc(f) is a Decoder that calls f.
+type EventDecoderFunc func(in []byte, evt *Event) error
 
-// The EventEncoderFunc type is an adapter to allow the use of ordinary functions as encoders of Event for byte slice.
-// If f is a function with the appropriate signature, EventEncoderFunc(f) is a Encoder that calls f.
-type EventEncoderFunc func(e *Event) ([]byte, error)
-
-// Marshal calls f(e).
-func (f EventEncoderFunc) Marshal(e *Event) ([]byte, error) {
-	return f(e)
+// Unmarshal calls f(in, m).
+func (f EventDecoderFunc) Unmarshal(in []byte, evt *Event) error {
+	return f(in, evt)
 }
