@@ -199,6 +199,20 @@ func (r *userRepository) isBlockedUser(ctx context.Context, userID string, block
 	return _blockedUserID == blockedUserID, nil
 }
 
+// UpdateBlockedUserCache refresh blocked users cache.
+func (r *userRepository) UpdateBlockedUserCache(ctx context.Context, userID string,
+	blockedUserID string, blocked bool) error {
+	_blockedUserKey := fmt.Sprintf(blockedUserKey, userID, blockedUserID)
+
+	if r.cache.Key(ctx, _blockedUserKey) {
+		if err := r.cache.Set(ctx, _blockedUserKey, strconv.FormatBool(blocked), blockedUserExpiration); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // GetAllContactsOnline returns all online contacts by userID.
 func (r *userRepository) GetAllContactsOnline(ctx context.Context, userID string) ([]string, error) {
 	stmt, err := r.database.DB().PrepareContext(ctx, `

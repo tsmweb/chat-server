@@ -3,7 +3,7 @@ package group;
 
 option go_package = "/protobuf";
 
-enum EventType {
+enum GroupEventType {
   DeleteGroup = 0;
   UpdateGroup = 1;
   AddAdmin = 2;
@@ -15,6 +15,6 @@ enum EventType {
 message GroupEvent {
   string group_id = 1;
   string member_id = 2;
-  EventType event = 3;
+  GroupEventType event = 3;
   int64 event_date = 4;
 }

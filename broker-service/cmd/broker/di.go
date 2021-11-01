@@ -32,14 +32,16 @@ func (p *Provider) BrokerProvider() *broker.Broker {
 		userDecoder := user.DecoderFunc(adapter.UserUnmarshal)
 		messageEncoder := message.EncoderFunc(adapter.MessageMarshal)
 		messageDecoder := message.DecoderFunc(adapter.MessageUnmarshal)
-		groupEventDecoder := group.EventDecoderFunc(adapter.EventUnmarshal)
+		groupEventDecoder := group.EventDecoderFunc(adapter.GroupEventUnmarshal)
+		userEventDecoder := user.EventDecoderFunc(adapter.UserEventUnmarshal)
 		errorEncoder := broker.ErrorEventEncoderFunc(adapter.ErrorEventMarshal)
 
 		userConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(), config.KafkaUsersTopic())
-		userPresenceConsumer := p.KafkaProvider().NewConsumer("", config.KafkaUsersPresenceTopic())
+		userPresenceConsumer := p.KafkaProvider().NewConsumer(config.KafkaClientID(), config.KafkaUsersPresenceTopic())
 		messageConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(), config.KafkaNewMessagesTopic())
 		offMessageConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(), config.KafkaOffMessagesTopic())
-		groupEventConsumer := p.KafkaProvider().NewConsumer("", config.KafkaGroupEventTopic())
+		groupEventConsumer := p.KafkaProvider().NewConsumer(config.KafkaClientID(), config.KafkaGroupEventTopic())
+		userEventConsumer := p.KafkaProvider().NewConsumer(config.KafkaClientID(), config.KafkaContactEventTopic())
 		errorProducer := p.KafkaProvider().NewProducer(config.KafkaErrorsTopic())
 
 		userRepository := repository.NewUserRepository(p.DatabaseProvider(), p.CacheDBProvider())
@@ -50,6 +52,7 @@ func (p *Provider) BrokerProvider() *broker.Broker {
 		messageHandler := broker.NewMessageHandler(userRepository, messageRepository, p.KafkaProvider(), messageEncoder)
 		offMessageHandler := broker.NewOfflineMessageHandler(messageRepository)
 		groupEventHandler := broker.NewGroupEventHandler(messageRepository)
+		userEventHandler := broker.NewUserEventHandler(userRepository)
 		errorHandler := broker.NewErrorHandler(errorEncoder, errorProducer)
 
 		p.broker = broker.NewBroker(
@@ -57,16 +60,19 @@ func (p *Provider) BrokerProvider() *broker.Broker {
 			userDecoder,
 			messageDecoder,
 			groupEventDecoder,
+			userEventDecoder,
 			userConsumer,
 			userPresenceConsumer,
 			messageConsumer,
-			groupEventConsumer,
 			offMessageConsumer,
+			groupEventConsumer,
+			userEventConsumer,
 			userHandler,
 			userPresenceHandler,
 			messageHandler,
 			offMessageHandler,
 			groupEventHandler,
+			userEventHandler,
 			errorHandler,
 		)
 	}

@@ -19,9 +19,9 @@ func main() {
 	}(ctx, stop)
 
 	// Working directory
-	//workDir, _ := os.Getwd()
-	//config.Load(workDir)
-	config.Load("../../")
+	workDir, _ := os.Getwd()
+	config.Load(workDir)
+	//config.Load("../../")
 
 	// start broker service
 	provider := CreateProvider(ctx)

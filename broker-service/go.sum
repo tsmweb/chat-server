@@ -82,6 +82,8 @@ github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5Cc
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/tsmweb/go-helper-api v1.2.2 h1:+LHzAhzRZ7hQCDKWy+gxU9nCfic8PLmpkakboPVTiTo=
 github.com/tsmweb/go-helper-api v1.2.2/go.mod h1:02KxmEj4qkiGXVi31P+HhTcUKohVQCblLiM5PMR2oz0=
+github.com/tsmweb/go-helper-api v1.2.3 h1:VDEiGBL8pBeEHahyr6GqNqpFs/VzDY0u3lqbQvx7gg0=
+github.com/tsmweb/go-helper-api v1.2.3/go.mod h1:02KxmEj4qkiGXVi31P+HhTcUKohVQCblLiM5PMR2oz0=
 github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c h1:u40Z8hqBAAQyv+vATcGgV0YCnDjqSL7/q/JyPhhJSPk=
 github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c/go.mod h1:lB8K/P019DLNhemzwFU4jHLhdvlE6uDZjXFejJXr49I=
 github.com/xdg/stringprep v1.0.0 h1:d9X0esnoa3dFsV0FG35rAT0RIhYFlPq7MiP+DW89La0=

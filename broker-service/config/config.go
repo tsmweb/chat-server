@@ -31,6 +31,7 @@ var (
 	kafkaOffMessagesTopic   string
 	kafkaErrorsTopic        string
 	kafkaGroupEventTopic    string
+	kafkaContactEventTopic  string
 	kafkaHostTopic          string
 )
 
@@ -63,6 +64,7 @@ func Load(workDir string) {
 	kafkaOffMessagesTopic = os.Getenv("KAFKA_OFF_MESSAGES_TOPIC")
 	kafkaErrorsTopic = os.Getenv("KAFKA_ERRORS_TOPIC")
 	kafkaGroupEventTopic = os.Getenv("KAFKA_GROUP_EVENT_TOPIC")
+	kafkaContactEventTopic = os.Getenv("KAFKA_CONTACT_EVENT_TOPIC")
 	kafkaHostTopic = os.Getenv("KAFKA_HOST_TOPIC")
 }
 
@@ -144,6 +146,10 @@ func KafkaErrorsTopic() string {
 
 func KafkaGroupEventTopic() string {
 	return kafkaGroupEventTopic
+}
+
+func KafkaContactEventTopic() string {
+	return kafkaContactEventTopic
 }
 
 func KafkaHostTopic(serverID string) string {

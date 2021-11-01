@@ -52,6 +52,9 @@ type Repository interface {
 	// IsBlockedUser returns true if the message sending user was blocked and false otherwise.
 	IsBlockedUser(ctx context.Context, userID string, blockedUserID string) (bool, error)
 
+	// UpdateBlockedUserCache refresh blocked users cache.
+	UpdateBlockedUserCache(ctx context.Context, userID string, blockedUserID string, blocked bool) error
+
 	// GetAllContactsOnline returns all online contacts by userID.
 	GetAllContactsOnline(ctx context.Context, userID string) ([]string, error)
 

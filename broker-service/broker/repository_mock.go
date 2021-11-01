@@ -57,6 +57,14 @@ func (m *mockUserRepository) IsBlockedUser(ctx context.Context, fromID string, t
 	return args.Get(0).(bool), nil
 }
 
+// UpdateBlockedUserCache represents the simulated method for the UpdateBlockedUserCache feature
+// in the user.Repository layer.
+func (m *mockUserRepository) UpdateBlockedUserCache(ctx context.Context, userID string, blockedUserID string,
+	blocked bool) error {
+	args := m.Called(ctx, userID, blockedUserID, blocked)
+	return args.Error(0)
+}
+
 // GetAllContactsOnline represents the simulated method for the GetAllContactsOnline
 // feature in the user.Repository layer.
 func (m *mockUserRepository) GetAllContactsOnline(ctx context.Context, userID string) ([]string, error) {
