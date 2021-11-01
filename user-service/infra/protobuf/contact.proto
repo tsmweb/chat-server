@@ -1,0 +1,16 @@
+syntax = "proto3";
+package contact;
+
+option go_package = "/protobuf";
+
+enum ContactEventType {
+  BlockUser = 0;
+  UnblockUser = 1;
+}
+
+message ContactEvent {
+  string user_id = 1;
+  string contact_id = 2;
+  ContactEventType event = 3;
+  int64 event_date = 4;
+}

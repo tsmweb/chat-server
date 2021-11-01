@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/tsmweb/go-helper-api/cerror"
+	"github.com/tsmweb/go-helper-api/kafka"
 	"time"
 )
 
@@ -14,11 +15,21 @@ type BlockUseCase interface {
 
 type blockUseCase struct {
 	repository Repository
+	encoder    EventEncoder
+	producer   kafka.Producer
 }
 
 // NewBlockUseCase create a new instance of BlockUseCase.
-func NewBlockUseCase(r Repository) BlockUseCase {
-	return &blockUseCase{repository: r}
+func NewBlockUseCase(
+	repository Repository,
+	encoder EventEncoder,
+	producer kafka.Producer,
+) BlockUseCase {
+	return &blockUseCase{
+		repository: repository,
+		encoder:    encoder,
+		producer:   producer,
+	}
 }
 
 // Execute perform the block use case.
@@ -39,5 +50,22 @@ func (u *blockUseCase) Execute(ctx context.Context, userID, blockedUserID string
 		return err
 	}
 
+	if err = u.notify(ctx, userID, blockedUserID); err != nil {
+		return &ErrEventNotification{Msg: err.Error()}
+	}
+
+	return nil
+}
+
+func (u *blockUseCase) notify(ctx context.Context, userID, contactID string) error {
+	event := NewEvent(userID, contactID, EventBlockUser)
+	epb, err := u.encoder.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	if err = u.producer.Publish(ctx, []byte(userID), epb); err != nil {
+		return err
+	}
 	return nil
 }

@@ -10,18 +10,19 @@ import (
 )
 
 var (
-	dbHost                string
-	dbPort                int
-	dbUser                string
-	dbPassword            string
-	dbName                string
-	dbSchema              string
-	serverPort            int
-	privateKey            string
-	publicKey             string
-	kafkaBootstrapServers string
-	kafkaClientID         string
-	kafkaGroupEventTopic  string
+	dbHost                 string
+	dbPort                 int
+	dbUser                 string
+	dbPassword             string
+	dbName                 string
+	dbSchema               string
+	serverPort             int
+	privateKey             string
+	publicKey              string
+	kafkaBootstrapServers  string
+	kafkaClientID          string
+	kafkaGroupEventTopic   string
+	kafkaContactEventTopic string
 )
 
 func Load(workDir string) {
@@ -45,6 +46,7 @@ func Load(workDir string) {
 	kafkaBootstrapServers = os.Getenv("KAFKA_BOOTSTRAP_SERVERS")
 	kafkaClientID = os.Getenv("KAFKA_CLIENT_ID")
 	kafkaGroupEventTopic = os.Getenv("KAFKA_GROUP_EVENT_TOPIC")
+	kafkaContactEventTopic = os.Getenv("KAFKA_CONTACT_EVENT_TOPIC")
 }
 
 func PathPrivateKey() string {
@@ -93,4 +95,8 @@ func KafkaClientID() string {
 
 func KafkaGroupEventTopic() string {
 	return kafkaGroupEventTopic
+}
+
+func KafkaContactEventTopic() string {
+	return kafkaContactEventTopic
 }

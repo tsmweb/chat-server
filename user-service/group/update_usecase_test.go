@@ -17,7 +17,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 	encode.On("Marshal", mock.Anything).
 		Return([]byte{}, nil)
 
-	producer := new(mockProducer)
+	producer := new(common.MockKafkaProducer)
 	producer.On("Publish", mock.Anything, mock.Anything, mock.Anything).
 		Return(nil)
 
@@ -107,7 +107,7 @@ func TestUpdateUseCase_Execute(t *testing.T) {
 
 		r.On("Update", mock.Anything, mock.Anything).
 			Return(true, nil)
-		p := new(mockProducer)
+		p := new(common.MockKafkaProducer)
 		p.On("Publish", mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("error"))
 

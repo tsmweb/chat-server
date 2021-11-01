@@ -5,12 +5,21 @@ import (
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/tsmweb/user-service/common"
 	"testing"
 )
 
 func TestUnblockUseCase_Execute(t *testing.T) {
 	//t.Parallel()
 	ctx := context.Background()
+
+	encode := new(mockEventEncoder)
+	encode.On("Marshal", mock.Anything).
+		Return([]byte{}, nil)
+
+	producer := new(common.MockKafkaProducer)
+	producer.On("Publish", mock.Anything, mock.Anything, mock.Anything).
+		Return(nil)
 
 	t.Run("when use case fails with ErrUserNotFound", func(t *testing.T) {
 		//t.Parallel()
@@ -19,7 +28,7 @@ func TestUnblockUseCase_Execute(t *testing.T) {
 			Return(false, nil).
 			Once()
 
-		uc := NewUnblockUseCase(r)
+		uc := NewUnblockUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "+5518999999999", "+5518977777777")
 
 		assert.Equal(t, ErrUserNotFound, err)
@@ -32,9 +41,20 @@ func TestUnblockUseCase_Execute(t *testing.T) {
 			Return(false, errors.New("error")).
 			Once()
 
-		uc := NewUnblockUseCase(r)
+		uc := NewUnblockUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "+5518999999999", "+5518977777777")
+		assert.NotNil(t, err)
 
+		r.On("Unblock", mock.Anything, mock.Anything, mock.Anything).
+			Return(true, nil).
+			Once()
+		p := new(common.MockKafkaProducer)
+		p.On("Publish", mock.Anything, mock.Anything, mock.Anything).
+			Return(errors.New("error")).
+			Once()
+
+		uc = NewUnblockUseCase(r, encode, p)
+		err = uc.Execute(ctx, "+5518999999999", "+5518977777777")
 		assert.NotNil(t, err)
 	})
 
@@ -45,7 +65,7 @@ func TestUnblockUseCase_Execute(t *testing.T) {
 			Return(true, nil).
 			Once()
 
-		uc := NewUnblockUseCase(r)
+		uc := NewUnblockUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "+5518999999999", "+5518977777777")
 
 		assert.Nil(t, err)

@@ -6,12 +6,21 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/tsmweb/go-helper-api/cerror"
+	"github.com/tsmweb/user-service/common"
 	"testing"
 )
 
 func TestBlockUseCase_Execute(t *testing.T) {
 	//t.Parallel()
 	ctx := context.Background()
+
+	encode := new(mockEventEncoder)
+	encode.On("Marshal", mock.Anything).
+		Return([]byte{}, nil)
+
+	producer := new(common.MockKafkaProducer)
+	producer.On("Publish", mock.Anything, mock.Anything, mock.Anything).
+		Return(nil)
 
 	t.Run("when use case fails with ErrUserNotFound", func(t *testing.T) {
 		//t.Parallel()
@@ -20,7 +29,7 @@ func TestBlockUseCase_Execute(t *testing.T) {
 			Return(false, nil).
 			Once()
 
-		uc := NewBlockUseCase(r)
+		uc := NewBlockUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "+5518999999999", "+5518977777777")
 
 		assert.Equal(t, ErrUserNotFound, err)
@@ -36,7 +45,7 @@ func TestBlockUseCase_Execute(t *testing.T) {
 			Return(cerror.ErrRecordAlreadyRegistered).
 			Once()
 
-		uc := NewBlockUseCase(r)
+		uc := NewBlockUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "+5518999999999", "+5518977777777")
 
 		assert.Equal(t, ErrContactAlreadyBlocked, err)
@@ -49,20 +58,29 @@ func TestBlockUseCase_Execute(t *testing.T) {
 			Return(false, errors.New("error")).
 			Once()
 
-		uc := NewBlockUseCase(r)
+		uc := NewBlockUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "+5518999999999", "+5518977777777")
-
 		assert.NotNil(t, err)
 
 		r.On("ExistsUser", mock.Anything, mock.Anything).
-			Return(true, nil).
-			Once()
+			Return(true, nil)
 		r.On("Block", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("error")).
 			Once()
 
 		err = uc.Execute(ctx, "+5518999999999", "+5518977777777")
+		assert.NotNil(t, err)
 
+		r.On("Block", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(nil).
+			Once()
+		p := new(common.MockKafkaProducer)
+		p.On("Publish", mock.Anything, mock.Anything, mock.Anything).
+			Return(errors.New("error")).
+			Once()
+
+		uc = NewBlockUseCase(r, encode, p)
+		err = uc.Execute(ctx, "+5518999999999", "+5518977777777")
 		assert.NotNil(t, err)
 	})
 
@@ -76,7 +94,7 @@ func TestBlockUseCase_Execute(t *testing.T) {
 			Return(nil).
 			Once()
 
-		uc := NewBlockUseCase(r)
+		uc := NewBlockUseCase(r, encode, producer)
 		err := uc.Execute(ctx, "+5518999999999", "+5518977777777")
 
 		assert.Nil(t, err)

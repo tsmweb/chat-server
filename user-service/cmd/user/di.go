@@ -28,14 +28,17 @@ func CreateProvider() *Provider {
 func (p *Provider) ContactRouter(mr *mux.Router) {
 	database := p.DatabaseProvider()
 	repo := repository.NewContactRepositoryPostgres(database)
+	encoder := contact.EventEncoderFunc(adapter.ContactEventMarshal)
+	producer := p.KafkaProvider().NewProducer(config.KafkaContactEventTopic())
+
 	getUseCase := contact.NewGetUseCase(repo)
 	getAllUseCase := contact.NewGetAllUseCase(repo)
 	getPresenceUseCase := contact.NewGetPresenceUseCase(repo)
 	createUseCase := contact.NewCreateUseCase(repo)
 	updateUseCase := contact.NewUpdateUseCase(repo)
 	deleteUseCase := contact.NewDeleteUseCase(repo)
-	blockUseCase := contact.NewBlockUseCase(repo)
-	unblockUseCase := contact.NewUnblockUseCase(repo)
+	blockUseCase := contact.NewBlockUseCase(repo, encoder, producer)
+	unblockUseCase := contact.NewUnblockUseCase(repo, encoder, producer)
 
 	handler.MakeContactRouters(
 		mr,
@@ -54,7 +57,7 @@ func (p *Provider) ContactRouter(mr *mux.Router) {
 func (p *Provider) GroupRouter(mr *mux.Router) {
 	database := p.DatabaseProvider()
 	repo := repository.NewGroupRepositoryPostgres(database)
-	encoder := group.EventEncoderFunc(adapter.EventMarshal)
+	encoder := group.EventEncoderFunc(adapter.GroupEventMarshal)
 	producer := p.KafkaProvider().NewProducer(config.KafkaGroupEventTopic())
 
 	getUseCase := group.NewGetUseCase(repo)
