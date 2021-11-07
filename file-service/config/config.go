@@ -1,0 +1,131 @@
+package config
+
+import (
+	"log"
+	"os"
+	"path"
+	"path/filepath"
+	"strconv"
+
+	"github.com/joho/godotenv"
+)
+
+var (
+	serverPort      int
+	dbHost          string
+	dbPort          int
+	dbUser          string
+	dbPassword      string
+	dbName          string
+	dbSchema        string
+	maxUploadSize   int64
+	privateKey      string
+	publicKey       string
+	filePath        string
+	userFilePath    string
+	groupFilePath   string
+	messageFilePath string
+)
+
+func Load(workDir string) error {
+	if err := godotenv.Load(path.Join(workDir, "/.env")); err != nil {
+		log.Fatalf("Error loading .env file [%s]", workDir)
+	}
+
+	_serverPort, err := strconv.Atoi(os.Getenv("SERVER_PORT"))
+	if err != nil {
+		return err
+	}
+	serverPort =_serverPort
+
+	_maxUploadSize, err := strconv.Atoi(os.Getenv("MAX_UPLOAD_SIZE"))
+	if err != nil {
+		return err
+	}
+	maxUploadSize = int64(1024 * 1024 * _maxUploadSize)
+
+	filePath = filepath.Join(workDir, "files")
+	userFilePath = filepath.Join(filePath, "user")
+	groupFilePath = filepath.Join(filePath, "group")
+	messageFilePath = filepath.Join(filePath, "message")
+
+	if err := os.MkdirAll(userFilePath, os.ModePerm); err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(groupFilePath, os.ModePerm); err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(messageFilePath, os.ModePerm); err != nil {
+		return err
+	}
+
+	dbHost = os.Getenv("DB_HOST")
+	dbPort, _ = strconv.Atoi(os.Getenv("DB_PORT"))
+	dbUser = os.Getenv("DB_USER")
+	dbPassword = os.Getenv("DB_PASSWORD")
+	dbName = os.Getenv("DB_DATABASE")
+	dbSchema = os.Getenv("DB_SCHEMA")
+
+	privateKey = workDir + "/config/keys/private-key"
+	publicKey = workDir + "/config/keys/public-key.pub"
+
+	return nil
+}
+
+func ServerPort() int {
+	return serverPort
+}
+
+func DBHost() string {
+	return dbHost
+}
+
+func DBPort() int {
+	return dbPort
+}
+
+func DBUser() string {
+	return dbUser
+}
+
+func DBPassword() string {
+	return dbPassword
+}
+
+func DBName() string {
+	return dbName
+}
+
+func DBSchema() string {
+	return dbSchema
+}
+
+func MaxUploadSize() int64 {
+	return maxUploadSize
+}
+
+func PathPrivateKey() string {
+	return privateKey
+}
+
+func PathPublicKey() string {
+	return publicKey
+}
+
+func FilePath() string {
+	return filePath
+}
+
+func UserFilePath() string {
+	return userFilePath
+}
+
+func GroupFilePath() string {
+	return groupFilePath
+}
+
+func MessageFilePath() string {
+	return messageFilePath
+}

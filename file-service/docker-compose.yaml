@@ -1,0 +1,21 @@
+version: "3"
+
+services:
+  app:
+    container_name: file-service
+    build: .
+    ports:
+      - "8083:8083"
+    volumes:
+      - .:/go/src
+    environment:
+      SERVER_PORT: 8083
+      DB_HOST: host.docker.internal
+      DB_PORT: 5432
+      DB_DATABASE: chat_db
+      DB_SCHEMA: chat_db
+      DB_USER: salesapi
+      DB_PASSWORD: password
+      MAX_UPLOAD_SIZE: 10
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"
