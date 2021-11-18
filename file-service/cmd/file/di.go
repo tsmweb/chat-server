@@ -40,6 +40,13 @@ func (p *Provider) GroupRouter(mr *mux.Router) {
 		validateUseCase)
 }
 
+func (p *Provider) MediaRouter(mr *mux.Router) {
+	handler.MakeMediaHandlers(
+		mr,
+		p.JwtProvider(),
+		p.AuthProvider())
+}
+
 func (p *Provider) JwtProvider() auth.JWT {
 	if p.jwt == nil {
 		p.jwt = auth.NewJWT(config.PathPrivateKey(), config.PathPublicKey())

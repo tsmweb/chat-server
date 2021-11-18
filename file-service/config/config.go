@@ -14,17 +14,17 @@ var (
 	serverPort      int
 	dbHost          string
 	dbPort          int
-	dbUser          string
-	dbPassword      string
-	dbName          string
-	dbSchema        string
-	maxUploadSize   int64
-	privateKey      string
-	publicKey       string
-	filePath        string
-	userFilePath    string
-	groupFilePath   string
-	messageFilePath string
+	dbUser        string
+	dbPassword    string
+	dbName        string
+	dbSchema      string
+	maxUploadSize int64
+	privateKey    string
+	publicKey     string
+	filePath      string
+	userFilePath  string
+	groupFilePath string
+	mediaFilePath string
 )
 
 func Load(workDir string) error {
@@ -47,7 +47,7 @@ func Load(workDir string) error {
 	filePath = filepath.Join(workDir, "files")
 	userFilePath = filepath.Join(filePath, "user")
 	groupFilePath = filepath.Join(filePath, "group")
-	messageFilePath = filepath.Join(filePath, "message")
+	mediaFilePath = filepath.Join(filePath, "media")
 
 	if err := os.MkdirAll(userFilePath, os.ModePerm); err != nil {
 		return err
@@ -57,7 +57,7 @@ func Load(workDir string) error {
 		return err
 	}
 
-	if err := os.MkdirAll(messageFilePath, os.ModePerm); err != nil {
+	if err := os.MkdirAll(mediaFilePath, os.ModePerm); err != nil {
 		return err
 	}
 
@@ -106,6 +106,10 @@ func MaxUploadSize() int64 {
 	return maxUploadSize
 }
 
+func SetMaxUploadSize(size int64) {
+	maxUploadSize = 1024 * size
+}
+
 func PathPrivateKey() string {
 	return privateKey
 }
@@ -126,6 +130,6 @@ func GroupFilePath() string {
 	return groupFilePath
 }
 
-func MessageFilePath() string {
-	return messageFilePath
+func MediaFilePath() string {
+	return mediaFilePath
 }

@@ -24,6 +24,7 @@ func main() {
 	provider := CreateProvider()
 	provider.UserRouter(router)
 	provider.GroupRouter(router)
+	provider.MediaRouter(router)
 
 	handler := middleware.GZIP(router)
 	handler = middleware.CORS(handler)
