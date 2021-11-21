@@ -179,7 +179,7 @@ func (s *Server) messageConsumer() {
 	defer s.consumeMessage.Close()
 
 	callbackFn := func(event *kafka.Event, err error) {
-		if err != nil {
+		if err != nil && err.Error() != "nil" {
 			s.chError <- *NewErrorEvent("", "Server.messageConsumer()", err.Error())
 			return
 		}

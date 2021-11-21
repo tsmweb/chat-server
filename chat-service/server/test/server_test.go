@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/tsmweb/chat-service/adapter"
 	"github.com/tsmweb/chat-service/config"
 	"github.com/tsmweb/chat-service/pkg/epoll"
@@ -20,20 +22,19 @@ import (
 	"time"
 )
 
-func TestServer(t *testing.T) {
-	const (
-		UserTest1 = "+5518911111111"
-		UserTest2 = "+5518922222222"
-		UserTest3 = "+5518933333333"
-	)
+const (
+	userTest1 = "+5518911111111"
+	userTest2 = "+5518922222222"
+)
 
+func TestServer(t *testing.T) {
 	c := initServer(t)
 
 	ln := runServerTest(t, c)
 	defer ln.Close()
 
-	conn1 := newConnUser(t, ln.Addr().String(), UserTest1)
-	conn2 := newConnUser(t, ln.Addr().String(), UserTest2)
+	conn1 := newConnUser(t, ln.Addr().String(), userTest1)
+	conn2 := newConnUser(t, ln.Addr().String(), userTest2)
 	defer func() {
 		conn1.Close()
 		conn2.Close()
@@ -42,7 +43,7 @@ func TestServer(t *testing.T) {
 
 	t.Run("when the message is not valid", func(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
-		msg, _ := message.NewMessage(UserTest1, UserTest2, "", message.ContentTypeText, "hello")
+		msg, _ := message.NewMessage(userTest1, userTest2, "", message.ContentTypeText, "hello")
 		msg.ContentType = ""
 
 		if err := writerConn(conn1, msg); err != nil {
@@ -55,23 +56,9 @@ func TestServer(t *testing.T) {
 		assert.Equal(t, res.Content, message.ErrContentTypeValidateModel.Error())
 	})
 
-	t.Run("when UserTest1 was blocked by UserTest3", func(t *testing.T) {
+	t.Run("userTest2 sends message to userTest1", func(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
-		msg, _ := message.NewMessage(UserTest1, UserTest3, "", message.ContentTypeText, "hello")
-
-		if err := writerConn(conn1, msg); err != nil {
-			t.Fatalf("error send message writerConn(): %v", err)
-		}
-
-		res := readMessageFromConn(t, conn1)
-		t.Log(res)
-		assert.Equal(t, res.ID, msg.ID)
-		assert.Equal(t, res.Content, message.InvalidMessage)
-	})
-
-	t.Run("UserTest2 sends message to UserTest1", func(t *testing.T) {
-		time.Sleep(100 * time.Millisecond)
-		msg, _ := message.NewMessage(UserTest2, UserTest1, "", message.ContentTypeText, "hello test")
+		msg, _ := message.NewMessage(userTest2, userTest1, "", message.ContentTypeText, "hello test")
 
 		if err := writerConn(conn2, msg); err != nil {
 			t.Fatalf("error send message writerConn(): %v", err)
@@ -118,7 +105,7 @@ func readMessageFromConn(t *testing.T, conn net.Conn) *message.Message {
 
 func initServer(t *testing.T) *server.Server {
 	t.Helper()
-	config.Load("../")
+	config.Load("../../")
 
 	pollerConfig := epoll.ProviderPollerConfig(func(err error) {
 		go func(err error) {
@@ -136,14 +123,28 @@ func initServer(t *testing.T) *server.Server {
 	msgDecoder := message.DecoderFunc(adapter.MessageUnmarshal)
 	userEncoder := user.EncoderFunc(adapter.UserMarshal)
 	eventErrorEncoder := server.ErrorEventEncoderFunc(adapter.ErrorEventMarshal)
-	kaf := kafka.New([]string{config.KafkaBootstrapServers()}, config.KafkaClientID())
-	consumeMessage := kaf.NewConsumer(config.KafkaGroupID(), config.KafkaHostTopic())
-	handleMessage := server.NewHandleMessage(msgEncoder, kaf.NewProducer(config.KafkaNewMessagesTopic()))
-	handleOffMessage := server.NewHandleMessage(msgEncoder, kaf.NewProducer(config.KafkaOffMessagesTopic()))
-	handleUserStatus := server.NewHandleUserStatus(userEncoder,
-		kaf.NewProducer(config.KafkaUsersTopic()),
-		kaf.NewProducer(config.KafkaUsersPresenceTopic()))
-	handleError := server.NewHandleError(eventErrorEncoder, kaf.NewProducer(config.KafkaErrorsTopic()))
+
+	chEvent := make(chan kafka.Event)
+
+	consumeMessage := new(mockConsumer)
+	consumeMessage.On("Subscribe", mock.Anything, mock.MatchedBy(func(fn func(event *kafka.Event, err error)) bool {
+		evt := <-chEvent
+		fn(&evt, errors.New("nil"))
+		return true
+	}))
+
+	messageProducer := new(mockMessageProducer)
+	messageProducer.chEvent = chEvent
+	messageProducer.On("Publish", mock.Anything, mock.Anything, mock.Anything).
+		Return(nil)
+	handleMessage := server.NewHandleMessage(msgEncoder, messageProducer)
+
+	kafkaProducer := new(mockProducer)
+	kafkaProducer.On("Publish", mock.Anything, mock.Anything, mock.Anything).
+		Return(nil)
+	handleOffMessage := server.NewHandleMessage(msgEncoder, kafkaProducer)
+	handleUserStatus := server.NewHandleUserStatus(userEncoder, kafkaProducer, kafkaProducer)
+	handleError := server.NewHandleError(eventErrorEncoder, kafkaProducer)
 
 	serv := server.NewServer(
 		context.Background(),

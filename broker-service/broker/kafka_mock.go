@@ -48,7 +48,9 @@ type mockConsumer struct {
 }
 
 // Subscribe represents the simulated method for the Subscribe feature in the kafka.Consumer layer.
-func (m *mockConsumer) Subscribe(ctx context.Context, callbackFn func(event *kafka.Event, err error)) {}
+func (m *mockConsumer) Subscribe(ctx context.Context, callbackFn func(event *kafka.Event, err error)) {
+	m.Called(ctx, callbackFn)
+}
 
 // Close represents the simulated method for the Close feature in the kafka.Consumer layer.
 func (m *mockConsumer) Close() {}

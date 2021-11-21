@@ -11,7 +11,7 @@ import (
 
 const (
 	groupMembersKey        = "group:members:%s"
-	groupMembersExpiration = time.Minute * 15
+	groupMembersExpiration = time.Minute * 30
 
 	insertedStatusMessage  = "I"
 	processedStatusMessage = "P"

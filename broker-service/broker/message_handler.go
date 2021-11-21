@@ -44,7 +44,7 @@ func (h *messageHandler) Execute(ctx context.Context, msg message.Message) *Erro
 		return h.processGroupMessage(ctx, msg)
 	}
 
-	// checks if the recipient is a valid user.
+	// Checks if the addressee is a valid user.
 	ok, err := h.isValidUser(ctx, msg)
 	if err != nil {
 		return err
@@ -53,7 +53,7 @@ func (h *messageHandler) Execute(ctx context.Context, msg message.Message) *Erro
 		return nil
 	}
 
-	// check if the sender has been blocked by the recipient.
+	// Check if the sender has been blocked by the addressee.
 	ok, err = h.isBlockedUser(ctx, msg)
 	if err != nil {
 		return err
@@ -82,7 +82,7 @@ func (h *messageHandler) processGroupMessage(ctx context.Context, msg message.Me
 	var errEvents ErrorEvents
 
 	for _, member := range members {
-		if member == msg.From {
+		if member == msg.From { // sender
 			continue
 		}
 		m, _ := msg.ReplicateTo(member)
@@ -98,7 +98,7 @@ func (h *messageHandler) processGroupMessage(ctx context.Context, msg message.Me
 	return nil
 }
 
-// isValidUser checks if the recipient is a valid user.
+// isValidUser checks if the addressee is a valid user.
 func (h *messageHandler) isValidUser(ctx context.Context, msg message.Message) (bool, *ErrorEvent) {
 	ok, err := h.userRepository.IsValidUser(ctx, msg.To)
 	if err != nil {
@@ -106,7 +106,7 @@ func (h *messageHandler) isValidUser(ctx context.Context, msg message.Message) (
 	}
 	if !ok {
 		msgResponse := message.NewResponse(msg.ID, msg.From, "", message.ContentTypeError,
-			message.ErrMessageRecipientIsInvalid.Error())
+			message.ErrMessageAddresseeIsInvalid.Error())
 
 		return false, h.sendMessage(ctx, *msgResponse)
 	}
@@ -114,7 +114,7 @@ func (h *messageHandler) isValidUser(ctx context.Context, msg message.Message) (
 	return true, nil
 }
 
-// isBlockedUser check if the sender has been blocked by the recipient.
+// isBlockedUser check if the sender has been blocked by the addressee.
 func (h *messageHandler) isBlockedUser(ctx context.Context, msg message.Message) (bool, *ErrorEvent) {
 	ok, err := h.userRepository.IsBlockedUser(ctx, msg.To, msg.From)
 	if err != nil {

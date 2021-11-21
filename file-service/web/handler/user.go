@@ -29,7 +29,7 @@ func GetUserFile() http.Handler {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "image/jpeg")
+		w.Header().Set("Content-Type", httputil.MimeTypeText(httputil.MimeImageJPEG))
 		w.Header().Set("Content-Length", strconv.Itoa(len(fileBytes)))
 		w.Write(fileBytes)
 	})

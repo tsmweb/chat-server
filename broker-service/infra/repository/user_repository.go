@@ -19,7 +19,7 @@ const (
 	blockedUserKey        = "blocked:user:%s:%s"
 	blockedUserTrue       = "true"
 	blockedUserFalse      = "false"
-	blockedUserExpiration = time.Minute * 15
+	blockedUserExpiration = time.Minute * 30
 )
 
 // userRepository implementation for user.Repository interface.

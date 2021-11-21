@@ -11,11 +11,6 @@ import (
 	"time"
 )
 
-const (
-	InvalidMessage = "invalid message"
-	AckMessage     = "ack"
-)
-
 // ContentType represents the type of message content,
 // such as ContentTypeACK, ContentTypeText, ContentTypeMedia, ContentTypeStatus,
 // ContentTypeInfo and ContentTypeError.
@@ -92,7 +87,7 @@ var (
 	ErrDateValidateModel         = &cerror.ErrValidateModel{Msg: "required date"}
 	ErrContentTypeValidateModel  = &cerror.ErrValidateModel{Msg: "required content_type"}
 	ErrContentValidateModel      = &cerror.ErrValidateModel{Msg: "required content"}
-	ErrMessageRecipientIsInvalid = errors.New("message recipient is invalid")
+	ErrMessageAddresseeIsInvalid = errors.New("message addressee is invalid")
 	ErrMessageSendingBlocked     = errors.New("you were blocked by the recipient of this message")
 	ErrGroupIsInvalid            = errors.New("group is invalid")
 )
@@ -148,7 +143,7 @@ func newMessage(from string, to string, group string, date time.Time, contentTyp
 	return msg, nil
 }
 
-// ReplicateTo replicate the message to another recipient.
+// ReplicateTo replicate the message to another addressee.
 func (m *Message) ReplicateTo(to string) (*Message, error) {
 	return newMessage(m.From, to, m.Group, m.Date, m.ContentType, m.Content)
 }

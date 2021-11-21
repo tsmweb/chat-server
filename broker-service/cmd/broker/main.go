@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"github.com/tsmweb/broker-service/config"
 	"log"
 	"os"
 	"os/signal"
+
+	"github.com/tsmweb/broker-service/config"
 )
 
 func main() {
@@ -19,9 +20,9 @@ func main() {
 	}(ctx, stop)
 
 	// Working directory
-	workDir, _ := os.Getwd()
-	config.Load(workDir)
-	//config.Load("../../")
+	// workDir, _ := os.Getwd()
+	// config.Load(workDir)
+	config.Load("../../")
 
 	// start broker service
 	provider := CreateProvider(ctx)

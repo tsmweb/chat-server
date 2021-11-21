@@ -30,7 +30,7 @@ func NewUser(ID, name, lastname, password string) (*User, error) {
 		return p, err
 	}
 
-	pwd, err := hashutil.HashSHA1(password)
+	pwd, err := hashutil.HashSHA256(password)
 	if err != nil {
 		return p, err
 	}

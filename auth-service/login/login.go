@@ -35,7 +35,7 @@ func NewLogin(ID, password string) (*Login, error) {
 
 // ApplyHashPassword hashes the password in plain text.
 func (l *Login) ApplyHashPassword() error {
-	pwd, err := hashutil.HashSHA1(l.Password)
+	pwd, err := hashutil.HashSHA256(l.Password)
 	if err != nil {
 		return err
 	}

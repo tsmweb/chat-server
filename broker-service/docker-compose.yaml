@@ -37,6 +37,5 @@ services:
       KAFKA_GROUP_EVENT_TOPIC: GROUP_EVENTS
       KAFKA_CONTACT_EVENT_TOPIC: CONTACT_EVENTS
       KAFKA_HOST_TOPIC: MESSAGES
-
     extra_hosts:
       - "host.docker.internal:172.17.0.1"

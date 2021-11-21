@@ -20,7 +20,9 @@ func TestHandler_GetMediaFile(t *testing.T) {
 	}
 
 	t.Run("when handler.GetMediaFile return StatusNotFound", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/af4dabda998031f6ef8b52dd25e920f8e65f5812.jpg", mediaResource), nil)
+		req := httptest.NewRequest(http.MethodGet,
+			fmt.Sprintf("%s/9f2093abeecac621b55489bf8cb0e08ee00d5fe6da6f30e77214a648e58bd91a.jpg",
+				mediaResource), nil)
 		rec := httptest.NewRecorder()
 
 		handler := GetMediaFile()
@@ -33,7 +35,9 @@ func TestHandler_GetMediaFile(t *testing.T) {
 	})
 
 	t.Run("when handler.GetMediaFile return StatusOK", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/af4dabda998031f6ef8b52dd25e920f8e65f58db.jpg", mediaResource), nil)
+		req := httptest.NewRequest(http.MethodGet,
+			fmt.Sprintf("%s/9f2093abeecac621b55489bf8cb0e08ee00d5fe6da6f30e77214a648e58bd91b.jpg",
+				mediaResource), nil)
 		rec := httptest.NewRecorder()
 
 		handler := GetMediaFile()

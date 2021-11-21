@@ -11,7 +11,7 @@ type MockKafkaProducer struct {
 }
 
 // Publish represents the simulated method for the Publish feature in the kafka.Producer layer.
-func (m *MockKafkaProducer) Publish(ctx context.Context, key, value []byte) error {
+func (m *MockKafkaProducer) Publish(ctx context.Context, key []byte, value ...[]byte) error {
 	args := m.Called(ctx, key, value)
 	return args.Error(0)
 }

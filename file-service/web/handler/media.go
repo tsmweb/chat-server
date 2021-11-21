@@ -31,7 +31,6 @@ func GetMediaFile() http.Handler {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		//w.Header().Set("Content-Type", "image/jpeg")
 		w.Header().Set("Content-Length", strconv.Itoa(len(fileBytes)))
 		w.Write(fileBytes)
 	})
@@ -70,7 +69,7 @@ func UploadMediaFile(jwt auth.JWT) http.Handler {
 			return
 		}
 
-		fileNameHash, _ := hashutil.HashSHA1(fmt.Sprintf("%s%v", userID, time.Now().UnixNano()))
+		fileNameHash, _ := hashutil.HashSHA256(fmt.Sprintf("%s%v", userID, time.Now().UnixNano()))
 		fileName := fmt.Sprintf("%s.%s", fileNameHash, fileExtension)
 
 		// Creates the file on the local file system.

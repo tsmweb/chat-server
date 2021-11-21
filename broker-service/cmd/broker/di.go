@@ -16,7 +16,7 @@ import (
 type Provider struct {
 	ctx      context.Context
 	database db.Database
-	cache db.CacheDB
+	cache    db.CacheDB
 	kafka    kafka.Kafka
 	broker   *broker.Broker
 }
