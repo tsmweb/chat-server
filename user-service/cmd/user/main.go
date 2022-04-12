@@ -7,15 +7,17 @@ import (
 	"github.com/tsmweb/user-service/config"
 	"github.com/urfave/negroni"
 	"log"
+	"net/http"
+	"os"
 )
 
 func main() {
 	log.Println("[>] Starting server")
 
 	// Working directory
-	//workDir, _ := os.Getwd()
-	//config.Load(workDir)
-	config.Load("../../")
+	workDir, _ := os.Getwd()
+	config.Load(workDir)
+	//config.Load("../../")
 
 	router := mux.NewRouter()
 
@@ -30,6 +32,12 @@ func main() {
 	nr.Use(negroni.NewLogger())
 	nr.UseHandler(handler)
 
-	serverPort := config.ServerPort()
-	nr.Run(fmt.Sprintf(":%d", serverPort))
+	//nr.Run(fmt.Sprintf(":%d", config.ServerPort()))
+
+	log.Fatal(http.ListenAndServeTLS(
+		fmt.Sprintf(":%d", config.ServerPort()),
+		config.CertSecureFile(),
+		config.KeySecureFile(),
+		nr,
+	))
 }

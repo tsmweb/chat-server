@@ -85,7 +85,7 @@ func (p *Provider) GroupRouter(mr *mux.Router) {
 
 func (p *Provider) JwtProvider() auth.JWT {
 	if p.jwt == nil {
-		p.jwt = auth.NewJWT(config.PathPrivateKey(), config.PathPublicKey())
+		p.jwt = auth.NewJWT(config.KeySecureFile(), config.PubSecureFile())
 	}
 	return p.jwt
 }

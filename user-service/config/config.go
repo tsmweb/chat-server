@@ -17,8 +17,9 @@ var (
 	dbName                 string
 	dbSchema               string
 	serverPort             int
-	privateKey             string
-	publicKey              string
+	keySecureFile          string
+	pubSecureFile          string
+	certSecureFile         string
 	kafkaBootstrapServers  string
 	kafkaClientID          string
 	kafkaGroupEventTopic   string
@@ -40,8 +41,9 @@ func Load(workDir string) {
 
 	serverPort, _ = strconv.Atoi(os.Getenv("SERVER_PORT"))
 
-	privateKey = workDir + "/config/keys/private-key"
-	publicKey = workDir + "/config/keys/public-key.pub"
+	keySecureFile = workDir + "/config/cert/server.pem"
+	pubSecureFile = workDir + "/config/cert/server.pub"
+	certSecureFile = workDir + "/config/cert/server.crt"
 
 	kafkaBootstrapServers = os.Getenv("KAFKA_BOOTSTRAP_SERVERS")
 	kafkaClientID = os.Getenv("KAFKA_CLIENT_ID")
@@ -49,12 +51,16 @@ func Load(workDir string) {
 	kafkaContactEventTopic = os.Getenv("KAFKA_CONTACT_EVENT_TOPIC")
 }
 
-func PathPrivateKey() string {
-	return privateKey
+func KeySecureFile() string {
+	return keySecureFile
 }
 
-func PathPublicKey() string {
-	return publicKey
+func PubSecureFile() string {
+	return pubSecureFile
+}
+
+func CertSecureFile() string {
+	return certSecureFile
 }
 
 func ServerPort() int {
