@@ -7,6 +7,7 @@ import (
 	"github.com/tsmweb/go-helper-api/middleware"
 	"github.com/urfave/negroni"
 	"log"
+	"net/http"
 )
 
 func main() {
@@ -30,6 +31,12 @@ func main() {
 	nr.Use(negroni.NewLogger())
 	nr.UseHandler(handler)
 
-	serverPort := config.ServerPort()
-	nr.Run(fmt.Sprintf(":%d", serverPort))
+	//nr.Run(fmt.Sprintf(":%d", config.ServerPort()))
+
+	log.Fatal(http.ListenAndServeTLS(
+		fmt.Sprintf(":%d", config.ServerPort()),
+		config.CertSecureFile(),
+		config.KeySecureFile(),
+		nr,
+	))
 }

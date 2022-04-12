@@ -10,16 +10,17 @@ import (
 )
 
 var (
-	serverPort  int
-	dbHost      string
-	dbPort      int
-	dbUser      string
-	dbPassword  string
-	dbName      string
-	dbSchema    string
-	privateKey  string
-	publicKey   string
-	expireToken int
+	serverPort     int
+	dbHost         string
+	dbPort         int
+	dbUser         string
+	dbPassword     string
+	dbName         string
+	dbSchema       string
+	keySecureFile  string
+	pubSecureFile  string
+	certSecureFile string
+	expireToken    int
 )
 
 func Load(workDir string) {
@@ -36,8 +37,10 @@ func Load(workDir string) {
 
 	serverPort, _ = strconv.Atoi(os.Getenv("SERVER_PORT"))
 
-	privateKey = workDir + "/config/keys/private-key"
-	publicKey = workDir + "/config/keys/public-key.pub"
+	keySecureFile = workDir + "/config/cert/server.pem"
+	pubSecureFile = workDir + "/config/cert/server.pub"
+	certSecureFile = workDir + "/config/cert/server.crt"
+
 	expireToken, _ = strconv.Atoi(os.Getenv("EXPIRE_TOKEN")) //hour
 }
 
@@ -69,12 +72,16 @@ func DBSchema() string {
 	return dbSchema
 }
 
-func PathPrivateKey() string {
-	return privateKey
+func KeySecureFile() string {
+	return keySecureFile
 }
 
-func PathPublicKey() string {
-	return publicKey
+func PubSecureFile() string {
+	return pubSecureFile
+}
+
+func CertSecureFile() string {
+	return certSecureFile
 }
 
 func ExpireToken() int {

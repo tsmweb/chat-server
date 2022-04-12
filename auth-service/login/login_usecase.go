@@ -38,7 +38,11 @@ func (u *loginUseCase) Execute(ctx context.Context, ID, password string) (string
 		return "", cerror.ErrUnauthorized
 	}
 
-	token, err := u.jwt.GenerateToken(ID, config.ExpireToken())
+	payload := map[string]interface{}{
+		"id": ID,
+	}
+
+	token, err := u.jwt.GenerateToken(payload, config.ExpireToken())
 	if err != nil {
 		return "", err
 	}
