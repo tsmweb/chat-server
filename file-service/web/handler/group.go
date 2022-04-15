@@ -63,7 +63,7 @@ func GetGroupFile(jwt auth.JWT, validateUseCase group.ValidateUseCase) http.Hand
 	})
 }
 
-// UploadUserFile uploads an image to the group.
+// UploadGroupFile uploads an image to the group.
 func UploadGroupFile(jwt auth.JWT, validateUseCase group.ValidateUseCase) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Get user id.
@@ -83,7 +83,7 @@ func UploadGroupFile(jwt auth.JWT, validateUseCase group.ValidateUseCase) http.H
 
 		groupID := r.FormValue("id")
 
-		if err = validateUseCase.Execute(r.Context(), groupID, userID,true); err != nil {
+		if err = validateUseCase.Execute(r.Context(), groupID, userID, true); err != nil {
 			log.Println(err.Error())
 
 			if errors.Is(err, group.ErrGroupNotFound) {

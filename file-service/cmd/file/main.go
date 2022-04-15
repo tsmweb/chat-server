@@ -7,17 +7,21 @@ import (
 	"github.com/tsmweb/go-helper-api/middleware"
 	"github.com/urfave/negroni"
 	"log"
+	"net/http"
+	"os"
 )
 
 func main() {
 	log.Println("[>] starting server")
 
 	// Working directory
-	//workDir, _ := os.Getwd()
-	//config.Load(workDir)
-	if err := config.Load("../../"); err != nil {
+	workDir, _ := os.Getwd()
+	if err := config.Load(workDir); err != nil {
 		panic(err)
 	}
+	//if err := config.Load("../../"); err != nil {
+	//	panic(err)
+	//}
 
 	router := mux.NewRouter()
 
@@ -33,6 +37,12 @@ func main() {
 	nr.Use(negroni.NewLogger())
 	nr.UseHandler(handler)
 
-	serverPort := config.ServerPort()
-	nr.Run(fmt.Sprintf(":%d", serverPort))
+	//nr.Run(fmt.Sprintf(":%d", config.ServerPort()))
+
+	log.Fatal(http.ListenAndServeTLS(
+		fmt.Sprintf(":%d", config.ServerPort()),
+		config.CertSecureFile(),
+		config.KeySecureFile(),
+		nr,
+	))
 }

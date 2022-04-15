@@ -11,20 +11,21 @@ import (
 )
 
 var (
-	serverPort      int
-	dbHost          string
-	dbPort          int
-	dbUser        string
-	dbPassword    string
-	dbName        string
-	dbSchema      string
-	maxUploadSize int64
-	privateKey    string
-	publicKey     string
-	filePath      string
-	userFilePath  string
-	groupFilePath string
-	mediaFilePath string
+	serverPort     int
+	dbHost         string
+	dbPort         int
+	dbUser         string
+	dbPassword     string
+	dbName         string
+	dbSchema       string
+	maxUploadSize  int64
+	keySecureFile  string
+	pubSecureFile  string
+	certSecureFile string
+	filePath       string
+	userFilePath   string
+	groupFilePath  string
+	mediaFilePath  string
 )
 
 func Load(workDir string) error {
@@ -36,7 +37,7 @@ func Load(workDir string) error {
 	if err != nil {
 		return err
 	}
-	serverPort =_serverPort
+	serverPort = _serverPort
 
 	_maxUploadSize, err := strconv.Atoi(os.Getenv("MAX_UPLOAD_SIZE"))
 	if err != nil {
@@ -68,8 +69,9 @@ func Load(workDir string) error {
 	dbName = os.Getenv("DB_DATABASE")
 	dbSchema = os.Getenv("DB_SCHEMA")
 
-	privateKey = workDir + "/config/keys/private-key"
-	publicKey = workDir + "/config/keys/public-key.pub"
+	keySecureFile = workDir + "/config/cert/server.pem"
+	pubSecureFile = workDir + "/config/cert/server.pub"
+	certSecureFile = workDir + "/config/cert/server.crt"
 
 	return nil
 }
@@ -110,12 +112,16 @@ func SetMaxUploadSize(size int64) {
 	maxUploadSize = 1024 * size
 }
 
-func PathPrivateKey() string {
-	return privateKey
+func KeySecureFile() string {
+	return keySecureFile
 }
 
-func PathPublicKey() string {
-	return publicKey
+func PubSecureFile() string {
+	return pubSecureFile
+}
+
+func CertSecureFile() string {
+	return certSecureFile
 }
 
 func FilePath() string {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"github.com/tsmweb/file-service/group"
-	"github.com/tsmweb/file-service/infra/db"
+	"github.com/tsmweb/file-service/infrastructure/db"
 )
 
 // groupRepositoryPostgres implementation for group.Repository interface.
@@ -54,7 +54,7 @@ func (r *groupRepositoryPostgres) IsGroupMember(ctx context.Context, groupID, us
 		if err == sql.ErrNoRows {
 			return false, nil
 		}
-		return false,  err
+		return false, err
 	}
 
 	return id == userID, nil
@@ -75,7 +75,7 @@ func (r *groupRepositoryPostgres) IsGroupAdmin(ctx context.Context, groupID, use
 	admin := false
 	err = stmt.QueryRowContext(ctx, groupID, userID).Scan(&admin)
 	if err != nil && err != sql.ErrNoRows {
-		return false,  err
+		return false, err
 	}
 
 	return admin, nil

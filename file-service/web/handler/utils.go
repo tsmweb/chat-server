@@ -40,6 +40,9 @@ func getContentType(file multipart.File) (fileType string, fileExtension string,
 	case "image/png":
 		fileExtension = "png"
 
+	case "audio/mpeg":
+		fileExtension = "mp3"
+
 	case "video/mp4":
 		fileExtension = "mp4"
 
