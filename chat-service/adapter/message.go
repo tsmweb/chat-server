@@ -3,7 +3,7 @@ package adapter
 import (
 	"time"
 
-	"github.com/tsmweb/chat-service/infra/protobuf"
+	"github.com/tsmweb/chat-service/infrastructure/protobuf"
 	"github.com/tsmweb/chat-service/server/message"
 	"google.golang.org/protobuf/proto"
 )
