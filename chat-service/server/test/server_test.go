@@ -196,7 +196,7 @@ func runServerTest(tb testing.TB, chat *server.Server) net.Listener {
 				continue
 			}
 
-			if err := chat.Register(userID, conn); err != nil {
+			if err = chat.Register(userID, conn); err != nil {
 				tb.Fatalf("failed to register user on server server: %v", err)
 			}
 		}

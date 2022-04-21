@@ -67,7 +67,7 @@ func (u *UserConn) readMessage() (*message.Message, error) {
 
 	msg := new(message.Message)
 	decoder := json.NewDecoder(r)
-	if err := decoder.Decode(msg); err != nil {
+	if err = decoder.Decode(msg); err != nil {
 		return nil, err
 	}
 

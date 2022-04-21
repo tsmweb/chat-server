@@ -16,8 +16,9 @@ func main() {
 
 	// Working directory
 	workDir, _ := os.Getwd()
-	config.Load(workDir)
-	//config.Load("../../")
+	if err := config.Load(workDir); err != nil {
+		panic(err)
+	}
 
 	router := mux.NewRouter()
 

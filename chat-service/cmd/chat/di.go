@@ -81,7 +81,7 @@ func (p *Providers) EpollProvider() (epoll.EPoll, error) {
 	return epoll.NewEPoll(poller), nil
 }
 
-// Poller OnWaitError will be called from goroutine, waiting for events.
+// PollerConfigProvider OnWaitError will be called from goroutine, waiting for events.
 func (p *Providers) PollerConfigProvider() *netpoll.Config {
 	errorProducer := p.KafkaProvider().NewProducer(config.KafkaErrorsTopic())
 
@@ -104,7 +104,7 @@ func (p *Providers) KafkaProvider() kafka.Kafka {
 
 func (p *Providers) JwtProvider() auth.JWT {
 	if p.jwt == nil {
-		p.jwt = auth.NewJWT(config.PathPrivateKey(), config.PathPublicKey())
+		p.jwt = auth.NewJWT(config.KeySecureFile(), config.PubSecureFile())
 	}
 	return p.jwt
 }

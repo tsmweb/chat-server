@@ -23,6 +23,12 @@ func main() {
 	log.Println("[>] starting server")
 	flag.Parse()
 
+	// Working directory
+	workDir, _ := os.Getwd()
+	if err := config.Load(workDir); err != nil {
+		panic(err)
+	}
+
 	// Increase resources limitations
 	var rLimit syscall.Rlimit
 	if err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit); err != nil {
@@ -48,11 +54,6 @@ func main() {
 		fn()
 	}(ctx, stop)
 
-	// Working directory
-	//workDir, _ := os.Getwd()
-	//config.Load(workDir)
-	config.Load("../../")
-
 	router := mux.NewRouter()
 
 	// starts API server
@@ -68,6 +69,12 @@ func main() {
 	nr.Use(negroni.NewLogger())
 	nr.UseHandler(handler)
 
-	serverPort := config.ServerPort()
-	nr.Run(fmt.Sprintf(":%d", serverPort))
+	//nr.Run(fmt.Sprintf(":%d", config.ServerPort()))
+
+	log.Fatal(http.ListenAndServeTLS(
+		fmt.Sprintf(":%d", config.ServerPort()),
+		config.CertSecureFile(),
+		config.KeySecureFile(),
+		nr,
+	))
 }

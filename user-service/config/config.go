@@ -26,20 +26,27 @@ var (
 	kafkaContactEventTopic string
 )
 
-func Load(workDir string) {
+func Load(workDir string) error {
 	err := godotenv.Load(path.Join(workDir, "/.env"))
 	if err != nil {
 		log.Fatalf("Error loading .env file [%s]", workDir)
 	}
 
+	_serverPort, err := strconv.Atoi(os.Getenv("SERVER_PORT"))
+	if err != nil {
+		return err
+	}
+	serverPort = _serverPort
+
 	dbHost = os.Getenv("DB_HOST")
-	dbPort, _ = strconv.Atoi(os.Getenv("DB_PORT"))
+	dbPort, err = strconv.Atoi(os.Getenv("DB_PORT"))
+	if err != nil {
+		return err
+	}
 	dbUser = os.Getenv("DB_USER")
 	dbPassword = os.Getenv("DB_PASSWORD")
 	dbName = os.Getenv("DB_DATABASE")
 	dbSchema = os.Getenv("DB_SCHEMA")
-
-	serverPort, _ = strconv.Atoi(os.Getenv("SERVER_PORT"))
 
 	keySecureFile = workDir + "/config/cert/server.pem"
 	pubSecureFile = workDir + "/config/cert/server.pub"
@@ -49,6 +56,8 @@ func Load(workDir string) {
 	kafkaClientID = os.Getenv("KAFKA_CLIENT_ID")
 	kafkaGroupEventTopic = os.Getenv("KAFKA_GROUP_EVENT_TOPIC")
 	kafkaContactEventTopic = os.Getenv("KAFKA_CONTACT_EVENT_TOPIC")
+
+	return nil
 }
 
 func KeySecureFile() string {

@@ -39,7 +39,7 @@ func (h *handleError) Execute(ctx context.Context, errEvent ErrorEvent) {
 		return
 	}
 
-	if err := h.producer.Publish(ctx, []byte(errEvent.HostID), epb); err != nil {
+	if err = h.producer.Publish(ctx, []byte(errEvent.HostID), epb); err != nil {
 		log.Printf("[!] HandleError.Execute() \n Error: %v \n Data: %v", err.Error(), errEvent)
 	}
 }

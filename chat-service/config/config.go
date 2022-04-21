@@ -11,11 +11,12 @@ import (
 )
 
 var (
-	hostID     string
-	goPoolSize int
-	serverPort int
-	privateKey string
-	publicKey  string
+	hostID         string
+	goPoolSize     int
+	serverPort     int
+	keySecureFile  string
+	pubSecureFile  string
+	certSecureFile string
 
 	kafkaBootstrapServers   string
 	kafkaClientID           string
@@ -29,18 +30,25 @@ var (
 	kafkaGroupID            string
 )
 
-func Load(workDir string) {
+func Load(workDir string) error {
 	err := godotenv.Load(path.Join(workDir, "/.env"))
 	if err != nil {
 		log.Fatalf("Error loading .env file [%s]", workDir)
 	}
 
 	hostID = os.Getenv("HOST_ID")
-	goPoolSize, _ = strconv.Atoi(os.Getenv("GOPOOL_SIZE"))
-	serverPort, _ = strconv.Atoi(os.Getenv("SERVER_PORT"))
+	goPoolSize, err = strconv.Atoi(os.Getenv("GOPOOL_SIZE"))
+	if err != nil {
+		return err
+	}
+	serverPort, err = strconv.Atoi(os.Getenv("SERVER_PORT"))
+	if err != nil {
+		return err
+	}
 
-	privateKey = workDir + "/config/keys/private-key"
-	publicKey = workDir + "/config/keys/public-key.pub"
+	keySecureFile = workDir + "/config/cert/server.pem"
+	pubSecureFile = workDir + "/config/cert/server.pub"
+	certSecureFile = workDir + "/config/cert/server.crt"
 
 	kafkaBootstrapServers = os.Getenv("KAFKA_BOOTSTRAP_SERVERS")
 	kafkaClientID = os.Getenv("KAFKA_CLIENT_ID")
@@ -52,6 +60,8 @@ func Load(workDir string) {
 	kafkaErrorsTopic = os.Getenv("KAFKA_ERRORS_TOPIC")
 	kafkaHostTopic = fmt.Sprintf("%s_MESSAGES", hostID)
 	kafkaGroupID = os.Getenv("KAFKA_GROUP_ID")
+
+	return nil
 }
 
 func HostID() string {
@@ -62,12 +72,16 @@ func GoPoolSize() int {
 	return goPoolSize
 }
 
-func PathPrivateKey() string {
-	return privateKey
+func KeySecureFile() string {
+	return keySecureFile
 }
 
-func PathPublicKey() string {
-	return publicKey
+func PubSecureFile() string {
+	return pubSecureFile
+}
+
+func CertSecureFile() string {
+	return certSecureFile
 }
 
 func ServerPort() int {

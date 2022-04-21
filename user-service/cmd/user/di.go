@@ -9,8 +9,8 @@ import (
 	"github.com/tsmweb/user-service/config"
 	"github.com/tsmweb/user-service/contact"
 	"github.com/tsmweb/user-service/group"
-	"github.com/tsmweb/user-service/infra/db"
-	"github.com/tsmweb/user-service/infra/repository"
+	"github.com/tsmweb/user-service/infrastructure/db"
+	"github.com/tsmweb/user-service/infrastructure/repository"
 	"github.com/tsmweb/user-service/web/api/handler"
 )
 

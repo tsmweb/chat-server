@@ -64,7 +64,7 @@ func (r *reader) Stop() {
 	r.poller.Stop(r.desc)
 }
 
-// Poller OnWaitError will be called from goroutine, waiting for events.
+// ProviderPollerConfig OnWaitError will be called from goroutine, waiting for events.
 func ProviderPollerConfig(callbackFn func(err error)) *netpoll.Config {
 	return &netpoll.Config{
 		OnWaitError: callbackFn,

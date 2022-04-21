@@ -6,7 +6,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/tsmweb/go-helper-api/cerror"
 	"github.com/tsmweb/user-service/contact"
-	"github.com/tsmweb/user-service/infra/db"
+	"github.com/tsmweb/user-service/infrastructure/db"
 	"time"
 )
 
