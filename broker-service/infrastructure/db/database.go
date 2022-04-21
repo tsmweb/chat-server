@@ -26,8 +26,14 @@ type PostgresDatabase struct {
 
 // NewPostgresDatabase creates a new instance of PostgresDatabase.
 func NewPostgresDatabase() Database {
-	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable search_path=%s,public",
-		config.DBHost(), config.DBPort(), config.DBUser(), config.DBPassword(), config.DBName(), config.DBSchema())
+	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable "+
+		"search_path=%s,public",
+		config.DBHost(),
+		config.DBPort(),
+		config.DBUser(),
+		config.DBPassword(),
+		config.DBName(),
+		config.DBSchema())
 	db, err := sql.Open(dbDriver, connStr)
 	if err != nil {
 		panic(err.Error())

@@ -21,13 +21,17 @@ func TestUserHandler_Execute(t *testing.T) {
 	}(chMessage)
 
 	usr := user.New("+5518977777777", user.Online, "H01")
-	msg1, _ := message.New("+5518911111111", "+5518977777777", "", message.ContentTypeText, "message test 1")
-	msg2, _ := message.New("+5518922222222", "+5518977777777", "", message.ContentTypeText, "message test 2")
-	msg3, _ := message.New("+5518933333333", "+5518977777777", "", message.ContentTypeACK, "read")
-	msgs := []*message.Message {msg1, msg2, msg3}
+	msg1, _ := message.New("+5518911111111", "+5518977777777", "",
+		message.ContentTypeText, "message test 1")
+	msg2, _ := message.New("+5518922222222", "+5518977777777", "",
+		message.ContentTypeText, "message test 2")
+	msg3, _ := message.New("+5518933333333", "+5518977777777", "",
+		message.ContentTypeACK, "read")
+	msgs := []*message.Message{msg1, msg2, msg3}
 
 	userRepo := new(mockUserRepository)
-	userRepo.On("AddUserPresence", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+	userRepo.On("AddUserPresence", mock.Anything, mock.Anything, mock.Anything,
+		mock.Anything).
 		Return(nil).
 		Once()
 	userRepo.On("GetAllContactsOnline", mock.Anything, mock.Anything).

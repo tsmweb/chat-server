@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/tsmweb/broker-service/broker/user"
-	"github.com/tsmweb/broker-service/infra/db"
+	"github.com/tsmweb/broker-service/infrastructure/db"
 	"strconv"
 	"time"
 )
@@ -37,7 +37,8 @@ func NewUserRepository(database db.Database, cache db.CacheDB) user.Repository {
 }
 
 // AddUserPresence adds the user's presence to the database.
-func (r *userRepository) AddUserPresence(ctx context.Context, userID string, serverID string, createAt time.Time) error {
+func (r *userRepository) AddUserPresence(ctx context.Context, userID string, serverID string,
+	createAt time.Time) error {
 	txn, err := r.database.DB().Begin()
 	if err != nil {
 		return err
@@ -99,7 +100,8 @@ func (r *userRepository) RemoveUserPresence(ctx context.Context, userID string) 
 }
 
 // UpdateUserPresenceCache updates user presence in cache.
-func (r *userRepository) UpdateUserPresenceCache(ctx context.Context, userID string, serverID string, status string) error {
+func (r *userRepository) UpdateUserPresenceCache(ctx context.Context, userID string,
+	serverID string, status string) error {
 	if user.Online.String() == status {
 		return r.cache.Set(ctx, userID, serverID, 0)
 	}
@@ -130,7 +132,8 @@ func (r *userRepository) IsValidUser(ctx context.Context, userID string) (bool, 
 		return false, err
 	}
 
-	if err = r.cache.Set(ctx, _validUserKey, strconv.FormatBool(isValid), validUserExpiration); err != nil {
+	if err = r.cache.Set(ctx, _validUserKey,
+		strconv.FormatBool(isValid), validUserExpiration); err != nil {
 		return false, err
 	}
 
@@ -154,7 +157,8 @@ func (r *userRepository) isValidUser(ctx context.Context, userID string) (bool, 
 }
 
 // IsBlockedUser returns true if the message sending user was blocked and false otherwise.
-func (r *userRepository) IsBlockedUser(ctx context.Context, userID string, blockedUserID string) (bool, error) {
+func (r *userRepository) IsBlockedUser(ctx context.Context, userID string,
+	blockedUserID string) (bool, error) {
 	_blockedUserKey := fmt.Sprintf(blockedUserKey, userID, blockedUserID)
 	isBlockedStr, err := r.cache.Get(ctx, _blockedUserKey)
 	if err != nil {
@@ -172,14 +176,16 @@ func (r *userRepository) IsBlockedUser(ctx context.Context, userID string, block
 		return false, err
 	}
 
-	if err = r.cache.Set(ctx, _blockedUserKey, strconv.FormatBool(isBlocked), blockedUserExpiration); err != nil {
+	if err = r.cache.Set(ctx, _blockedUserKey,
+		strconv.FormatBool(isBlocked), blockedUserExpiration); err != nil {
 		return false, err
 	}
 
 	return isBlocked, nil
 }
 
-func (r *userRepository) isBlockedUser(ctx context.Context, userID string, blockedUserID string) (bool, error) {
+func (r *userRepository) isBlockedUser(ctx context.Context, userID string,
+	blockedUserID string) (bool, error) {
 	stmt, err := r.database.DB().PrepareContext(ctx, `
 		SELECT blocked_user_id 
 		FROM blocked_user 
@@ -205,7 +211,8 @@ func (r *userRepository) UpdateBlockedUserCache(ctx context.Context, userID stri
 	_blockedUserKey := fmt.Sprintf(blockedUserKey, userID, blockedUserID)
 
 	if r.cache.Key(ctx, _blockedUserKey) {
-		if err := r.cache.Set(ctx, _blockedUserKey, strconv.FormatBool(blocked), blockedUserExpiration); err != nil {
+		if err := r.cache.Set(ctx, _blockedUserKey,
+			strconv.FormatBool(blocked), blockedUserExpiration); err != nil {
 			return err
 		}
 	}
@@ -214,7 +221,8 @@ func (r *userRepository) UpdateBlockedUserCache(ctx context.Context, userID stri
 }
 
 // GetAllContactsOnline returns all online contacts by userID.
-func (r *userRepository) GetAllContactsOnline(ctx context.Context, userID string) ([]string, error) {
+func (r *userRepository) GetAllContactsOnline(ctx context.Context,
+	userID string) ([]string, error) {
 	stmt, err := r.database.DB().PrepareContext(ctx, `
 		SELECT c.contact_id
 		FROM contact c
@@ -253,7 +261,8 @@ func (r *userRepository) GetAllContactsOnline(ctx context.Context, userID string
 }
 
 // GetAllRelationshipsOnline returns all online users for which I am a contact.
-func (r *userRepository) GetAllRelationshipsOnline(ctx context.Context, userID string) ([]string, error) {
+func (r *userRepository) GetAllRelationshipsOnline(ctx context.Context,
+	userID string) ([]string, error) {
 	stmt, err := r.database.DB().PrepareContext(ctx, `
 		SELECT c.user_id
 		FROM contact c

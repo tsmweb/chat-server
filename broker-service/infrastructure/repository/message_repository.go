@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/tsmweb/broker-service/broker/message"
-	"github.com/tsmweb/broker-service/infra/db"
+	"github.com/tsmweb/broker-service/infrastructure/db"
 	"time"
 )
 
@@ -32,7 +32,8 @@ func NewMessageRepository(database db.Database, cache db.CacheDB) message.Reposi
 }
 
 // GetAllGroupMembers returns all members of a group by groupID.
-func (r *messageRepository) GetAllGroupMembers(ctx context.Context, groupID string) ([]string, error) {
+func (r *messageRepository) GetAllGroupMembers(ctx context.Context,
+	groupID string) ([]string, error) {
 	_groupMembersKey := fmt.Sprintf(groupMembersKey, groupID)
 	members, _ := r.cache.SMembers(ctx, _groupMembersKey)
 	if len(members) > 0 {
@@ -57,7 +58,8 @@ func (r *messageRepository) GetAllGroupMembers(ctx context.Context, groupID stri
 	return members, nil
 }
 
-func (r *messageRepository) getAllGroupMembers(ctx context.Context, groupID string) ([]string, error) {
+func (r *messageRepository) getAllGroupMembers(ctx context.Context,
+	groupID string) ([]string, error) {
 	stmt, err := r.database.DB().PrepareContext(ctx, `
 		SELECT user_id
 		FROM group_member
@@ -101,7 +103,8 @@ func (r *messageRepository) RemoveGroupFromCache(ctx context.Context, groupID st
 }
 
 // AddGroupMemberToCache add a member to the group.
-func (r *messageRepository) AddGroupMemberToCache(ctx context.Context, groupID, memberID string) error {
+func (r *messageRepository) AddGroupMemberToCache(ctx context.Context, groupID,
+	memberID string) error {
 	_groupMembersKey := fmt.Sprintf(groupMembersKey, groupID)
 	if r.cache.Key(ctx, _groupMembersKey) {
 		return r.cache.SAdd(ctx, _groupMembersKey, memberID)
@@ -110,13 +113,15 @@ func (r *messageRepository) AddGroupMemberToCache(ctx context.Context, groupID, 
 }
 
 // RemoveGroupMemberFromCache remove a member from the group.
-func (r *messageRepository) RemoveGroupMemberFromCache(ctx context.Context, groupID, memberID string) error {
+func (r *messageRepository) RemoveGroupMemberFromCache(ctx context.Context, groupID,
+	memberID string) error {
 	_groupMembersKey := fmt.Sprintf(groupMembersKey, groupID)
 	return r.cache.SRem(ctx, _groupMembersKey, memberID)
 }
 
 // GetAllMessages returns all offline messages by user ID.
-func (r *messageRepository) GetAllMessages(ctx context.Context, userID string) ([]*message.Message, error) {
+func (r *messageRepository) GetAllMessages(ctx context.Context,
+	userID string) ([]*message.Message, error) {
 	if err := r.updateMessageStatusToProcessed(ctx, userID); err != nil {
 		return nil, err
 	}
@@ -166,7 +171,8 @@ func (r *messageRepository) GetAllMessages(ctx context.Context, userID string) (
 	return messages, nil
 }
 
-func (r *messageRepository) updateMessageStatusToProcessed(ctx context.Context, userID string) error {
+func (r *messageRepository) updateMessageStatusToProcessed(ctx context.Context,
+	userID string) error {
 	txn, err := r.database.DB().Begin()
 	if err != nil {
 		return err
@@ -205,7 +211,14 @@ func (r *messageRepository) AddMessage(ctx context.Context, msg message.Message)
 
 	stmt, err := txn.PrepareContext(ctx, `
 		INSERT INTO offline_message(
-			msg_id, msg_status, msg_from, msg_to, msg_group, msg_date, msg_content_type, msg_content)
+			msg_id, 
+			msg_status, 
+			msg_from, 
+			msg_to, 
+			msg_group, 
+			msg_date, 
+			msg_content_type, 
+			msg_content)
 		VALUES($1, $2, $3, $4, $5, $6, $7, $8)`)
 	if err != nil {
 		return err
@@ -213,7 +226,8 @@ func (r *messageRepository) AddMessage(ctx context.Context, msg message.Message)
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(
-		ctx, msg.ID, insertedStatusMessage, msg.From, msg.To, msg.Group, msg.Date, msg.ContentType, msg.Content)
+		ctx, msg.ID, insertedStatusMessage, msg.From, msg.To, msg.Group, msg.Date, msg.ContentType,
+		msg.Content)
 	if err != nil {
 		txn.Rollback()
 		return err

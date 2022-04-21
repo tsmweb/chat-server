@@ -23,7 +23,8 @@ func NewUserPresenceHandler(userRepository user.Repository) UserPresenceHandler 
 }
 
 func (h *userPresenceHandler) Execute(ctx context.Context, usr user.User) *ErrorEvent {
-	if err := h.userRepository.UpdateUserPresenceCache(ctx, usr.ID, usr.ServerID, usr.Status); err != nil {
+	if err := h.userRepository.UpdateUserPresenceCache(ctx, usr.ID, usr.ServerID,
+		usr.Status); err != nil {
 		return NewErrorEvent(usr.ID, "UserPresenceHandler.Execute()", err.Error())
 	}
 	return nil

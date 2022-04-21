@@ -30,7 +30,8 @@ func NewUserHandler(
 }
 
 // Execute performs user status handling as: register in the database and notifies contacts.
-func (h *userHandler) Execute(ctx context.Context, usr user.User, chMessage chan<- message.Message) *ErrorEvent {
+func (h *userHandler) Execute(ctx context.Context, usr user.User,
+	chMessage chan<- message.Message) *ErrorEvent {
 	if err := h.setUserPresence(ctx, usr); err != nil {
 		return NewErrorEvent(usr.ID, "UserHandler.setUserPresence()", err.Error())
 	}
@@ -41,7 +42,8 @@ func (h *userHandler) Execute(ctx context.Context, usr user.User, chMessage chan
 		}
 
 		if err := h.notifyPresenceOfContactsToUser(ctx, usr, chMessage); err != nil {
-			return NewErrorEvent(usr.ID, "UserHandler.notifyPresenceOfContactsToUser()", err.Error())
+			return NewErrorEvent(usr.ID, "UserHandler.notifyPresenceOfContactsToUser()",
+				err.Error())
 		}
 	}
 
@@ -85,7 +87,8 @@ func (h *userHandler) notifyPresenceOfContactsToUser(ctx context.Context, usr us
 	}
 
 	for _, contact := range contacts {
-		msg, _ := message.New(contact, usr.ID, "", message.ContentTypeStatus, user.Online.String())
+		msg, _ := message.New(contact, usr.ID, "", message.ContentTypeStatus,
+			user.Online.String())
 		chMessage <- *msg
 	}
 

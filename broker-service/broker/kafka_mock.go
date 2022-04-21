@@ -26,7 +26,6 @@ func (m *mockKafka) NewConsumer(groupID, topic string) kafka.Consumer {
 // Debug represents the simulated method for the Debug feature in the kafka.Kafka layer.
 func (m *mockKafka) Debug(debug bool) {}
 
-
 // mockProducer injects mock kafka.Producer dependency.
 type mockProducer struct {
 	mock.Mock
@@ -41,14 +40,14 @@ func (m *mockProducer) Publish(ctx context.Context, key []byte, values ...[]byte
 // Close represents the simulated method for the Close feature in the kafka.Producer layer.
 func (m *mockProducer) Close() {}
 
-
 // mockConsumer injects mock kafka.Consumer dependency.
 type mockConsumer struct {
 	mock.Mock
 }
 
 // Subscribe represents the simulated method for the Subscribe feature in the kafka.Consumer layer.
-func (m *mockConsumer) Subscribe(ctx context.Context, callbackFn func(event *kafka.Event, err error)) {
+func (m *mockConsumer) Subscribe(ctx context.Context, callbackFn func(event *kafka.Event,
+	err error)) {
 	m.Called(ctx, callbackFn)
 }
 

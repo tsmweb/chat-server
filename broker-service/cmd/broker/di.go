@@ -8,8 +8,8 @@ import (
 	"github.com/tsmweb/broker-service/broker/message"
 	"github.com/tsmweb/broker-service/broker/user"
 	"github.com/tsmweb/broker-service/config"
-	"github.com/tsmweb/broker-service/infra/db"
-	"github.com/tsmweb/broker-service/infra/repository"
+	"github.com/tsmweb/broker-service/infrastructure/db"
+	"github.com/tsmweb/broker-service/infrastructure/repository"
 	"github.com/tsmweb/go-helper-api/kafka"
 )
 
@@ -36,20 +36,28 @@ func (p *Provider) BrokerProvider() *broker.Broker {
 		userEventDecoder := user.EventDecoderFunc(adapter.UserEventUnmarshal)
 		errorEncoder := broker.ErrorEventEncoderFunc(adapter.ErrorEventMarshal)
 
-		userConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(), config.KafkaUsersTopic())
-		userPresenceConsumer := p.KafkaProvider().NewConsumer(config.KafkaClientID(), config.KafkaUsersPresenceTopic())
-		messageConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(), config.KafkaNewMessagesTopic())
-		offMessageConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(), config.KafkaOffMessagesTopic())
-		groupEventConsumer := p.KafkaProvider().NewConsumer(config.KafkaClientID(), config.KafkaGroupEventTopic())
-		userEventConsumer := p.KafkaProvider().NewConsumer(config.KafkaClientID(), config.KafkaContactEventTopic())
+		userConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(),
+			config.KafkaUsersTopic())
+		userPresenceConsumer := p.KafkaProvider().NewConsumer(config.KafkaClientID(),
+			config.KafkaUsersPresenceTopic())
+		messageConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(),
+			config.KafkaNewMessagesTopic())
+		offMessageConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(),
+			config.KafkaOffMessagesTopic())
+		groupEventConsumer := p.KafkaProvider().NewConsumer(config.KafkaClientID(),
+			config.KafkaGroupEventTopic())
+		userEventConsumer := p.KafkaProvider().NewConsumer(config.KafkaClientID(),
+			config.KafkaContactEventTopic())
 		errorProducer := p.KafkaProvider().NewProducer(config.KafkaErrorsTopic())
 
 		userRepository := repository.NewUserRepository(p.DatabaseProvider(), p.CacheDBProvider())
-		messageRepository := repository.NewMessageRepository(p.DatabaseProvider(), p.CacheDBProvider())
+		messageRepository := repository.NewMessageRepository(p.DatabaseProvider(),
+			p.CacheDBProvider())
 
 		userHandler := broker.NewUserHandler(userRepository, messageRepository)
 		userPresenceHandler := broker.NewUserPresenceHandler(userRepository)
-		messageHandler := broker.NewMessageHandler(userRepository, messageRepository, p.KafkaProvider(), messageEncoder)
+		messageHandler := broker.NewMessageHandler(userRepository, messageRepository,
+			p.KafkaProvider(), messageEncoder)
 		offMessageHandler := broker.NewOfflineMessageHandler(messageRepository)
 		groupEventHandler := broker.NewGroupEventHandler(messageRepository)
 		userEventHandler := broker.NewUserEventHandler(userRepository)

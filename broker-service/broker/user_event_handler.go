@@ -34,8 +34,11 @@ func (h *userEventHandler) Execute(ctx context.Context, evt user.Event) *ErrorEv
 		return nil
 	}
 
-	if err := h.userRepository.UpdateBlockedUserCache(ctx, evt.UserID, evt.ContactID, isBlocked); err != nil {
-		return NewErrorEvent(evt.UserID, "UserEventHandler.UpdateBlockedUserCache()", err.Error())
+	if err := h.userRepository.UpdateBlockedUserCache(ctx, evt.UserID,
+		evt.ContactID, isBlocked); err != nil {
+
+		return NewErrorEvent(evt.UserID, "UserEventHandler.UpdateBlockedUserCache()",
+			err.Error())
 	}
 
 	return nil

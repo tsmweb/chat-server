@@ -41,7 +41,8 @@ type Repository interface {
 	RemoveUserPresence(ctx context.Context, userID string) error
 
 	// UpdateUserPresenceCache updates user presence in cache.
-	UpdateUserPresenceCache(ctx context.Context, userID string, serverID string, status string) error
+	UpdateUserPresenceCache(ctx context.Context, userID string, serverID string,
+		status string) error
 
 	// GetUserServer returns the server the user is online.
 	GetUserServer(ctx context.Context, userID string) (string, error)
@@ -53,7 +54,8 @@ type Repository interface {
 	IsBlockedUser(ctx context.Context, userID string, blockedUserID string) (bool, error)
 
 	// UpdateBlockedUserCache refresh blocked users cache.
-	UpdateBlockedUserCache(ctx context.Context, userID string, blockedUserID string, blocked bool) error
+	UpdateBlockedUserCache(ctx context.Context, userID string, blockedUserID string,
+		blocked bool) error
 
 	// GetAllContactsOnline returns all online contacts by userID.
 	GetAllContactsOnline(ctx context.Context, userID string) ([]string, error)
@@ -85,7 +87,8 @@ type Encoder interface {
 	Marshal(u *User) ([]byte, error)
 }
 
-// The EncoderFunc type is an adapter to allow the use of ordinary functions as encoders of User for byte slice.
+// The EncoderFunc type is an adapter to allow the use of ordinary functions as encoders of
+// User for byte slice.
 // If f is a function with the appropriate signature, EncoderFunc(f) is a Encoder that calls f.
 type EncoderFunc func(u *User) ([]byte, error)
 
@@ -99,7 +102,8 @@ type Decoder interface {
 	Unmarshal(in []byte, u *User) error
 }
 
-// The DecoderFunc type is an adapter to allow the use of ordinary functions as decoders of byte slice for User.
+// The DecoderFunc type is an adapter to allow the use of ordinary functions as decoders of
+// byte slice for User.
 // If f is a function with the appropriate signature, DecoderFunc(f) is a Decoder that calls f.
 type DecoderFunc func(in []byte, u *User) error
 

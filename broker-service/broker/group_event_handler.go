@@ -26,22 +26,27 @@ func NewGroupEventHandler(msgRepository message.Repository) GroupEventHandler {
 // Execute performs group event handling.
 func (h *groupEventHandler) Execute(ctx context.Context, evt group.Event) *ErrorEvent {
 	if evt.Event == group.EventAddMember.String() {
-		if err := h.msgRepository.AddGroupMemberToCache(ctx, evt.GroupID, evt.MemberID); err != nil {
-			return NewErrorEvent("", "GroupEventHandler.AddGroupMemberToCache()", err.Error())
+		if err := h.msgRepository.AddGroupMemberToCache(ctx, evt.GroupID,
+			evt.MemberID); err != nil {
+			return NewErrorEvent("", "GroupEventHandler.AddGroupMemberToCache()",
+				err.Error())
 		}
 		return nil
 	}
 
 	if evt.Event == group.EventRemoveMember.String() {
-		if err := h.msgRepository.RemoveGroupMemberFromCache(ctx, evt.GroupID, evt.MemberID); err != nil {
-			return NewErrorEvent("", "GroupEventHandler.RemoveGroupMemberFromCache()", err.Error())
+		if err := h.msgRepository.RemoveGroupMemberFromCache(ctx, evt.GroupID,
+			evt.MemberID); err != nil {
+			return NewErrorEvent("", "GroupEventHandler.RemoveGroupMemberFromCache()",
+				err.Error())
 		}
 		return nil
 	}
 
 	if evt.Event == group.EventDeleteGroup.String() {
 		if err := h.msgRepository.RemoveGroupFromCache(ctx, evt.GroupID); err != nil {
-			return NewErrorEvent("", "GroupEventHandler.RemoveGroupFromCache()", err.Error())
+			return NewErrorEvent("", "GroupEventHandler.RemoveGroupFromCache()",
+				err.Error())
 		}
 		return nil
 	}

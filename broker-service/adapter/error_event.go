@@ -2,7 +2,7 @@ package adapter
 
 import (
 	"github.com/tsmweb/broker-service/broker"
-	"github.com/tsmweb/broker-service/infra/protobuf"
+	"github.com/tsmweb/broker-service/infrastructure/protobuf"
 	"google.golang.org/protobuf/proto"
 	"time"
 )

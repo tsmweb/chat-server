@@ -155,7 +155,7 @@ func (b *Broker) usersConsumer() {
 		}
 
 		var usr user.User
-		if err := b.userDecoder.Unmarshal(event.Value, &usr); err != nil {
+		if err = b.userDecoder.Unmarshal(event.Value, &usr); err != nil {
 			b.chError <- *NewErrorEvent("", "Broker.usersConsumer()", err.Error())
 			return
 		}
@@ -171,13 +171,15 @@ func (b *Broker) usersPresenceConsumer() {
 
 	callbackFn := func(event *kafka.Event, err error) {
 		if err != nil {
-			b.chError <- *NewErrorEvent("", "Broker.usersPresenceConsumer()", err.Error())
+			b.chError <- *NewErrorEvent("", "Broker.usersPresenceConsumer()",
+				err.Error())
 			return
 		}
 
 		var usr user.User
-		if err := b.userDecoder.Unmarshal(event.Value, &usr); err != nil {
-			b.chError <- *NewErrorEvent("", "Broker.usersPresenceConsumer()", err.Error())
+		if err = b.userDecoder.Unmarshal(event.Value, &usr); err != nil {
+			b.chError <- *NewErrorEvent("", "Broker.usersPresenceConsumer()",
+				err.Error())
 			return
 		}
 
@@ -197,7 +199,7 @@ func (b *Broker) messagesConsumer() {
 		}
 
 		var msg message.Message
-		if err := b.msgDecoder.Unmarshal(event.Value, &msg); err != nil {
+		if err = b.msgDecoder.Unmarshal(event.Value, &msg); err != nil {
 			b.chError <- *NewErrorEvent("", "Broker.messagesConsumer()", err.Error())
 			return
 		}
@@ -213,13 +215,15 @@ func (b *Broker) offlineMessagesConsumer() {
 
 	callbackFn := func(event *kafka.Event, err error) {
 		if err != nil {
-			b.chError <- *NewErrorEvent("", "Broker.offlineMessagesConsumer()", err.Error())
+			b.chError <- *NewErrorEvent("", "Broker.offlineMessagesConsumer()",
+				err.Error())
 			return
 		}
 
 		var msg message.Message
-		if err := b.msgDecoder.Unmarshal(event.Value, &msg); err != nil {
-			b.chError <- *NewErrorEvent("", "Broker.offlineMessagesConsumer()", err.Error())
+		if err = b.msgDecoder.Unmarshal(event.Value, &msg); err != nil {
+			b.chError <- *NewErrorEvent("", "Broker.offlineMessagesConsumer()",
+				err.Error())
 			return
 		}
 
@@ -239,7 +243,7 @@ func (b *Broker) groupEventsConsumer() {
 		}
 
 		var groupEvent group.Event
-		if err := b.groupEventDecoder.Unmarshal(event.Value, &groupEvent); err != nil {
+		if err = b.groupEventDecoder.Unmarshal(event.Value, &groupEvent); err != nil {
 			b.chError <- *NewErrorEvent("", "Broker.groupEventsConsumer()", err.Error())
 			return
 		}
@@ -260,7 +264,7 @@ func (b *Broker) userEventsConsumer() {
 		}
 
 		var userEvent user.Event
-		if err := b.userEventDecoder.Unmarshal(event.Value, &userEvent); err != nil {
+		if err = b.userEventDecoder.Unmarshal(event.Value, &userEvent); err != nil {
 			b.chError <- *NewErrorEvent("", "Broker.userEventsConsumer()", err.Error())
 			return
 		}

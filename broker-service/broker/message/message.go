@@ -104,12 +104,14 @@ type Message struct {
 }
 
 // New creates and returns a new Message instance.
-func New(from string, to string, group string, contentType ContentType, content string) (*Message, error) {
+func New(from string, to string, group string, contentType ContentType,
+	content string) (*Message, error) {
 	return newMessage(from, to, group, time.Now().UTC(), contentType.String(), content)
 }
 
 // NewResponse creates and returns a new Message instance.
-func NewResponse(msgID string, to string, group string, contentType ContentType, content string) *Message {
+func NewResponse(msgID string, to string, group string, contentType ContentType,
+	content string) *Message {
 	msg := &Message{
 		ID:          msgID,
 		From:        "server",
@@ -122,7 +124,8 @@ func NewResponse(msgID string, to string, group string, contentType ContentType,
 	return msg
 }
 
-func newMessage(from string, to string, group string, date time.Time, contentType string, content string) (*Message, error) {
+func newMessage(from string, to string, group string, date time.Time, contentType string,
+	content string) (*Message, error) {
 	msg := &Message{
 		From:        from,
 		To:          to,
@@ -149,7 +152,8 @@ func (m *Message) ReplicateTo(to string) (*Message, error) {
 }
 
 func (m *Message) generateID() error {
-	id, err := hashutil.HashSHA1(m.From + m.To + m.Group + strconv.FormatInt(time.Now().Unix(), 10))
+	id, err := hashutil.HashSHA1(m.From + m.To + m.Group +
+		strconv.FormatInt(time.Now().Unix(), 10))
 	if err != nil {
 		return err
 	}
@@ -192,7 +196,8 @@ type Encoder interface {
 	Marshal(m *Message) ([]byte, error)
 }
 
-// The EncoderFunc type is an adapter to allow the use of ordinary functions as encoders of Message for byte slice.
+// The EncoderFunc type is an adapter to allow the use of ordinary functions as encoders of
+// Message for byte slice.
 // If f is a function with the appropriate signature, EncoderFunc(f) is a Encoder that calls f.
 type EncoderFunc func(m *Message) ([]byte, error)
 
@@ -206,7 +211,8 @@ type Decoder interface {
 	Unmarshal(in []byte, m *Message) error
 }
 
-// The DecoderFunc type is an adapter to allow the use of ordinary functions as decoders of byte slice for Message.
+// The DecoderFunc type is an adapter to allow the use of ordinary functions as decoders
+// of byte slice for Message.
 // If f is a function with the appropriate signature, DecoderFunc(f) is a Decoder that calls f.
 type DecoderFunc func(in []byte, m *Message) error
 

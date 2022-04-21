@@ -8,7 +8,8 @@ import (
 
 func TestNewMessage(t *testing.T) {
 	//t.Parallel()
-	m, err := New("+5518977777777", "+5518966666666", "", ContentTypeText, "test")
+	m, err := New("+5518977777777", "+5518966666666", "", ContentTypeText,
+		"test")
 
 	assert.Nil(t, err)
 	assert.NotNil(t, m.ID)

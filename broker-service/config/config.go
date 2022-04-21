@@ -35,17 +35,23 @@ var (
 	kafkaHostTopic          string
 )
 
-func Load(workDir string) {
+func Load(workDir string) error {
 	err := godotenv.Load(path.Join(workDir, "/.env"))
 	if err != nil {
 		log.Fatalf("Error loading .env file [%s]", workDir)
 	}
 
 	hostID = os.Getenv("HOST_ID")
-	goPoolSize, _ = strconv.Atoi(os.Getenv("GOPOOL_SIZE"))
+	goPoolSize, err = strconv.Atoi(os.Getenv("GOPOOL_SIZE"))
+	if err != nil {
+		return err
+	}
 
 	dbHost = os.Getenv("DB_HOST")
-	dbPort, _ = strconv.Atoi(os.Getenv("DB_PORT"))
+	dbPort, err = strconv.Atoi(os.Getenv("DB_PORT"))
+	if err != nil {
+		return err
+	}
 	dbUser = os.Getenv("DB_USER")
 	dbPassword = os.Getenv("DB_PASSWORD")
 	dbName = os.Getenv("DB_DATABASE")
@@ -66,6 +72,8 @@ func Load(workDir string) {
 	kafkaGroupEventTopic = os.Getenv("KAFKA_GROUP_EVENT_TOPIC")
 	kafkaContactEventTopic = os.Getenv("KAFKA_CONTACT_EVENT_TOPIC")
 	kafkaHostTopic = os.Getenv("KAFKA_HOST_TOPIC")
+
+	return nil
 }
 
 func HostID() string {

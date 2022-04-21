@@ -71,7 +71,8 @@ func (c *RedisCacheDB) Key(ctx context.Context, key string) bool {
 	return true
 }
 
-func (c *RedisCacheDB) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
+func (c *RedisCacheDB) Set(ctx context.Context, key string, value interface{},
+	expiration time.Duration) error {
 	_, err := c.db.Set(ctx, key, value, expiration).Result()
 	return err
 }

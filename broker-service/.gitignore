@@ -17,8 +17,8 @@
 # IDE
 .idea
 
-# Keys
-config/keys/*
+# Certs
+config/cert/*
 
 # Test
 test

@@ -92,7 +92,8 @@ func (h *messageHandler) processGroupMessage(ctx context.Context, msg message.Me
 	}
 
 	if len(errEvents) > 0 {
-		return NewErrorEvent(msg.From, "MessageHandler.processGroupMessage()", errEvents.String())
+		return NewErrorEvent(msg.From, "MessageHandler.processGroupMessage()",
+			errEvents.String())
 	}
 
 	return nil
@@ -139,19 +140,22 @@ func (h *messageHandler) sendMessage(ctx context.Context, msg message.Message) *
 	if strings.TrimSpace(serverID) != "" { // online
 		err = h.dispatchMessagesToHosts(ctx, serverID, msg)
 		if err != nil {
-			return NewErrorEvent(msg.From, "MessageHandler.dispatchMessagesToHosts()", err.Error())
+			return NewErrorEvent(msg.From, "MessageHandler.dispatchMessagesToHosts()",
+				err.Error())
 		}
 	} else if msg.ContentType != message.ContentTypeStatus.String() { // offline
 		err = h.dispatchToOfflineMessages(ctx, msg)
 		if err != nil {
-			return NewErrorEvent(msg.From, "MessageHandler.dispatchToOfflineMessages()", err.Error())
+			return NewErrorEvent(msg.From, "MessageHandler.dispatchToOfflineMessages()",
+				err.Error())
 		}
 	}
 
 	return nil
 }
 
-func (h *messageHandler) dispatchMessagesToHosts(ctx context.Context, serverID string, msg message.Message) error {
+func (h *messageHandler) dispatchMessagesToHosts(ctx context.Context, serverID string,
+	msg message.Message) error {
 	producer := h.queue.NewProducer(config.KafkaHostTopic(serverID))
 	defer producer.Close()
 	return h.dispatchMessages(ctx, producer, msg)
@@ -163,7 +167,8 @@ func (h *messageHandler) dispatchToOfflineMessages(ctx context.Context, msg mess
 	return h.dispatchMessages(ctx, producer, msg)
 }
 
-func (h *messageHandler) dispatchMessages(ctx context.Context, producer kafka.Producer, msg message.Message) error {
+func (h *messageHandler) dispatchMessages(ctx context.Context, producer kafka.Producer,
+	msg message.Message) error {
 	mpb, err := h.encoder.Marshal(&msg)
 	if err != nil {
 		return err
