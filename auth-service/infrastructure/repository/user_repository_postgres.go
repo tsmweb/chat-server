@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"github.com/lib/pq"
-	"github.com/tsmweb/auth-service/infra/db"
+	"github.com/tsmweb/auth-service/infrastructure/db"
 	"github.com/tsmweb/auth-service/user"
 	"github.com/tsmweb/go-helper-api/cerror"
 	"time"

@@ -8,15 +8,18 @@ import (
 	"github.com/urfave/negroni"
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
 	log.Println("[>] starting server")
 
 	// Working directory
-	//workDir, _ := os.Getwd()
-	//config.Load(workDir)
-	config.Load("../../")
+	workDir, _ := os.Getwd()
+	if err := config.Load(workDir); err != nil {
+		panic(err)
+	}
+	// config.Load("../../")
 
 	router := mux.NewRouter()
 

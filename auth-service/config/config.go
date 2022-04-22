@@ -23,25 +23,37 @@ var (
 	expireToken    int
 )
 
-func Load(workDir string) {
+func Load(workDir string) error {
 	if err := godotenv.Load(path.Join(workDir, "/.env")); err != nil {
 		log.Fatalf("Error loading .env file [%s]", workDir)
 	}
 
+	_serverPort, err := strconv.Atoi(os.Getenv("SERVER_PORT"))
+	if err != nil {
+		return err
+	}
+	serverPort = _serverPort
+
 	dbHost = os.Getenv("DB_HOST")
-	dbPort, _ = strconv.Atoi(os.Getenv("DB_PORT"))
+	dbPort, err = strconv.Atoi(os.Getenv("DB_PORT"))
+	if err != nil {
+		return err
+	}
 	dbUser = os.Getenv("DB_USER")
 	dbPassword = os.Getenv("DB_PASSWORD")
 	dbName = os.Getenv("DB_DATABASE")
 	dbSchema = os.Getenv("DB_SCHEMA")
 
-	serverPort, _ = strconv.Atoi(os.Getenv("SERVER_PORT"))
-
 	keySecureFile = workDir + "/config/cert/server.pem"
 	pubSecureFile = workDir + "/config/cert/server.pub"
 	certSecureFile = workDir + "/config/cert/server.crt"
 
-	expireToken, _ = strconv.Atoi(os.Getenv("EXPIRE_TOKEN")) //hour
+	expireToken, err = strconv.Atoi(os.Getenv("EXPIRE_TOKEN")) //hour
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func ServerPort() int {
