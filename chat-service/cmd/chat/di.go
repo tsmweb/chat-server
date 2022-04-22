@@ -45,7 +45,8 @@ func (p *Providers) ServerProvider() (*server.Server, error) {
 		userEncoder := user.EncoderFunc(adapter.UserMarshal)
 		errorEncoder := server.ErrorEventEncoderFunc(adapter.ErrorEventMarshal)
 
-		messageConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(), config.KafkaHostTopic())
+		messageConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(),
+			config.KafkaHostTopic())
 		messageProducer := p.KafkaProvider().NewProducer(config.KafkaNewMessagesTopic())
 		offMessageProducer := p.KafkaProvider().NewProducer(config.KafkaOffMessagesTopic())
 		userProducer := p.KafkaProvider().NewProducer(config.KafkaUsersTopic())
@@ -54,7 +55,8 @@ func (p *Providers) ServerProvider() (*server.Server, error) {
 
 		handleMessage := server.NewHandleMessage(messageEncoder, messageProducer)
 		handleOffMessage := server.NewHandleMessage(messageEncoder, offMessageProducer)
-		handleUserStatus := server.NewHandleUserStatus(userEncoder, userProducer, userPresenceProducer)
+		handleUserStatus := server.NewHandleUserStatus(userEncoder, userProducer,
+			userPresenceProducer)
 		handleError := server.NewHandleError(errorEncoder, errorProducer)
 
 		p.server = server.NewServer(
@@ -88,7 +90,8 @@ func (p *Providers) PollerConfigProvider() *netpoll.Config {
 	return &netpoll.Config{
 		OnWaitError: func(err error) {
 			go func(err error) {
-				errEvent := server.NewErrorEvent("", "PollerConfig.OnWaitError()", err.Error())
+				errEvent := server.NewErrorEvent("", "PollerConfig.OnWaitError()",
+					err.Error())
 				errorProducer.Publish(p.ctx, []byte(errEvent.HostID), errEvent.ToJSON())
 			}(err)
 		},

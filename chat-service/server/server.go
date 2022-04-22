@@ -2,16 +2,19 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"github.com/tsmweb/chat-service/config"
 	"github.com/tsmweb/chat-service/pkg/epoll"
 	"github.com/tsmweb/chat-service/server/message"
 	"github.com/tsmweb/chat-service/server/user"
 	"github.com/tsmweb/go-helper-api/concurrent/executor"
 	"github.com/tsmweb/go-helper-api/kafka"
+	"log"
 	"net"
 )
 
-// Server registers the user's net.Conn connection and handles the data received and sent over the connection.
+// Server registers the user's net.Conn connection and handles the data received and sent over
+// the connection.
 // It also produces and consumes Apache Kafka data to communicate with the cluster of services.
 type Server struct {
 	ctx      context.Context
@@ -73,7 +76,8 @@ func NewServer(
 	return server
 }
 
-// Register registers the user's net.Conn connection and handles the data received and sent over the connection.
+// Register registers the user's net.Conn connection and handles the data received and sent over
+// the connection.
 func (s *Server) Register(userID string, conn net.Conn) error {
 	userConn := &UserConn{
 		userID: userID,
@@ -82,7 +86,16 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 		writer: s.connWriter,
 	}
 
-	observer, err := s.poller.ObservableRead(conn)
+	var fdConn net.Conn
+
+	switch conn.(type) {
+	case *tls.Conn:
+		fdConn = conn.(*tls.Conn).NetConn()
+	default:
+		fdConn = conn
+	}
+
+	observer, err := s.poller.ObservableRead(fdConn)
 	if err != nil {
 		s.chError <- *NewErrorEvent(userConn.userID, "Server.Register()", err.Error())
 		return err
@@ -93,7 +106,8 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 			observer.Stop()
 			s.chUserOUT <- userConn.userID
 			if errPoller != nil {
-				s.chError <- *NewErrorEvent(userConn.userID, "Server.Register():poller", errPoller.Error())
+				s.chError <- *NewErrorEvent(userConn.userID, "Server.Register():poller",
+					errPoller.Error())
 			}
 			return
 		}
@@ -238,6 +252,7 @@ func (s *Server) userStatusTask(userID string, status user.Status) func(ctx cont
 
 func (s *Server) errorTask(errEvent ErrorEvent) func(ctx context.Context) {
 	return func(ctx context.Context) {
+		log.Println(string(errEvent.ToJSON()))
 		s.handleError.Execute(ctx, errEvent)
 	}
 }

@@ -19,7 +19,8 @@ func HandleWS(jwt auth.JWT, server *server.Server) http.Handler {
 		data, err := jwt.GetDataToken(r, "id")
 		if err != nil || data == nil {
 			log.Println(err.Error())
-			httputil.RespondWithError(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+			httputil.RespondWithError(w, http.StatusInternalServerError,
+				http.StatusText(http.StatusInternalServerError))
 			return
 		}
 		userID := data.(string)

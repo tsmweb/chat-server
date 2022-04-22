@@ -14,7 +14,8 @@ import (
 func TestHandleMessage_Execute(t *testing.T) {
 	ctx := context.Background()
 	encode := message.EncoderFunc(adapter.MessageMarshal)
-	msg, _ := message.NewMessage("+5518977777777", "+5518966666666", "", message.ContentTypeText, "hello")
+	msg, _ := message.NewMessage("+5518977777777", "+5518966666666", "",
+		message.ContentTypeText, "hello")
 
 	t.Run("when message handler fails with error", func(t *testing.T) {
 		p := new(mockProducer)

@@ -43,7 +43,8 @@ func TestServer(t *testing.T) {
 
 	t.Run("when the message is not valid", func(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
-		msg, _ := message.NewMessage(userTest1, userTest2, "", message.ContentTypeText, "hello")
+		msg, _ := message.NewMessage(userTest1, userTest2, "", message.ContentTypeText,
+			"hello")
 		msg.ContentType = ""
 
 		if err := writerConn(conn1, msg); err != nil {
@@ -58,7 +59,8 @@ func TestServer(t *testing.T) {
 
 	t.Run("userTest2 sends message to userTest1", func(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
-		msg, _ := message.NewMessage(userTest2, userTest1, "", message.ContentTypeText, "hello test")
+		msg, _ := message.NewMessage(userTest2, userTest1, "", message.ContentTypeText,
+			"hello test")
 
 		if err := writerConn(conn2, msg); err != nil {
 			t.Fatalf("error send message writerConn(): %v", err)
@@ -127,11 +129,12 @@ func initServer(t *testing.T) *server.Server {
 	chEvent := make(chan kafka.Event)
 
 	consumeMessage := new(mockConsumer)
-	consumeMessage.On("Subscribe", mock.Anything, mock.MatchedBy(func(fn func(event *kafka.Event, err error)) bool {
-		evt := <-chEvent
-		fn(&evt, errors.New("nil"))
-		return true
-	}))
+	consumeMessage.On("Subscribe", mock.Anything,
+		mock.MatchedBy(func(fn func(event *kafka.Event, err error)) bool {
+			evt := <-chEvent
+			fn(&evt, errors.New("nil"))
+			return true
+		}))
 
 	messageProducer := new(mockMessageProducer)
 	messageProducer.chEvent = chEvent

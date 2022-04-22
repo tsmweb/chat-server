@@ -47,7 +47,8 @@ type ErrorEventEncoder interface {
 	Marshal(e *ErrorEvent) ([]byte, error)
 }
 
-// The ErrorEventEncoderFunc type is an adapter to allow the use of ordinary functions as encoders of ErrorEvent for byte slice.
+// The ErrorEventEncoderFunc type is an adapter to allow the use of ordinary functions as encoders
+// of ErrorEvent for byte slice.
 // If f is a function with the appropriate signature, EncoderFunc(f) is a Encoder that calls f.
 type ErrorEventEncoderFunc func(e *ErrorEvent) ([]byte, error)
 

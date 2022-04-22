@@ -90,11 +90,13 @@ func NewResponse(msgID string, contentType ContentType, content string) *Message
 }
 
 // NewMessage creates and returns a new Message instance.
-func NewMessage(from string, to string, group string, contentType ContentType, content string) (*Message, error) {
+func NewMessage(from string, to string, group string, contentType ContentType,
+	content string) (*Message, error) {
 	return newMessage(from, to, group, time.Now().UTC(), contentType.String(), content)
 }
 
-func newMessage(from string, to string, group string, date time.Time, contentType string, content string) (*Message, error) {
+func newMessage(from string, to string, group string, date time.Time, contentType string,
+	content string) (*Message, error) {
 	msg := &Message{
 		From:        from,
 		To:          to,
@@ -121,7 +123,8 @@ func (m *Message) ReplicateTo(to string) (*Message, error) {
 }
 
 func (m *Message) generateID() error {
-	id, err := hashutil.HashSHA1(m.From + m.To + m.Group + strconv.FormatInt(time.Now().Unix(), 10))
+	id, err := hashutil.HashSHA1(m.From + m.To + m.Group +
+		strconv.FormatInt(time.Now().Unix(), 10))
 	if err != nil {
 		return err
 	}
