@@ -7,7 +7,6 @@ import (
 	"github.com/tsmweb/user-service/config"
 	"github.com/urfave/negroni"
 	"log"
-	"net/http"
 	"os"
 )
 
@@ -33,12 +32,12 @@ func main() {
 	nr.Use(negroni.NewLogger())
 	nr.UseHandler(handler)
 
-	//nr.Run(fmt.Sprintf(":%d", config.ServerPort()))
+	nr.Run(fmt.Sprintf(":%d", config.ServerPort()))
 
-	log.Fatal(http.ListenAndServeTLS(
-		fmt.Sprintf(":%d", config.ServerPort()),
-		config.CertSecureFile(),
-		config.KeySecureFile(),
-		nr,
-	))
+	//log.Fatal(http.ListenAndServeTLS(
+	//	fmt.Sprintf(":%d", config.ServerPort()),
+	//	config.CertSecureFile(),
+	//	config.KeySecureFile(),
+	//	nr,
+	//))
 }

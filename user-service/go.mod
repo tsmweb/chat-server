@@ -7,7 +7,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/lib/pq v1.10.5
 	github.com/stretchr/testify v1.7.1
-	github.com/tsmweb/go-helper-api v1.2.6
+	github.com/tsmweb/go-helper-api v1.2.7
 	github.com/urfave/negroni v1.0.0
 	google.golang.org/protobuf v1.28.0
 )
@@ -16,10 +16,8 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.4.1 // indirect
-	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/klauspost/compress v1.15.1 // indirect
-	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
 	github.com/pierrec/lz4/v4 v4.1.14 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/segmentio/kafka-go v0.4.31 // indirect

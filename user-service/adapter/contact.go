@@ -1,8 +1,8 @@
 package adapter
 
 import (
-	"github.com/tsmweb/user-service/contact"
-	"github.com/tsmweb/user-service/infrastructure/protobuf"
+	"github.com/tsmweb/user-service/app/contact"
+	"github.com/tsmweb/user-service/infra/protobuf"
 	"google.golang.org/protobuf/proto"
 	"time"
 )

@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"github.com/lib/pq"
 	"github.com/tsmweb/go-helper-api/cerror"
-	"github.com/tsmweb/user-service/contact"
-	"github.com/tsmweb/user-service/infrastructure/db"
+	"github.com/tsmweb/user-service/app/contact"
+	"github.com/tsmweb/user-service/infra/db"
 	"time"
 )
 

@@ -9,7 +9,7 @@ import (
 	"github.com/tsmweb/go-helper-api/cerror"
 	"github.com/tsmweb/go-helper-api/httputil"
 	"github.com/tsmweb/go-helper-api/middleware"
-	"github.com/tsmweb/user-service/contact"
+	"github.com/tsmweb/user-service/app/contact"
 	"github.com/tsmweb/user-service/web/api/dto"
 	"github.com/urfave/negroni"
 	"log"
@@ -344,6 +344,7 @@ func MakeContactRouters(
 	deleteUseCase contact.DeleteUseCase,
 	blockUseCase contact.BlockUseCase,
 	unblockUseCase contact.UnblockUseCase) {
+
 	// contact/{id} [GET]
 	r.Handle(fmt.Sprintf("%s/{id}", contactResource), negroni.New(
 		negroni.HandlerFunc(auth.RequireTokenAuth),

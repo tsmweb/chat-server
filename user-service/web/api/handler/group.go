@@ -10,8 +10,8 @@ import (
 	"github.com/tsmweb/go-helper-api/cerror"
 	"github.com/tsmweb/go-helper-api/httputil"
 	"github.com/tsmweb/go-helper-api/middleware"
+	"github.com/tsmweb/user-service/app/group"
 	"github.com/tsmweb/user-service/common"
-	"github.com/tsmweb/user-service/group"
 	"github.com/tsmweb/user-service/web/api/dto"
 	"github.com/urfave/negroni"
 	"log"
@@ -392,6 +392,7 @@ func MakeGroupRouters(
 	addMemberUseCase group.AddMemberUseCase,
 	removeMemberUseCase group.RemoveMemberUseCase,
 	setAdminUseCase group.SetAdminUseCase) {
+
 	// group/{id} [GET]
 	r.Handle(fmt.Sprintf("%s/{id}", groupResource), negroni.New(
 		negroni.HandlerFunc(auth.RequireTokenAuth),

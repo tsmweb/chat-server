@@ -3,7 +3,7 @@ package handler
 import (
 	"context"
 	"github.com/stretchr/testify/mock"
-	"github.com/tsmweb/user-service/group"
+	"github.com/tsmweb/user-service/app/group"
 )
 
 // mockGroupGetUseCase injects mock dependency into handler layer.

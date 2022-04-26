@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"github.com/tsmweb/user-service/contact"
+	"github.com/tsmweb/user-service/app/contact"
 	"time"
 )
 
