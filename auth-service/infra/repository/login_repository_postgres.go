@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"github.com/tsmweb/auth-service/infrastructure/db"
-	"github.com/tsmweb/auth-service/login"
+	"github.com/tsmweb/auth-service/app/login"
+	"github.com/tsmweb/auth-service/infra/db"
 )
 
 // loginRepositoryPostgres implementation for login.Repository interface.
@@ -21,7 +21,7 @@ func NewLoginRepositoryPostgres(db db.Database) login.Repository {
 func (r *loginRepositoryPostgres) Login(ctx context.Context, login *login.Login) (bool, error) {
 	ok := false
 
-	stmt, err := r.dataBase.DB().PrepareContext(ctx,`
+	stmt, err := r.dataBase.DB().PrepareContext(ctx, `
 		SELECT true FROM login 
 		WHERE user_id = $1 
 		AND password = $2`)

@@ -10,9 +10,9 @@ type MockJWT struct {
 	mock.Mock
 }
 
-// GenerateToken represents the simulated method for the generate token feature in the JWT.
-func (m *MockJWT) GenerateToken(id string, exp int) (string, error) {
-	args := m.Called(id, exp)
+// GenerateToken represents the simulated method for to generate token feature in the JWT.
+func (m *MockJWT) GenerateToken(payload map[string]interface{}, exp int) (string, error) {
+	args := m.Called(payload, exp)
 	if args.Get(0) == nil {
 		return "", args.Error(1)
 	}

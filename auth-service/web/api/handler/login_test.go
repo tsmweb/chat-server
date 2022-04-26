@@ -6,8 +6,8 @@ import (
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/tsmweb/auth-service/app/login"
 	"github.com/tsmweb/auth-service/common"
-	"github.com/tsmweb/auth-service/login"
 	"github.com/tsmweb/auth-service/web/api/dto"
 	"github.com/tsmweb/go-helper-api/cerror"
 	"net/http"
@@ -45,7 +45,7 @@ func TestHandler_Login(t *testing.T) {
 	t.Run("when handler.Login return StatusBadRequest", func(t *testing.T) {
 		//t.Parallel()
 		loginDto := &dto.Login{
-			ID: "+5518999999999",
+			ID:       "+5518999999999",
 			Password: "",
 		}
 
@@ -69,7 +69,7 @@ func TestHandler_Login(t *testing.T) {
 	t.Run("when handler.Login return StatusUnauthorized", func(t *testing.T) {
 		//t.Parallel()
 		loginDto := &dto.Login{
-			ID: "+5518999999999",
+			ID:       "+5518999999999",
 			Password: "123456",
 		}
 
@@ -93,7 +93,7 @@ func TestHandler_Login(t *testing.T) {
 	t.Run("when handler.Login return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
 		loginDto := &dto.Login{
-			ID: "+5518999999999",
+			ID:       "+5518999999999",
 			Password: "123456",
 		}
 
@@ -117,7 +117,7 @@ func TestHandler_Login(t *testing.T) {
 	t.Run("when handler.Login return StatusOK", func(t *testing.T) {
 		//t.Parallel()
 		loginDto := &dto.Login{
-			ID: "+5518999999999",
+			ID:       "+5518999999999",
 			Password: "123456",
 		}
 
@@ -199,7 +199,7 @@ func TestHandler_UpdatePassword(t *testing.T) {
 	t.Run("when handler.UpdatePassword return StatusUnauthorized", func(t *testing.T) {
 		//t.Parallel()
 		loginDto := &dto.Login{
-			ID: "+5518977777777",
+			ID:       "+5518977777777",
 			Password: "123456",
 		}
 
@@ -227,7 +227,7 @@ func TestHandler_UpdatePassword(t *testing.T) {
 	t.Run("when handler.UpdatePassword return StatusBadRequest", func(t *testing.T) {
 		//t.Parallel()
 		loginDto := &dto.Login{
-			ID: "+5518999999999",
+			ID:       "+5518999999999",
 			Password: "",
 		}
 
@@ -255,7 +255,7 @@ func TestHandler_UpdatePassword(t *testing.T) {
 	t.Run("when handler.UpdatePassword return StatusNotFound", func(t *testing.T) {
 		//t.Parallel()
 		loginDto := &dto.Login{
-			ID: "+5518999999999",
+			ID:       "+5518999999999",
 			Password: "123456",
 		}
 
@@ -283,7 +283,7 @@ func TestHandler_UpdatePassword(t *testing.T) {
 	t.Run("when handler.UpdatePassword return StatusInternalServerError", func(t *testing.T) {
 		//t.Parallel()
 		loginDto := &dto.Login{
-			ID: "+5518999999999",
+			ID:       "+5518999999999",
 			Password: "123456",
 		}
 
@@ -311,7 +311,7 @@ func TestHandler_UpdatePassword(t *testing.T) {
 	t.Run("when handler.UpdatePassword return StatusOK", func(t *testing.T) {
 		//t.Parallel()
 		loginDto := &dto.Login{
-			ID: "+5518999999999",
+			ID:       "+5518999999999",
 			Password: "123456",
 		}
 

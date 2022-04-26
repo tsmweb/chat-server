@@ -45,7 +45,7 @@ func NewPostgresDatabase() Database {
 	}
 
 	db.SetMaxOpenConns(100)
-	db.SetMaxIdleConns(5)
+	db.SetMaxIdleConns(3)
 	db.SetConnMaxLifetime(time.Minute * 5)
 
 	return &PostgresDatabase{db}

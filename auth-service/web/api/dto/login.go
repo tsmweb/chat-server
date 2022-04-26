@@ -1,6 +1,6 @@
 package dto
 
-import "github.com/tsmweb/auth-service/login"
+import "github.com/tsmweb/auth-service/app/login"
 
 // Login data.
 type Login struct {
@@ -11,7 +11,7 @@ type Login struct {
 // ToEntity mapper Login to login.Login
 func (p *Login) ToEntity() *login.Login {
 	return &login.Login{
-		ID: p.ID,
+		ID:       p.ID,
 		Password: p.Password,
 	}
 }

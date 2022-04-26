@@ -1,16 +1,24 @@
 package user
 
 import (
+	"context"
+	"github.com/tsmweb/go-helper-api/cerror"
 	"github.com/tsmweb/go-helper-api/util/hashutil"
 	"time"
 )
 
+var (
+	ErrIDValidateModel       = &cerror.ErrValidateModel{Msg: "required id"}
+	ErrNameValidateModel     = &cerror.ErrValidateModel{Msg: "required name"}
+	ErrPasswordValidateModel = &cerror.ErrValidateModel{Msg: "required password"}
+)
+
 // User data model
 type User struct {
-	ID       string
-	Name     string
-	LastName string
-	Password string
+	ID        string
+	Name      string
+	LastName  string
+	Password  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -18,10 +26,10 @@ type User struct {
 // NewUser create a new User
 func NewUser(ID, name, lastname, password string) (*User, error) {
 	p := &User{
-		ID:       ID,
-		Name:     name,
-		LastName: lastname,
-		Password: password,
+		ID:        ID,
+		Name:      name,
+		LastName:  lastname,
+		Password:  password,
 		CreatedAt: time.Now().UTC(),
 	}
 
@@ -52,4 +60,11 @@ func (p User) Validate(op Operation) error {
 	}
 
 	return nil
+}
+
+// Repository interface for user data source.
+type Repository interface {
+	Get(ctx context.Context, ID string) (*User, error)
+	Create(ctx context.Context, user *User) error
+	Update(ctx context.Context, user *User) (bool, error)
 }

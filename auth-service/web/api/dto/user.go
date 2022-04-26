@@ -1,16 +1,16 @@
 package dto
 
 import (
-	"github.com/tsmweb/auth-service/user"
+	"github.com/tsmweb/auth-service/app/user"
 	"time"
 )
 
 // User data
 type User struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	LastName string `json:"lastname"`
-	Password string `json:"password,omitempty"`
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	LastName  string    `json:"lastname"`
+	Password  string    `json:"password,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

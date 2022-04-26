@@ -3,7 +3,7 @@ package handler
 import (
 	"context"
 	"github.com/stretchr/testify/mock"
-	"github.com/tsmweb/auth-service/login"
+	"github.com/tsmweb/auth-service/app/login"
 )
 
 // mockLoginUseCase injects mock dependency into Handler layer.

@@ -11,12 +11,12 @@ services:
     environment:
       SERVER_PORT: 8081
       EXPIRE_TOKEN: 24
-      DB_HOST: host.docker.internal
+      DB_HOST: host.docker.app
       DB_PORT: 5432
       DB_DATABASE: chat_db
       DB_SCHEMA: chat_db
       DB_USER: salesapi
       DB_PASSWORD: password
     extra_hosts:
-      - "host.docker.internal:172.17.0.1"
+      - "host.docker.app:172.17.0.1"
 

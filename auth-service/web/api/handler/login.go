@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/tsmweb/auth-service/app/login"
 	"github.com/tsmweb/auth-service/common"
-	"github.com/tsmweb/auth-service/login"
 	"github.com/tsmweb/auth-service/web/api/dto"
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/cerror"
@@ -124,6 +124,7 @@ func MakeLoginHandlers(
 	auth middleware.Auth,
 	loginUseCase login.LoginUseCase,
 	updateUseCase login.UpdateUseCase) {
+
 	// login [POST]
 	r.Handle(loginResource, Login(loginUseCase)).
 		Methods(http.MethodPost)

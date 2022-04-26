@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/tsmweb/auth-service/app/user"
 	"github.com/tsmweb/auth-service/common"
-	"github.com/tsmweb/auth-service/user"
 	"github.com/tsmweb/auth-service/web/api/dto"
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/cerror"
@@ -49,7 +49,7 @@ func GetUser(jwt auth.JWT, getUseCase user.GetUseCase) http.Handler {
 	})
 }
 
-// Create a new user.
+// CreateUser a new user.
 func CreateUser(createUseCase user.CreateUseCase) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !httputil.HasContentType(r, httputil.MimeApplicationJSON) {
@@ -88,7 +88,7 @@ func CreateUser(createUseCase user.CreateUseCase) http.Handler {
 	})
 }
 
-// Update updates user data.
+// UpdateUser updates user data.
 func UpdateUser(jwt auth.JWT, updateUseCase user.UpdateUseCase) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !httputil.HasContentType(r, httputil.MimeApplicationJSON) {
@@ -157,6 +157,7 @@ func MakeUserHandlers(
 	getUseCase user.GetUseCase,
 	createUseCase user.CreateUseCase,
 	updateUseCase user.UpdateUseCase) {
+
 	// user [GET]
 	r.Handle(userResource, negroni.New(
 		negroni.HandlerFunc(auth.RequireTokenAuth),

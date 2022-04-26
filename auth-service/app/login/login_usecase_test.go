@@ -40,7 +40,7 @@ func TestLoginUseCase_Execute(t *testing.T) {
 		r.On("Login", mock.Anything, mock.Anything).
 			Return(true, nil).
 			Once()
-		j.On("GenerateToken", "+5518999999999", config.ExpireToken()).
+		j.On("GenerateToken", map[string]interface{}{"id": "+5518999999999"}, config.ExpireToken()).
 			Return("", nil).
 			Once()
 		_, err = uc.Execute(ctx, "+5518999999999", "123456")
@@ -63,7 +63,7 @@ func TestLoginUseCase_Execute(t *testing.T) {
 		r.On("Login", mock.Anything, mock.Anything).
 			Return(true, nil).
 			Once()
-		j.On("GenerateToken", "+5518999999999", config.ExpireToken()).
+		j.On("GenerateToken", map[string]interface{}{"id": "+5518999999999"}, config.ExpireToken()).
 			Return(nil, errors.New("error")).
 			Once()
 		_, err = uc.Execute(ctx, "+5518999999999", "123456")
@@ -80,7 +80,7 @@ func TestLoginUseCase_Execute(t *testing.T) {
 			Return(true, nil).
 			Once()
 		j := new(common.MockJWT)
-		j.On("GenerateToken", "+5518999999999", config.ExpireToken()).
+		j.On("GenerateToken", map[string]interface{}{"id": "+5518999999999"}, config.ExpireToken()).
 			Return(token, nil).
 			Once()
 		uc := NewLoginUseCase(r, j)

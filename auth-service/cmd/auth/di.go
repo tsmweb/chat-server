@@ -2,11 +2,11 @@ package main
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/tsmweb/auth-service/app/login"
+	"github.com/tsmweb/auth-service/app/user"
 	"github.com/tsmweb/auth-service/config"
-	"github.com/tsmweb/auth-service/infrastructure/db"
-	"github.com/tsmweb/auth-service/infrastructure/repository"
-	"github.com/tsmweb/auth-service/login"
-	"github.com/tsmweb/auth-service/user"
+	"github.com/tsmweb/auth-service/infra/db"
+	"github.com/tsmweb/auth-service/infra/repository"
 	"github.com/tsmweb/auth-service/web/api/handler"
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/middleware"

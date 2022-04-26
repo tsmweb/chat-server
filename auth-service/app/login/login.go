@@ -1,14 +1,21 @@
 package login
 
 import (
+	"context"
+	"github.com/tsmweb/go-helper-api/cerror"
 	"github.com/tsmweb/go-helper-api/util/hashutil"
 	"time"
 )
 
+var (
+	ErrIDValidateModel       = &cerror.ErrValidateModel{Msg: "required id"}
+	ErrPasswordValidateModel = &cerror.ErrValidateModel{Msg: "required password"}
+)
+
 // Login data model.
 type Login struct {
-	ID       string
-	Password string
+	ID        string
+	Password  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -16,8 +23,8 @@ type Login struct {
 // NewLogin create a new Login.
 func NewLogin(ID, password string) (*Login, error) {
 	l := &Login{
-		ID: ID,
-		Password: password,
+		ID:        ID,
+		Password:  password,
 		CreatedAt: time.Now().UTC(),
 	}
 
@@ -54,4 +61,10 @@ func (l *Login) Validate() error {
 	}
 
 	return nil
+}
+
+// Repository interface for login data source.
+type Repository interface {
+	Login(ctx context.Context, login *Login) (bool, error)
+	Update(ctx context.Context, login *Login) (bool, error)
 }
