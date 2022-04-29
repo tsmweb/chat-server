@@ -1,28 +1,27 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/tsmweb/file-service/config"
+	"github.com/tsmweb/file-service/app/user"
+	"github.com/tsmweb/file-service/common/fileutil"
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/httputil"
 	"github.com/tsmweb/go-helper-api/middleware"
 	"github.com/urfave/negroni"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"path/filepath"
 	"strconv"
 )
 
 // GetUserFile gets the user image by ID.
-func GetUserFile() http.Handler {
+func GetUserFile(getUseCase user.GetUseCase) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		userID := vars["id"]
 
-		path := filepath.Join(config.UserFilePath(), fmt.Sprintf("%s.jpg", userID))
-		fileBytes, err := ioutil.ReadFile(path)
+		fileBytes, err := getUseCase.Execute(userID)
 		if err != nil {
 			httputil.RespondWithError(w, http.StatusNotFound, err.Error())
 			return
@@ -36,7 +35,7 @@ func GetUserFile() http.Handler {
 }
 
 // UploadUserFile uploads an image to the user.
-func UploadUserFile(jwt auth.JWT) http.Handler {
+func UploadUserFile(jwt auth.JWT, uploadUseCase user.UploadUseCase) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Get user id.
 		data, err := jwt.GetDataToken(r, "id")
@@ -48,7 +47,7 @@ func UploadUserFile(jwt auth.JWT) http.Handler {
 		userID := data.(string)
 
 		// Validate file size.
-		if err = validateFileSize(w, r); err != nil {
+		if err = fileutil.ValidateFileSize(w, r); err != nil {
 			httputil.RespondWithError(w, http.StatusBadRequest, "The uploaded file is too big.")
 			return
 		}
@@ -60,17 +59,18 @@ func UploadUserFile(jwt auth.JWT) http.Handler {
 		}
 		defer file.Close()
 
-		// Get content type.
-		_, fileExtension, err := getContentType(file)
-		if err != nil || fileExtension != "jpg" {
-			httputil.RespondWithError(w, http.StatusUnsupportedMediaType,
-				http.StatusText(http.StatusUnsupportedMediaType))
-			return
-		}
+		if err = uploadUseCase.Execute(userID, file); err != nil {
+			log.Println(err.Error())
 
-		// Creates the file on the local file system.
-		path := filepath.Join(config.UserFilePath(), fmt.Sprintf("%s.%s", userID, fileExtension))
-		if err = copyFile(path, file); err != nil {
+			if errors.Is(err, user.ErrFileTooBig) {
+				httputil.RespondWithError(w, http.StatusBadRequest, err.Error())
+				return
+			}
+			if errors.Is(err, user.ErrUnsupportedMediaType) {
+				httputil.RespondWithError(w, http.StatusUnsupportedMediaType, err.Error())
+				return
+			}
+
 			httputil.RespondWithError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
@@ -93,16 +93,18 @@ func MakeUserHandlers(
 	r *mux.Router,
 	jwt auth.JWT,
 	auth middleware.Auth,
+	getUseCase user.GetUseCase,
+	uploadUseCase user.UploadUseCase,
 ) {
 	// user/{id} [GET]
 	r.Handle(fmt.Sprintf("%s/{id}", userResource), negroni.New(
 		negroni.HandlerFunc(auth.RequireTokenAuth),
-		negroni.Wrap(GetUserFile())),
+		negroni.Wrap(GetUserFile(getUseCase))),
 	).Methods(http.MethodGet)
 
 	// user [POST]
 	r.Handle(userResource, negroni.New(
 		negroni.HandlerFunc(auth.RequireTokenAuth),
-		negroni.Wrap(UploadUserFile(jwt))),
+		negroni.Wrap(UploadUserFile(jwt, uploadUseCase))),
 	).Methods(http.MethodPost)
 }

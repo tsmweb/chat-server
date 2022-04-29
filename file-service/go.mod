@@ -7,7 +7,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/lib/pq v1.10.5
 	github.com/stretchr/testify v1.7.1
-	github.com/tsmweb/go-helper-api v1.2.6
+	github.com/tsmweb/go-helper-api v1.2.7
 	github.com/urfave/negroni v1.0.0
 )
 

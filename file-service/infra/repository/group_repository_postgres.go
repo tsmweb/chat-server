@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"github.com/tsmweb/file-service/group"
-	"github.com/tsmweb/file-service/infrastructure/db"
+	"github.com/tsmweb/file-service/app/group"
+	"github.com/tsmweb/file-service/infra/db"
 )
 
 // groupRepositoryPostgres implementation for group.Repository interface.

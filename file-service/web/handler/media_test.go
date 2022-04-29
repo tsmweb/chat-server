@@ -7,7 +7,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/tsmweb/file-service/common"
+	"github.com/tsmweb/file-service/app/media"
+	"github.com/tsmweb/file-service/common/appmock"
+	"github.com/tsmweb/file-service/common/imageutil"
 	"github.com/tsmweb/file-service/config"
 	"net/http"
 	"net/http/httptest"
@@ -19,13 +21,15 @@ func TestHandler_GetMediaFile(t *testing.T) {
 		t.Error(err)
 	}
 
+	getUseCase := media.NewGetUseCase()
+
 	t.Run("when handler.GetMediaFile return StatusNotFound", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet,
 			fmt.Sprintf("%s/9f2093abeecac621b55489bf8cb0e08ee00d5fe6da6f30e77214a648e58bd91a.jpg",
 				mediaResource), nil)
 		rec := httptest.NewRecorder()
 
-		handler := GetMediaFile()
+		handler := GetMediaFile(getUseCase)
 
 		router := mux.NewRouter()
 		router.Handle(fmt.Sprintf("%s/{name}", mediaResource), handler).Methods(http.MethodGet)
@@ -40,7 +44,7 @@ func TestHandler_GetMediaFile(t *testing.T) {
 				mediaResource), nil)
 		rec := httptest.NewRecorder()
 
-		handler := GetMediaFile()
+		handler := GetMediaFile(getUseCase)
 
 		router := mux.NewRouter()
 		router.Handle(fmt.Sprintf("%s/{name}", mediaResource), handler).Methods(http.MethodGet)
@@ -55,17 +59,19 @@ func TestHandler_UploadMediaFile(t *testing.T) {
 		t.Error(err)
 	}
 
+	uploadUseCase := media.NewUploadUseCase()
+
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, mediaResource, bytes.NewReader([]byte("")))
 		req.Header.Set("Content-Type", "image/jpeg")
 		rec := httptest.NewRecorder()
 
-		mJWT := new(common.MockJWT)
+		mJWT := new(appmock.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
 
-		UploadUserFile(mJWT).ServeHTTP(rec, req)
+		UploadMediaFile(mJWT, uploadUseCase).ServeHTTP(rec, req)
 
 		//t.Log(rec.Result().Status)
 		//t.Log(rec.Body.String())
@@ -75,19 +81,19 @@ func TestHandler_UploadMediaFile(t *testing.T) {
 	t.Run("when handler.UploadMediaFile return with StatusBadRequest", func(t *testing.T) {
 		config.SetMaxUploadSize(2) // KB
 
-		contentType, content, err := createImageBuffer("jpg")
+		contentType, content, err := imageutil.CreateImageBuffer("jpg")
 		assert.NoError(t, err)
 
 		req := httptest.NewRequest(http.MethodPost, mediaResource, content)
 		req.Header.Add("Content-Type", contentType)
 		rec := httptest.NewRecorder()
 
-		mJWT := new(common.MockJWT)
+		mJWT := new(appmock.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518977777777", nil).
 			Once()
 
-		UploadMediaFile(mJWT).ServeHTTP(rec, req)
+		UploadMediaFile(mJWT, uploadUseCase).ServeHTTP(rec, req)
 
 		t.Log(rec.Result().Status)
 		t.Log(rec.Body.String())
@@ -97,19 +103,19 @@ func TestHandler_UploadMediaFile(t *testing.T) {
 	t.Run("when handler.UploadMediaFile return with StatusCreated", func(t *testing.T) {
 		config.SetMaxUploadSize(1024) // KB
 
-		contentType, content, err := createImageBuffer("jpg")
+		contentType, content, err := imageutil.CreateImageBuffer("jpg")
 		assert.NoError(t, err)
 
 		req := httptest.NewRequest(http.MethodPost, mediaResource, content)
 		req.Header.Add("Content-Type", contentType)
 		rec := httptest.NewRecorder()
 
-		mJWT := new(common.MockJWT)
+		mJWT := new(appmock.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518977777777", nil).
 			Once()
 
-		UploadMediaFile(mJWT).ServeHTTP(rec, req)
+		UploadMediaFile(mJWT, uploadUseCase).ServeHTTP(rec, req)
 
 		t.Log(rec.Result().Status)
 		t.Log(rec.Body.String())

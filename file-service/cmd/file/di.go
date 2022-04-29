@@ -2,10 +2,12 @@ package main
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/tsmweb/file-service/app/group"
+	"github.com/tsmweb/file-service/app/media"
+	"github.com/tsmweb/file-service/app/user"
 	"github.com/tsmweb/file-service/config"
-	"github.com/tsmweb/file-service/group"
-	"github.com/tsmweb/file-service/infrastructure/db"
-	"github.com/tsmweb/file-service/infrastructure/repository"
+	"github.com/tsmweb/file-service/infra/db"
+	"github.com/tsmweb/file-service/infra/repository"
 	"github.com/tsmweb/file-service/web/handler"
 	"github.com/tsmweb/go-helper-api/auth"
 	"github.com/tsmweb/go-helper-api/middleware"
@@ -22,29 +24,41 @@ func CreateProvider() *Provider {
 }
 
 func (p *Provider) UserRouter(mr *mux.Router) {
+	getUseCase := user.NewGetUseCase()
+	uploadUseCase := user.NewUploadUseCase()
+
 	handler.MakeUserHandlers(
 		mr,
 		p.JwtProvider(),
-		p.AuthProvider())
+		p.AuthProvider(),
+		getUseCase,
+		uploadUseCase)
 }
 
 func (p *Provider) GroupRouter(mr *mux.Router) {
 	database := p.DatabaseProvider()
 	repo := repository.NewGroupRepositoryPostgres(database)
-	validateUseCase := group.NewValidateUseCase(repo)
+	getUseCase := group.NewGetUseCase(repo)
+	uploadUseCase := group.NewUploadUseCase(repo)
 
 	handler.MakeGroupHandlers(
 		mr,
 		p.JwtProvider(),
 		p.AuthProvider(),
-		validateUseCase)
+		getUseCase,
+		uploadUseCase)
 }
 
 func (p *Provider) MediaRouter(mr *mux.Router) {
+	getUseCase := media.NewGetUseCase()
+	uploadUseCase := media.NewUploadUseCase()
+
 	handler.MakeMediaHandlers(
 		mr,
 		p.JwtProvider(),
-		p.AuthProvider())
+		p.AuthProvider(),
+		getUseCase,
+		uploadUseCase)
 }
 
 func (p *Provider) JwtProvider() auth.JWT {

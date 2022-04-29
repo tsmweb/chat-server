@@ -50,20 +50,24 @@ func Load(workDir string) error {
 	groupFilePath = filepath.Join(filePath, "group")
 	mediaFilePath = filepath.Join(filePath, "media")
 
-	if err := os.MkdirAll(userFilePath, os.ModePerm); err != nil {
+	if err = os.MkdirAll(userFilePath, os.ModePerm); err != nil {
 		return err
 	}
 
-	if err := os.MkdirAll(groupFilePath, os.ModePerm); err != nil {
+	if err = os.MkdirAll(groupFilePath, os.ModePerm); err != nil {
 		return err
 	}
 
-	if err := os.MkdirAll(mediaFilePath, os.ModePerm); err != nil {
+	if err = os.MkdirAll(mediaFilePath, os.ModePerm); err != nil {
 		return err
 	}
 
 	dbHost = os.Getenv("DB_HOST")
-	dbPort, _ = strconv.Atoi(os.Getenv("DB_PORT"))
+	dbPort, err = strconv.Atoi(os.Getenv("DB_PORT"))
+	if err != nil {
+		return err
+	}
+
 	dbUser = os.Getenv("DB_USER")
 	dbPassword = os.Getenv("DB_PASSWORD")
 	dbName = os.Getenv("DB_DATABASE")

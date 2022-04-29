@@ -1,15 +1,15 @@
 package handler
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/tsmweb/file-service/common"
+	"github.com/tsmweb/file-service/app/group"
+	"github.com/tsmweb/file-service/common/appmock"
+	"github.com/tsmweb/file-service/common/imageutil"
 	"github.com/tsmweb/file-service/config"
-	"github.com/tsmweb/file-service/group"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -25,13 +25,14 @@ func TestHandler_GetGroupFile(t *testing.T) {
 			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", groupResource), nil)
 		rec := httptest.NewRecorder()
 
-		mJWT := new(common.MockJWT)
+		mJWT := new(appmock.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		mValidateUseCase := new(mockGroupValidateUseCase)
+		mRepo := new(appmock.MockGroupRepository)
+		getUseCase := group.NewGetUseCase(mRepo)
 
-		handler := GetGroupFile(mJWT, mValidateUseCase)
+		handler := GetGroupFile(mJWT, getUseCase)
 
 		router := mux.NewRouter()
 		router.Handle(fmt.Sprintf("%s/{id}", groupResource), handler).Methods(http.MethodGet)
@@ -45,16 +46,18 @@ func TestHandler_GetGroupFile(t *testing.T) {
 			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", groupResource), nil)
 		rec := httptest.NewRecorder()
 
-		mJWT := new(common.MockJWT)
+		mJWT := new(appmock.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518977777777", nil).
 			Once()
-		mValidateUseCase := new(mockGroupValidateUseCase)
-		mValidateUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(group.ErrGroupNotFound).
-			Once()
 
-		handler := GetGroupFile(mJWT, mValidateUseCase)
+		mRepo := new(appmock.MockGroupRepository)
+		mRepo.On("ExistsGroup", mock.Anything, mock.Anything).
+			Return(false, nil).
+			Once()
+		getUseCase := group.NewGetUseCase(mRepo)
+
+		handler := GetGroupFile(mJWT, getUseCase)
 
 		router := mux.NewRouter()
 		router.Handle(fmt.Sprintf("%s/{id}", groupResource), handler).Methods(http.MethodGet)
@@ -70,16 +73,20 @@ func TestHandler_GetGroupFile(t *testing.T) {
 			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", groupResource), nil)
 		rec := httptest.NewRecorder()
 
-		mJWT := new(common.MockJWT)
+		mJWT := new(appmock.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518977777777", nil).
 			Once()
-		mValidateUseCase := new(mockGroupValidateUseCase)
-		mValidateUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(group.ErrOperationNotAllowed).
+		mRepo := new(appmock.MockGroupRepository)
+		mRepo.On("ExistsGroup", mock.Anything, mock.Anything).
+			Return(true, nil).
 			Once()
+		mRepo.On("IsGroupMember", mock.Anything, mock.Anything, mock.Anything).
+			Return(false, nil).
+			Once()
+		getUseCase := group.NewGetUseCase(mRepo)
 
-		handler := GetGroupFile(mJWT, mValidateUseCase)
+		handler := GetGroupFile(mJWT, getUseCase)
 
 		router := mux.NewRouter()
 		router.Handle(fmt.Sprintf("%s/{id}", groupResource), handler).Methods(http.MethodGet)
@@ -95,16 +102,20 @@ func TestHandler_GetGroupFile(t *testing.T) {
 			fmt.Sprintf("%s/be49afd2ee890805c21ddd55879db1387aec9751", groupResource), nil)
 		rec := httptest.NewRecorder()
 
-		mJWT := new(common.MockJWT)
+		mJWT := new(appmock.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518977777777", nil).
 			Once()
-		mValidateUseCase := new(mockGroupValidateUseCase)
-		mValidateUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(nil).
+		mRepo := new(appmock.MockGroupRepository)
+		mRepo.On("ExistsGroup", mock.Anything, mock.Anything).
+			Return(true, nil).
 			Once()
+		mRepo.On("IsGroupMember", mock.Anything, mock.Anything, mock.Anything).
+			Return(true, nil).
+			Once()
+		getUseCase := group.NewGetUseCase(mRepo)
 
-		handler := GetGroupFile(mJWT, mValidateUseCase)
+		handler := GetGroupFile(mJWT, getUseCase)
 
 		router := mux.NewRouter()
 		router.Handle(fmt.Sprintf("%s/{id}", groupResource), handler).Methods(http.MethodGet)
@@ -121,66 +132,50 @@ func TestHandler_UploadGroupFile(t *testing.T) {
 	}
 
 	t.Run("when JWT fails with ErrInternalServer", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, groupResource, bytes.NewReader([]byte("")))
-		req.Header.Set("Content-Type", "image/jpeg")
+		config.SetMaxUploadSize(1024) // KB
+
+		contentType, content, err := imageutil.CreateImageBuffer("jpg")
+		assert.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, groupResource, content)
+		req.Header.Set("Content-Type", contentType)
 		rec := httptest.NewRecorder()
 
-		mJWT := new(common.MockJWT)
+		mJWT := new(appmock.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return(nil, errors.New("error")).
 			Once()
-		mValidateUseCase := new(mockGroupValidateUseCase)
+		mRepo := new(appmock.MockGroupRepository)
+		uploadUseCase := group.NewUploadUseCase(mRepo)
 
-		UploadGroupFile(mJWT, mValidateUseCase).ServeHTTP(rec, req)
+		UploadGroupFile(mJWT, uploadUseCase).ServeHTTP(rec, req)
 
 		//t.Log(rec.Result().Status)
 		//t.Log(rec.Body.String())
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
-	t.Run("when handler.UploadGroupFile return with StatusBadRequest", func(t *testing.T) {
-		config.SetMaxUploadSize(2) // KB
-
-		contentType, content, err := createImageBuffer("jpg")
-		assert.NoError(t, err)
-
-		req := httptest.NewRequest(http.MethodPost, groupResource, content)
-		req.Header.Add("Content-Type", contentType)
-		rec := httptest.NewRecorder()
-
-		mJWT := new(common.MockJWT)
-		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
-			Return("+5518977777777", nil).
-			Once()
-		mValidateUseCase := new(mockGroupValidateUseCase)
-
-		UploadGroupFile(mJWT, mValidateUseCase).ServeHTTP(rec, req)
-
-		t.Log(rec.Result().Status)
-		t.Log(rec.Body.String())
-		assert.Equal(t, http.StatusBadRequest, rec.Code)
-	})
-
 	t.Run("when handler.UploadGroupFile return with StatusNotFound", func(t *testing.T) {
 		config.SetMaxUploadSize(1024) // KB
 
-		contentType, content, err := createImageBuffer("jpg")
+		contentType, content, err := imageutil.CreateImageBuffer("jpg")
 		assert.NoError(t, err)
 
 		req := httptest.NewRequest(http.MethodPost, groupResource, content)
 		req.Header.Add("Content-Type", contentType)
 		rec := httptest.NewRecorder()
 
-		mJWT := new(common.MockJWT)
+		mJWT := new(appmock.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518977777777", nil).
 			Once()
-		mValidateUseCase := new(mockGroupValidateUseCase)
-		mValidateUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(group.ErrGroupNotFound).
+		mRepo := new(appmock.MockGroupRepository)
+		mRepo.On("ExistsGroup", mock.Anything, mock.Anything).
+			Return(false, nil).
 			Once()
+		uploadUseCase := group.NewUploadUseCase(mRepo)
 
-		UploadGroupFile(mJWT, mValidateUseCase).ServeHTTP(rec, req)
+		UploadGroupFile(mJWT, uploadUseCase).ServeHTTP(rec, req)
 
 		t.Log(rec.Result().Status)
 		t.Log(rec.Body.String())
@@ -190,49 +185,87 @@ func TestHandler_UploadGroupFile(t *testing.T) {
 	t.Run("when handler.UploadGroupFile return with StatusUnauthorized", func(t *testing.T) {
 		config.SetMaxUploadSize(1024) // KB
 
-		contentType, content, err := createImageBuffer("jpg")
+		contentType, content, err := imageutil.CreateImageBuffer("jpg")
 		assert.NoError(t, err)
 
 		req := httptest.NewRequest(http.MethodPost, groupResource, content)
 		req.Header.Add("Content-Type", contentType)
 		rec := httptest.NewRecorder()
 
-		mJWT := new(common.MockJWT)
+		mJWT := new(appmock.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518977777777", nil).
 			Once()
-		mValidateUseCase := new(mockGroupValidateUseCase)
-		mValidateUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(group.ErrOperationNotAllowed).
+		mRepo := new(appmock.MockGroupRepository)
+		mRepo.On("ExistsGroup", mock.Anything, mock.Anything).
+			Return(true, nil).
+			Once()
+		mRepo.On("IsGroupAdmin", mock.Anything, mock.Anything, mock.Anything).
+			Return(false, nil).
 			Once()
 
-		UploadGroupFile(mJWT, mValidateUseCase).ServeHTTP(rec, req)
+		uploadUseCase := group.NewUploadUseCase(mRepo)
+		UploadGroupFile(mJWT, uploadUseCase).ServeHTTP(rec, req)
 
 		t.Log(rec.Result().Status)
 		t.Log(rec.Body.String())
 		assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	})
 
-	t.Run("when handler.UploadGroupFile return with StatusUnsupportedMediaType", func(t *testing.T) {
-		config.SetMaxUploadSize(1024) // KB
+	t.Run("when handler.UploadGroupFile return with StatusBadRequest", func(t *testing.T) {
+		config.SetMaxUploadSize(2) // KB
 
-		contentType, content, err := createImageBuffer("png")
+		contentType, content, err := imageutil.CreateImageBuffer("jpg")
 		assert.NoError(t, err)
 
 		req := httptest.NewRequest(http.MethodPost, groupResource, content)
 		req.Header.Add("Content-Type", contentType)
 		rec := httptest.NewRecorder()
 
-		mJWT := new(common.MockJWT)
+		mJWT := new(appmock.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518977777777", nil).
 			Once()
-		mValidateUseCase := new(mockGroupValidateUseCase)
-		mValidateUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(nil).
+		mRepo := new(appmock.MockGroupRepository)
+		mRepo.On("ExistsGroup", mock.Anything, mock.Anything).
+			Return(true, nil).
+			Once()
+		mRepo.On("IsGroupAdmin", mock.Anything, mock.Anything, mock.Anything).
+			Return(true, nil).
+			Once()
+		uploadUseCase := group.NewUploadUseCase(mRepo)
+
+		UploadGroupFile(mJWT, uploadUseCase).ServeHTTP(rec, req)
+
+		t.Log(rec.Result().Status)
+		t.Log(rec.Body.String())
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+
+	t.Run("when handler.UploadGroupFile return with StatusUnsupportedMediaType", func(t *testing.T) {
+		config.SetMaxUploadSize(1024) // KB
+
+		contentType, content, err := imageutil.CreateImageBuffer("png")
+		assert.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, groupResource, content)
+		req.Header.Add("Content-Type", contentType)
+		rec := httptest.NewRecorder()
+
+		mJWT := new(appmock.MockJWT)
+		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
+			Return("+5518977777777", nil).
+			Once()
+		mRepo := new(appmock.MockGroupRepository)
+		mRepo.On("ExistsGroup", mock.Anything, mock.Anything).
+			Return(true, nil).
+			Once()
+		mRepo.On("IsGroupAdmin", mock.Anything, mock.Anything, mock.Anything).
+			Return(true, nil).
 			Once()
 
-		UploadGroupFile(mJWT, mValidateUseCase).ServeHTTP(rec, req)
+		uploadUseCase := group.NewUploadUseCase(mRepo)
+		UploadGroupFile(mJWT, uploadUseCase).ServeHTTP(rec, req)
 
 		t.Log(rec.Result().Status)
 		t.Log(rec.Body.String())
@@ -242,23 +275,27 @@ func TestHandler_UploadGroupFile(t *testing.T) {
 	t.Run("when handler.UploadGroupFile return with StatusCreated", func(t *testing.T) {
 		config.SetMaxUploadSize(1024) // KB
 
-		contentType, content, err := createImageBuffer("jpg")
+		contentType, content, err := imageutil.CreateImageBuffer("jpg")
 		assert.NoError(t, err)
 
 		req := httptest.NewRequest(http.MethodPost, groupResource, content)
 		req.Header.Add("Content-Type", contentType)
 		rec := httptest.NewRecorder()
 
-		mJWT := new(common.MockJWT)
+		mJWT := new(appmock.MockJWT)
 		mJWT.On("GetDataToken", mock.Anything, mock.Anything).
 			Return("+5518977777777", nil).
 			Once()
-		mValidateUseCase := new(mockGroupValidateUseCase)
-		mValidateUseCase.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(nil).
+		mRepo := new(appmock.MockGroupRepository)
+		mRepo.On("ExistsGroup", mock.Anything, mock.Anything).
+			Return(true, nil).
+			Once()
+		mRepo.On("IsGroupAdmin", mock.Anything, mock.Anything, mock.Anything).
+			Return(true, nil).
 			Once()
 
-		UploadGroupFile(mJWT, mValidateUseCase).ServeHTTP(rec, req)
+		uploadUseCase := group.NewUploadUseCase(mRepo)
+		UploadGroupFile(mJWT, uploadUseCase).ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusCreated, rec.Code)
 	})
