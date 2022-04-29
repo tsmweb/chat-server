@@ -8,7 +8,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/stretchr/testify v1.7.1
 	github.com/tsmweb/easygo v0.0.0-20190618140210-3c14a0dc985f
-	github.com/tsmweb/go-helper-api v1.2.6
+	github.com/tsmweb/go-helper-api v1.2.7
 	github.com/urfave/negroni v1.0.0
 	google.golang.org/protobuf v1.28.0
 )
