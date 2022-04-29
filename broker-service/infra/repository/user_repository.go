@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/tsmweb/broker-service/broker/user"
-	"github.com/tsmweb/broker-service/infrastructure/db"
+	"github.com/tsmweb/broker-service/infra/db"
 	"strconv"
 	"time"
 )

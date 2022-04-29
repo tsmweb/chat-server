@@ -86,8 +86,8 @@ func (h *messageHandler) processGroupMessage(ctx context.Context, msg message.Me
 			continue
 		}
 		m, _ := msg.ReplicateTo(member)
-		if err := h.sendMessage(ctx, *m); err != nil {
-			errEvents = append(errEvents, err)
+		if errEvent := h.sendMessage(ctx, *m); errEvent != nil {
+			errEvents = append(errEvents, errEvent)
 		}
 	}
 

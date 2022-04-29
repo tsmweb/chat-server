@@ -8,8 +8,8 @@ import (
 	"github.com/tsmweb/broker-service/broker/message"
 	"github.com/tsmweb/broker-service/broker/user"
 	"github.com/tsmweb/broker-service/config"
-	"github.com/tsmweb/broker-service/infrastructure/db"
-	"github.com/tsmweb/broker-service/infrastructure/repository"
+	"github.com/tsmweb/broker-service/infra/db"
+	"github.com/tsmweb/broker-service/infra/repository"
 	"github.com/tsmweb/go-helper-api/kafka"
 )
 
