@@ -1,0 +1,11 @@
+FROM golang:1.18
+
+WORKDIR /go/src
+ENV PATH="/go/bin:${PATH}"
+
+RUN apt-get update && \
+    apt-get install build-essential protobuf-compiler -y
+
+COPY . .
+RUN GOOS=linux go build -ldflags="-s -w" -o broker cmd/broker/main.go cmd/broker/di.go
+ENTRYPOINT ["./broker"]
