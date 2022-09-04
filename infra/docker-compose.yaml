@@ -1,4 +1,4 @@
-version: "3.7"
+version: "3.8"
 
 services: 
 
@@ -95,7 +95,7 @@ services:
             #  ---------------
             CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components,/data/connect-jars
         volumes:
-            - $PWD/data:/data
+            - connect_data:/data
         command: 
             - bash
             - -c
@@ -110,6 +110,9 @@ services:
         extra_hosts:
             - "host.docker.internal:172.17.0.1"
 
+    # Inserir a entrada `vm.max_map_count = 262144` em /etc/sysctl.conf
+    # Executar o comando `sudo sysctl -w vm.max_map_count=262144`
+    # Reiniciar o docker `sudo systemctl restart docker`
     es01:
         image: docker.elastic.co/elasticsearch/elasticsearch:7.11.2
         container_name: es01
@@ -127,7 +130,7 @@ services:
                 soft: -1
                 hard: -1
         volumes:
-            - ./es01:/usr/share/elasticsearch/data
+            - esdata01:/usr/share/elasticsearch/data
         extra_hosts:
             - "host.docker.internal:172.17.0.1"
 
@@ -143,3 +146,10 @@ services:
             - es01
         extra_hosts:
             - "host.docker.internal:172.17.0.1"
+
+volumes:
+    esdata01:
+        driver: local
+
+    connect_data:
+        driver: local
