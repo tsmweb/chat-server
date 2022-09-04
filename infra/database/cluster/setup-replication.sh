@@ -12,7 +12,7 @@ cat >> ${PGDATA}/postgresql.conf <<-EOREP
 wal_level = logical
 max_wal_senders = $PG_MAX_WAL_SENDERS
 wal_keep_segments = $PG_WAL_KEEP_SEGMENTS
-max_replication_slots = 1
+max_replication_slots = $PG_WAL_REPLICATION_SLOTS
 
 primary_conninfo = 'host=${REPLICATE_FROM} port=5432 user=${REPLICATE_USER} password=${REPLICATE_PASSWORD} sslmode=prefer sslcompression=0 gssencmode=prefer krbsrvname=postgres target_session_attrs=any'
 promote_trigger_file = '/tmp/promote_to_master'

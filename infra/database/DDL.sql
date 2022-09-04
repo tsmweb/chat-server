@@ -147,7 +147,3 @@ CREATE TABLE chat_db.offline_message (
 CREATE INDEX offline_message_msg_to_idx ON chat_db.offline_message USING btree (msg_to, msg_status);
 
 -- chat_db.group_member_notify foreign keys
-
-ALTER TABLE chat_db.offline_message ADD CONSTRAINT offline_message_from_user_id_fkey FOREIGN KEY (user_id) REFERENCES chat_db."user"(id);
-ALTER TABLE chat_db.offline_message ADD CONSTRAINT offline_message_to_user_id_fkey FOREIGN KEY (user_id) REFERENCES chat_db."user"(id);
-ALTER TABLE chat_db.offline_message ADD CONSTRAINT offline_message_group_user_id_fkey FOREIGN KEY (group_id) REFERENCES chat_db."group"(id);

@@ -1,51 +1,18 @@
-version: "3.7"
+version: "3.8"
 
 services: 
-    pg-master:
-        build: '.'
-        image: tsmweb/postgres
-        restart: 'always'
-        container_name: pg-master
+    postgres:
+        image: postgres:14.5
+        restart: 'no'
+        container_name: postgres_db
         ports: 
             - 5432:5432
         volumes: 
-            - pg-master-db:/var/lib/postgresql/data
+            - pg-data:/var/lib/postgresql/data
         environment: 
             POSTGRES_DB: 'postgres'
             POSTGRES_USER: 'postgres'
             POSTGRES_PASSWORD: 'postgres-password'
-            PGDATA: '/var/lib/postgresql/data/pgdata'
-            REPLICATE_FROM: 'pg-master'
-            REPLICATE_USER: 'replication'
-            REPLICATE_PASSWORD: 'replcation-password'
-            REPLICATE_MASTER: 'on'    
-
-    pg-slave:
-        build: '.'
-        image: tsmweb/postgres
-        restart: 'always'
-        container_name: pg-slave
-        ports: 
-            - 5433:5432
-        volumes: 
-            - pg-slave-db:/var/lib/postgresql/data
-        environment: 
-            POSTGRES_DB: 'postgres'
-            POSTGRES_USER: 'postgres'
-            POSTGRES_PASSWORD: 'postgres-password'
-            PGDATA: '/var/lib/postgresql/data/pgdata'
-            REPLICATE_FROM: 'pg-master'
-            REPLICATE_USER: 'replication'
-            REPLICATE_PASSWORD: 'replcation-password'
-            REPLICATE_MASTER: 'off'
 
 volumes:
-    pg-master-db:
-    pg-slave-db:   
-    
-networks:
-    default:
-        external:
-            name: tsmweb-network
-
-#docker network create --driver bridge tsmweb-network
+    pg-data:
