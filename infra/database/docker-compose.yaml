@@ -4,7 +4,7 @@ services:
     postgres:
         image: postgres:14.5
         restart: 'no'
-        container_name: postgres_db
+        container_name: postgres-db
         ports: 
             - 5432:5432
         volumes: 
