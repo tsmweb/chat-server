@@ -60,7 +60,7 @@ services:
             kafka-topics --create --topic=H01_MESSAGES --partitions 1 --if-not-exists --bootstrap-server=kafka:9092 &&
             kafka-topics --create --topic=H02_MESSAGES --partitions 1 --if-not-exists --bootstrap-server=kafka:9092 &&
             kafka-topics --create --topic=H03_MESSAGES --partitions 1 --if-not-exists --bootstrap-server=kafka:9092 &&
-            kafka-topics --create --topic=ERRORS --partitions 3 --if-not-exists --bootstrap-server=kafka:9092 &&
+            kafka-topics --create --topic=EVENTS --partitions 3 --if-not-exists --bootstrap-server=kafka:9092 &&
             kafka-topics --create --topic=METRICS --partitions 3 --if-not-exists --bootstrap-server=kafka:9092"
 
     kafka-connect:
