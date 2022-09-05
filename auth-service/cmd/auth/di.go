@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/gorilla/mux"
 	"github.com/tsmweb/auth-service/app/login"
 	"github.com/tsmweb/auth-service/app/user"
@@ -9,17 +11,22 @@ import (
 	"github.com/tsmweb/auth-service/infra/repository"
 	"github.com/tsmweb/auth-service/web/api/handler"
 	"github.com/tsmweb/go-helper-api/auth"
+	"github.com/tsmweb/go-helper-api/kafka"
 	"github.com/tsmweb/go-helper-api/middleware"
 )
 
 type Provider struct {
+	ctx      context.Context
 	jwt      auth.JWT
 	mAuth    middleware.Auth
 	dataBase db.Database
+	kafka    kafka.Kafka
 }
 
-func CreateProvider() *Provider {
-	return &Provider{}
+func CreateProvider(ctx context.Context) *Provider {
+	return &Provider{
+		ctx: ctx,
+	}
 }
 
 func (p *Provider) UserRouter(mr *mux.Router) {
@@ -50,6 +57,10 @@ func (p *Provider) LoginRouter(mr *mux.Router) {
 		updateUseCase)
 }
 
+func (p *Provider) NewKafkaProducer(topic string) kafka.Producer {
+	return p.KafkaProvider().NewProducer(topic)
+}
+
 func (p *Provider) JwtProvider() auth.JWT {
 	if p.jwt == nil {
 		p.jwt = auth.NewJWT(config.KeySecureFile(), config.PubSecureFile())
@@ -69,4 +80,11 @@ func (p *Provider) DatabaseProvider() db.Database {
 		p.dataBase = db.NewPostgresDatabase()
 	}
 	return p.dataBase
+}
+
+func (p *Provider) KafkaProvider() kafka.Kafka {
+	if p.kafka == nil {
+		p.kafka = kafka.New([]string{config.KafkaBootstrapServers()}, config.KafkaClientID())
+	}
+	return p.kafka
 }

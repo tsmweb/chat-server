@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/gorilla/mux"
 	"github.com/tsmweb/auth-service/config"
 	"github.com/tsmweb/go-helper-api/middleware"
+	"github.com/tsmweb/go-helper-api/observability/metric"
 	"github.com/urfave/negroni"
-	"log"
-	"os"
 )
 
 func main() {
@@ -19,9 +22,18 @@ func main() {
 		panic(err)
 	}
 
-	router := mux.NewRouter()
+	provider := CreateProvider(context.Background())
 
-	provider := CreateProvider()
+	// Collect service metrics.
+	producerMetrics := provider.NewKafkaProducer(config.KafkaMetricsTopic())
+	err := metric.Start(config.HostID(), config.MetricsSendInterval(), producerMetrics)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "[!] Could not start metrics collects. Error: %v", err)
+	}
+	defer metric.Stop()
+
+	// Configure the routes.
+	router := mux.NewRouter()
 	provider.UserRouter(router)
 	provider.LoginRouter(router)
 

@@ -4,8 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/tsmweb/auth-service/config"
 	"time"
+
+	"github.com/tsmweb/auth-service/config"
 
 	_ "github.com/lib/pq"
 )
@@ -14,9 +15,9 @@ const (
 	dbDriver = "postgres"
 )
 
-var (
-	instance Database
-)
+// var (
+// 	instance Database
+// )
 
 // Database read only interface to access database connection.
 type Database interface {
@@ -44,7 +45,7 @@ func NewPostgresDatabase() Database {
 		panic(err.Error())
 	}
 
-	db.SetMaxOpenConns(100)
+	db.SetMaxOpenConns(50)
 	db.SetMaxIdleConns(3)
 	db.SetConnMaxLifetime(time.Minute * 5)
 

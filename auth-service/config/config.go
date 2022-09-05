@@ -10,23 +10,32 @@ import (
 )
 
 var (
-	serverPort     int
-	dbHost         string
-	dbPort         int
-	dbUser         string
-	dbPassword     string
-	dbName         string
-	dbSchema       string
-	keySecureFile  string
-	pubSecureFile  string
-	certSecureFile string
-	expireToken    int
+	hostID              string
+	serverPort          int
+	dbHost              string
+	dbPort              int
+	dbUser              string
+	dbPassword          string
+	dbName              string
+	dbSchema            string
+	keySecureFile       string
+	pubSecureFile       string
+	certSecureFile      string
+	expireToken         int
+	metricsSendInterval int
+
+	kafkaBootstrapServers string
+	kafkaClientID         string
+	kafkaEventsTopic      string
+	kafkaMetricsTopic     string
 )
 
 func Load(workDir string) error {
 	if err := godotenv.Load(path.Join(workDir, "/.env")); err != nil {
 		log.Fatalf("Error loading .env file [%s]", workDir)
 	}
+
+	hostID = os.Getenv("HOST_ID")
 
 	_serverPort, err := strconv.Atoi(os.Getenv("SERVER_PORT"))
 	if err != nil {
@@ -48,12 +57,26 @@ func Load(workDir string) error {
 	pubSecureFile = workDir + "/config/cert/server.pub"
 	certSecureFile = workDir + "/config/cert/server.crt"
 
-	expireToken, err = strconv.Atoi(os.Getenv("EXPIRE_TOKEN")) //hour
+	expireToken, err = strconv.Atoi(os.Getenv("EXPIRE_TOKEN")) // hour
 	if err != nil {
 		return err
 	}
 
+	metricsSendInterval, err = strconv.Atoi(os.Getenv("METRICS_SEND_INTERVAL")) //sec
+	if err != nil {
+		return err
+	}
+
+	kafkaBootstrapServers = os.Getenv("KAFKA_BOOTSTRAP_SERVERS")
+	kafkaClientID = os.Getenv("KAFKA_CLIENT_ID")
+	kafkaEventsTopic = os.Getenv("KAFKA_EVENTS_TOPIC")
+	kafkaMetricsTopic = os.Getenv("KAFKA_METRICS_TOPIC")
+
 	return nil
+}
+
+func HostID() string {
+	return hostID
 }
 
 func ServerPort() int {
@@ -98,4 +121,24 @@ func CertSecureFile() string {
 
 func ExpireToken() int {
 	return expireToken
+}
+
+func MetricsSendInterval() int {
+	return metricsSendInterval
+}
+
+func KafkaBootstrapServers() string {
+	return kafkaBootstrapServers
+}
+
+func KafkaClientID() string {
+	return kafkaClientID
+}
+
+func KafkaEventsTopic() string {
+	return kafkaEventsTopic
+}
+
+func KafkaMetricsTopic() string {
+	return kafkaMetricsTopic
 }
