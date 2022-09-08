@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/tsmweb/auth-service/config"
 	"github.com/tsmweb/go-helper-api/middleware"
+	"github.com/tsmweb/go-helper-api/observability/event"
 	"github.com/tsmweb/go-helper-api/observability/metric"
 	"github.com/urfave/negroni"
 )
@@ -29,8 +30,17 @@ func main() {
 	err := metric.Start(config.HostID(), config.MetricsSendInterval(), producerMetrics)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[!] Could not start metrics collects. Error: %v", err)
+	} else {
+		defer metric.Stop()
 	}
-	defer metric.Stop()
+
+	// Initializes the service's event producer.
+	producerEvents := provider.NewKafkaProducer(config.KafkaEventsTopic())
+	if err = event.Init(producerEvents); err != nil {
+		fmt.Fprintf(os.Stderr, "[!] Could not start events collects. Error: %v", err)
+	} else {
+		defer event.Close()
+	}
 
 	// Configure the routes.
 	router := mux.NewRouter()

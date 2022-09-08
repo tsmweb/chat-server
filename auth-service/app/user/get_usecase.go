@@ -3,6 +3,8 @@ package user
 import (
 	"context"
 	"errors"
+
+	"github.com/tsmweb/auth-service/common/service"
 	"github.com/tsmweb/go-helper-api/cerror"
 )
 
@@ -12,12 +14,16 @@ type GetUseCase interface {
 }
 
 type getUseCase struct {
+	tag        string
 	repository Repository
 }
 
 // NewGetUseCase create a new instance of GetUseCase.
 func NewGetUseCase(repository Repository) GetUseCase {
-	return &getUseCase{repository}
+	return &getUseCase{
+		tag:        "GetUseCase",
+		repository: repository,
+	}
 }
 
 // Execute executes the get use case.
@@ -25,11 +31,15 @@ func (u *getUseCase) Execute(ctx context.Context, ID string) (*User, error) {
 	user, err := u.repository.Get(ctx, ID)
 	if err != nil {
 		if errors.Is(err, cerror.ErrNotFound) {
+			service.Warn(ID, u.tag, err.Error())
 			return nil, ErrUserNotFound
 		}
+
+		service.Error(ID, u.tag, err)
 		return nil, err
 	}
 	if user == nil {
+		service.Warn(ID, u.tag, err.Error())
 		return nil, ErrUserNotFound
 	}
 

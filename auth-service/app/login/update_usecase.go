@@ -2,9 +2,11 @@ package login
 
 import (
 	"context"
-	"github.com/tsmweb/auth-service/common"
-	"github.com/tsmweb/go-helper-api/cerror"
 	"time"
+
+	"github.com/tsmweb/auth-service/common"
+	"github.com/tsmweb/auth-service/common/service"
+	"github.com/tsmweb/go-helper-api/cerror"
 )
 
 // UpdateUseCase updates the login password, otherwise an error will be returned.
@@ -13,12 +15,14 @@ type UpdateUseCase interface {
 }
 
 type updateUseCase struct {
+	tag        string
 	repository Repository
 }
 
 // NewUpdateUseCase create a new instance of UpdateUseCase.
 func NewUpdateUseCase(r Repository) UpdateUseCase {
 	return &updateUseCase{
+		tag:        "UpdateUseCase",
 		repository: r,
 	}
 }
@@ -31,17 +35,20 @@ func (u *updateUseCase) Execute(ctx context.Context, login *Login) error {
 	}
 
 	if err = u.checkPermission(ctx, login.ID); err != nil {
+		service.Warn(login.ID, u.tag, err.Error())
 		return err
 	}
 
 	login.UpdatedAt = time.Now().UTC()
 
 	if err = login.ApplyHashPassword(); err != nil {
+		service.Error(login.ID, u.tag, err)
 		return cerror.ErrInternalServer
 	}
 
 	ok, err := u.repository.Update(ctx, login)
 	if err != nil {
+		service.Error(login.ID, u.tag, err)
 		return err
 	}
 	if !ok {

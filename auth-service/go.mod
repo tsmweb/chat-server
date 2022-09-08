@@ -5,9 +5,9 @@ go 1.19
 require (
 	github.com/gorilla/mux v1.8.0
 	github.com/joho/godotenv v1.4.0
-	github.com/lib/pq v1.10.6
+	github.com/lib/pq v1.10.7
 	github.com/stretchr/testify v1.8.0
-	github.com/tsmweb/go-helper-api v1.3.1
+	github.com/tsmweb/go-helper-api v1.3.3
 	github.com/urfave/negroni v1.0.0
 )
 
@@ -23,6 +23,6 @@ require (
 	github.com/segmentio/kafka-go v0.4.34 // indirect
 	github.com/stretchr/objx v0.4.0 // indirect
 	github.com/xi2/httpgzip v0.0.0-20190509075255-932ab5e254ae // indirect
-	golang.org/x/sys v0.0.0-20220829200755-d48e67d00261 // indirect
+	golang.org/x/sys v0.0.0-20220907062415-87db552b00fd // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

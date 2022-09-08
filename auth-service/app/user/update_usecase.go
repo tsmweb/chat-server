@@ -2,8 +2,10 @@ package user
 
 import (
 	"context"
-	"github.com/tsmweb/auth-service/common"
 	"time"
+
+	"github.com/tsmweb/auth-service/common"
+	"github.com/tsmweb/auth-service/common/service"
 )
 
 // UpdateUseCase updates a User, otherwise an error is returned.
@@ -12,12 +14,16 @@ type UpdateUseCase interface {
 }
 
 type updateUseCase struct {
+	tag        string
 	repository Repository
 }
 
 // NewUpdateUseCase create a new instance of UpdateUseCase.
 func NewUpdateUseCase(repository Repository) UpdateUseCase {
-	return &updateUseCase{repository}
+	return &updateUseCase{
+		tag:        "UpdateUseCase",
+		repository: repository,
+	}
 }
 
 // Execute executes the update use case.
@@ -28,6 +34,7 @@ func (u *updateUseCase) Execute(ctx context.Context, user *User) error {
 	}
 
 	if err = u.checkPermission(ctx, user.ID); err != nil {
+		service.Warn(user.ID, u.tag, err.Error())
 		return err
 	}
 
@@ -35,6 +42,7 @@ func (u *updateUseCase) Execute(ctx context.Context, user *User) error {
 
 	ok, err := u.repository.Update(ctx, user)
 	if err != nil {
+		service.Error(user.ID, u.tag, err)
 		return err
 	}
 	if !ok {

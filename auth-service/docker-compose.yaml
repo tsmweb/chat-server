@@ -14,7 +14,7 @@ services:
       EXPIRE_TOKEN: 24
       DB_HOST: host.docker.app
       DB_PORT: 5432
-      DB_DATABASE: chat_db
+      DB_DATABASE: postgres
       DB_SCHEMA: chat_db
       DB_USER: salesapi
       DB_PASSWORD: password
