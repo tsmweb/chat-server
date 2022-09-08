@@ -3,7 +3,9 @@ package contact
 import (
 	"context"
 	"errors"
+
 	"github.com/tsmweb/go-helper-api/cerror"
+	"github.com/tsmweb/user-service/common/service"
 )
 
 // CreateUseCase creates a new Contact, otherwise an error is returned.
@@ -12,12 +14,16 @@ type CreateUseCase interface {
 }
 
 type createUseCase struct {
+	tag        string
 	repository Repository
 }
 
 // NewCreateUseCase create a new instance of CreateUseCase.
 func NewCreateUseCase(r Repository) CreateUseCase {
-	return &createUseCase{repository: r}
+	return &createUseCase{
+		tag:        "CreateUseCase",
+		repository: r,
+	}
 }
 
 // Execute performs the creation use case.
@@ -29,6 +35,7 @@ func (u *createUseCase) Execute(ctx context.Context, ID, name, lastname, userID 
 
 	ok, err := u.repository.ExistsUser(ctx, ID)
 	if err != nil {
+		service.Error(userID, u.tag, err)
 		return err
 	}
 	if !ok {
@@ -40,6 +47,7 @@ func (u *createUseCase) Execute(ctx context.Context, ID, name, lastname, userID 
 		if errors.Is(err, cerror.ErrRecordAlreadyRegistered) {
 			return ErrContactAlreadyExists
 		}
+		service.Error(userID, u.tag, err)
 		return err
 	}
 

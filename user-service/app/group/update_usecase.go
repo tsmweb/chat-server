@@ -2,9 +2,11 @@ package group
 
 import (
 	"context"
+	"time"
+
 	"github.com/tsmweb/go-helper-api/kafka"
 	"github.com/tsmweb/user-service/common"
-	"time"
+	"github.com/tsmweb/user-service/common/service"
 )
 
 // UpdateUseCase updates a Group, otherwise an error is returned.
@@ -13,6 +15,7 @@ type UpdateUseCase interface {
 }
 
 type updateUseCase struct {
+	tag        string
 	repository Repository
 	encoder    EventEncoder
 	producer   kafka.Producer
@@ -25,6 +28,7 @@ func NewUpdateUseCase(
 	producer kafka.Producer,
 ) UpdateUseCase {
 	return &updateUseCase{
+		tag:        "UpdateUseCase",
 		repository: repository,
 		encoder:    encoder,
 		producer:   producer,
@@ -48,6 +52,7 @@ func (u *updateUseCase) Execute(ctx context.Context, group *Group) error {
 
 	ok, err := u.repository.Update(ctx, group)
 	if err != nil {
+		service.Error(authID, u.tag, err)
 		return err
 	}
 	if !ok {
@@ -55,6 +60,7 @@ func (u *updateUseCase) Execute(ctx context.Context, group *Group) error {
 	}
 
 	if err = u.notifyMember(ctx, group.ID); err != nil {
+		service.Error(authID, u.tag, err)
 		return &ErrEventNotification{Msg: err.Error()}
 	}
 
@@ -66,9 +72,11 @@ func (u *updateUseCase) checkPermission(ctx context.Context, groupID string) (st
 
 	ok, err := u.repository.IsGroupAdmin(ctx, groupID, authID)
 	if err != nil {
+		service.Error(authID, u.tag, err)
 		return "", err
 	}
 	if !ok {
+		service.Warn(authID, u.tag, ErrOperationNotAllowed.Error())
 		return "", ErrOperationNotAllowed
 	}
 

@@ -3,8 +3,10 @@ package group
 import (
 	"context"
 	"fmt"
+
 	"github.com/tsmweb/go-helper-api/kafka"
 	"github.com/tsmweb/user-service/common"
+	"github.com/tsmweb/user-service/common/service"
 )
 
 // RemoveMemberUseCase removes member from Group, otherwise an error is returned.
@@ -13,6 +15,7 @@ type RemoveMemberUseCase interface {
 }
 
 type removeMemberUseCase struct {
+	tag        string
 	repository Repository
 	encoder    EventEncoder
 	producer   kafka.Producer
@@ -25,6 +28,7 @@ func NewRemoveMemberUseCase(
 	producer kafka.Producer,
 ) RemoveMemberUseCase {
 	return &removeMemberUseCase{
+		tag:        "RemoveMemberUseCase",
 		repository: repository,
 		encoder:    encoder,
 		producer:   producer,
@@ -33,13 +37,16 @@ func NewRemoveMemberUseCase(
 
 // Execute performs the remove member use case.
 func (u *removeMemberUseCase) Execute(ctx context.Context, groupID, userID string) error {
-	err := u.checkPermission(ctx, groupID, userID)
+	authID := ctx.Value(common.AuthContextKey).(string)
+
+	err := u.checkPermission(ctx, authID, groupID, userID)
 	if err != nil {
 		return err
 	}
 
 	ok, err := u.repository.RemoveMember(ctx, groupID, userID)
 	if err != nil {
+		service.Error(authID, u.tag, err)
 		return err
 	}
 	if !ok {
@@ -47,18 +54,18 @@ func (u *removeMemberUseCase) Execute(ctx context.Context, groupID, userID strin
 	}
 
 	if err = u.notifyMember(ctx, groupID, userID); err != nil {
+		service.Error(authID, u.tag, err)
 		return &ErrEventNotification{Msg: err.Error()}
 	}
 
 	return nil
 }
 
-func (u *removeMemberUseCase) checkPermission(ctx context.Context, groupID, userID string) error {
-	authID := ctx.Value(common.AuthContextKey).(string)
-
+func (u *removeMemberUseCase) checkPermission(ctx context.Context, authID, groupID, userID string) error {
 	// the group owner cannot be removed.
 	ok, err := u.repository.IsGroupOwner(ctx, groupID, userID)
 	if err != nil {
+		service.Error(authID, u.tag, err)
 		return err
 	}
 	if ok {
@@ -73,9 +80,11 @@ func (u *removeMemberUseCase) checkPermission(ctx context.Context, groupID, user
 	// the member can be deleted from the group by the administrator
 	ok, err = u.repository.IsGroupAdmin(ctx, groupID, authID)
 	if err != nil {
+		service.Error(authID, u.tag, err)
 		return err
 	}
 	if !ok {
+		service.Warn(authID, u.tag, ErrOperationNotAllowed.Error())
 		return ErrOperationNotAllowed
 	}
 

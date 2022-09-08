@@ -3,9 +3,11 @@ package contact
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/tsmweb/go-helper-api/cerror"
 	"github.com/tsmweb/go-helper-api/kafka"
-	"time"
+	"github.com/tsmweb/user-service/common/service"
 )
 
 // BlockUseCase blocks a contact, otherwise an error is returned.
@@ -14,6 +16,7 @@ type BlockUseCase interface {
 }
 
 type blockUseCase struct {
+	tag        string
 	repository Repository
 	encoder    EventEncoder
 	producer   kafka.Producer
@@ -26,6 +29,7 @@ func NewBlockUseCase(
 	producer kafka.Producer,
 ) BlockUseCase {
 	return &blockUseCase{
+		tag:        "BlockUseCase",
 		repository: repository,
 		encoder:    encoder,
 		producer:   producer,
@@ -36,6 +40,7 @@ func NewBlockUseCase(
 func (u *blockUseCase) Execute(ctx context.Context, userID, blockedUserID string) error {
 	ok, err := u.repository.ExistsUser(ctx, blockedUserID)
 	if err != nil {
+		service.Error(userID, u.tag, err)
 		return err
 	}
 	if !ok {
@@ -47,10 +52,12 @@ func (u *blockUseCase) Execute(ctx context.Context, userID, blockedUserID string
 		if errors.Is(err, cerror.ErrRecordAlreadyRegistered) {
 			return ErrContactAlreadyBlocked
 		}
+		service.Error(userID, u.tag, err)
 		return err
 	}
 
 	if err = u.notify(ctx, userID, blockedUserID); err != nil {
+		service.Error(userID, u.tag, err)
 		return &ErrEventNotification{Msg: err.Error()}
 	}
 

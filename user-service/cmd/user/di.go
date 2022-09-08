@@ -83,6 +83,10 @@ func (p *Provider) GroupRouter(mr *mux.Router) {
 		setAdminUseCase)
 }
 
+func (p *Provider) NewKafkaProducer(topic string) kafka.Producer {
+	return p.KafkaProvider().NewProducer(topic)
+}
+
 func (p *Provider) JwtProvider() auth.JWT {
 	if p.jwt == nil {
 		p.jwt = auth.NewJWT(config.KeySecureFile(), config.PubSecureFile())

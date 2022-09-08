@@ -2,7 +2,9 @@ package contact
 
 import (
 	"context"
+
 	"github.com/tsmweb/go-helper-api/kafka"
+	"github.com/tsmweb/user-service/common/service"
 )
 
 // UnblockUseCase unblocks a contact, otherwise an error is returned.
@@ -11,6 +13,7 @@ type UnblockUseCase interface {
 }
 
 type unblockUseCase struct {
+	tag        string
 	repository Repository
 	encoder    EventEncoder
 	producer   kafka.Producer
@@ -23,6 +26,7 @@ func NewUnblockUseCase(
 	producer kafka.Producer,
 ) UnblockUseCase {
 	return &unblockUseCase{
+		tag:        "UnblockUseCase",
 		repository: repository,
 		encoder:    encoder,
 		producer:   producer,
@@ -33,6 +37,7 @@ func NewUnblockUseCase(
 func (u *unblockUseCase) Execute(ctx context.Context, userID, blockedUserID string) error {
 	ok, err := u.repository.Unblock(ctx, userID, blockedUserID)
 	if err != nil {
+		service.Error(userID, u.tag, err)
 		return err
 	}
 	if !ok {
@@ -40,6 +45,7 @@ func (u *unblockUseCase) Execute(ctx context.Context, userID, blockedUserID stri
 	}
 
 	if err = u.notify(ctx, userID, blockedUserID); err != nil {
+		service.Error(userID, u.tag, err)
 		return &ErrEventNotification{Msg: err.Error()}
 	}
 

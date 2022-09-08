@@ -3,9 +3,11 @@ package group
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/tsmweb/go-helper-api/kafka"
 	"github.com/tsmweb/user-service/common"
-	"time"
+	"github.com/tsmweb/user-service/common/service"
 )
 
 // SetAdminUseCase sets a member as a group administrator, otherwise an error is returned.
@@ -14,6 +16,7 @@ type SetAdminUseCase interface {
 }
 
 type setAdminUseCase struct {
+	tag        string
 	repository Repository
 	encoder    EventEncoder
 	producer   kafka.Producer
@@ -26,6 +29,7 @@ func NewSetAdminUseCase(
 	producer kafka.Producer,
 ) SetAdminUseCase {
 	return &setAdminUseCase{
+		tag:        "SetAdminUseCase",
 		repository: repository,
 		encoder:    encoder,
 		producer:   producer,
@@ -49,6 +53,7 @@ func (u *setAdminUseCase) Execute(ctx context.Context, member *Member) error {
 
 	ok, err := u.repository.SetAdmin(ctx, member)
 	if err != nil {
+		service.Error(authID, u.tag, err)
 		return err
 	}
 	if !ok {
@@ -56,6 +61,7 @@ func (u *setAdminUseCase) Execute(ctx context.Context, member *Member) error {
 	}
 
 	if err = u.notifyMember(ctx, member.GroupID, member.UserID, member.Admin); err != nil {
+		service.Error(authID, u.tag, err)
 		return &ErrEventNotification{Msg: err.Error()}
 	}
 
@@ -66,21 +72,25 @@ func (u *setAdminUseCase) checkPermission(ctx context.Context, groupID, userID s
 	authID := ctx.Value(common.AuthContextKey).(string)
 	// the member cannot self-promote as an administrator.
 	if authID == userID {
+		service.Warn(authID, u.tag, ErrOperationNotAllowed.Error())
 		return "", ErrOperationNotAllowed
 	}
 
 	// only group administrator can define a member to be admin.
 	ok, err := u.repository.IsGroupAdmin(ctx, groupID, authID)
 	if err != nil {
+		service.Error(authID, u.tag, err)
 		return "", err
 	}
 	if !ok {
+		service.Warn(authID, u.tag, ErrOperationNotAllowed.Error())
 		return "", ErrOperationNotAllowed
 	}
 
 	// the group owner cannot be changed.
 	ok, err = u.repository.IsGroupOwner(ctx, groupID, userID)
 	if err != nil {
+		service.Error(authID, u.tag, err)
 		return "", err
 	}
 	if ok {
@@ -92,7 +102,7 @@ func (u *setAdminUseCase) checkPermission(ctx context.Context, groupID, userID s
 
 func (u *setAdminUseCase) notifyMember(ctx context.Context, groupID, userID string, isAdmin bool) error {
 	var evt EventType = EventAddAdmin
-	if isAdmin == false {
+	if !isAdmin {
 		evt = EventRemoveAdmin
 	}
 

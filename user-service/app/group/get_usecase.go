@@ -3,8 +3,10 @@ package group
 import (
 	"context"
 	"errors"
+
 	"github.com/tsmweb/go-helper-api/cerror"
 	"github.com/tsmweb/user-service/common"
+	"github.com/tsmweb/user-service/common/service"
 )
 
 // GetUseCase returns a Group by groupID, otherwise an error is returned.
@@ -13,12 +15,16 @@ type GetUseCase interface {
 }
 
 type getUseCase struct {
+	tag        string
 	repository Repository
 }
 
 // NewGetUseCase create a new instance of GetUseCase.
 func NewGetUseCase(r Repository) GetUseCase {
-	return &getUseCase{repository: r}
+	return &getUseCase{
+		tag:        "GetUseCase",
+		repository: r,
+	}
 }
 
 // Execute performs the get use case.
@@ -30,6 +36,7 @@ func (u *getUseCase) Execute(ctx context.Context, groupID string) (*Group, error
 		if errors.Is(err, cerror.ErrNotFound) {
 			return nil, ErrGroupNotFound
 		}
+		service.Error(authID, u.tag, err)
 		return nil, err
 	}
 	if group == nil {

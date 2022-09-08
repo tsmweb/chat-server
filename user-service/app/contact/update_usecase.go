@@ -3,6 +3,8 @@ package contact
 import (
 	"context"
 	"time"
+
+	"github.com/tsmweb/user-service/common/service"
 )
 
 // UpdateUseCase updates a Contact, otherwise an error is returned.
@@ -11,12 +13,16 @@ type UpdateUseCase interface {
 }
 
 type updateUseCase struct {
+	tag        string
 	repository Repository
 }
 
 // NewUpdateUseCase create a new instance of UpdateUseCase.
 func NewUpdateUseCase(r Repository) UpdateUseCase {
-	return &updateUseCase{repository: r}
+	return &updateUseCase{
+		tag:        "UpdateUseCase",
+		repository: r,
+	}
 }
 
 // Execute performs the update use case.
@@ -30,6 +36,7 @@ func (u *updateUseCase) Execute(ctx context.Context, contact *Contact) error {
 
 	ok, err := u.repository.Update(ctx, contact)
 	if err != nil {
+		service.Error(contact.ID, u.tag, err)
 		return err
 	}
 	if !ok {

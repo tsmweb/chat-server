@@ -2,8 +2,10 @@ package group
 
 import (
 	"context"
+
 	"github.com/tsmweb/go-helper-api/kafka"
 	"github.com/tsmweb/user-service/common"
+	"github.com/tsmweb/user-service/common/service"
 )
 
 // DeleteUseCase delete a Group, otherwise an error is returned.
@@ -12,6 +14,7 @@ type DeleteUseCase interface {
 }
 
 type deleteUseCase struct {
+	tag        string
 	repository Repository
 	encoder    EventEncoder
 	producer   kafka.Producer
@@ -24,6 +27,7 @@ func NewDeleteUseCase(
 	producer kafka.Producer,
 ) DeleteUseCase {
 	return &deleteUseCase{
+		tag:        "DeleteUseCase",
 		repository: repository,
 		encoder:    encoder,
 		producer:   producer,
@@ -36,14 +40,17 @@ func (u *deleteUseCase) Execute(ctx context.Context, groupID string) error {
 
 	ok, err := u.repository.IsGroupAdmin(ctx, groupID, authID)
 	if err != nil {
+		service.Error(authID, u.tag, err)
 		return err
 	}
 	if !ok {
+		service.Warn(authID, u.tag, ErrOperationNotAllowed.Error())
 		return ErrOperationNotAllowed
 	}
 
 	ok, err = u.repository.Delete(ctx, groupID)
 	if err != nil {
+		service.Error(authID, u.tag, err)
 		return err
 	}
 	if !ok {
@@ -51,6 +58,7 @@ func (u *deleteUseCase) Execute(ctx context.Context, groupID string) error {
 	}
 
 	if err = u.notifyMember(ctx, groupID); err != nil {
+		service.Error(authID, u.tag, err)
 		return &ErrEventNotification{Msg: err.Error()}
 	}
 

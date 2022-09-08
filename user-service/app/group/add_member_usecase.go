@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/tsmweb/go-helper-api/cerror"
 	"github.com/tsmweb/go-helper-api/kafka"
 	"github.com/tsmweb/user-service/common"
+	"github.com/tsmweb/user-service/common/service"
 )
 
 // AddMemberUseCase adds member to a Group, otherwise an error is returned.
@@ -15,6 +17,7 @@ type AddMemberUseCase interface {
 }
 
 type addMemberUseCase struct {
+	tag        string
 	repository Repository
 	encoder    EventEncoder
 	producer   kafka.Producer
@@ -27,6 +30,7 @@ func NewAddMemberUseCase(
 	producer kafka.Producer,
 ) AddMemberUseCase {
 	return &addMemberUseCase{
+		tag:        "AddMemberUseCase",
 		repository: repository,
 		encoder:    encoder,
 		producer:   producer,
@@ -35,8 +39,11 @@ func NewAddMemberUseCase(
 
 // Execute performs the add member use case.
 func (u *addMemberUseCase) Execute(ctx context.Context, groupID string, userID string, admin bool) error {
+	authID := ctx.Value(common.AuthContextKey).(string)
+
 	ok, err := u.repository.ExistsGroup(ctx, groupID)
 	if err != nil {
+		service.Error(authID, u.tag, err)
 		return err
 	}
 	if !ok {
@@ -45,13 +52,14 @@ func (u *addMemberUseCase) Execute(ctx context.Context, groupID string, userID s
 
 	ok, err = u.repository.ExistsUser(ctx, userID)
 	if err != nil {
+		service.Error(authID, u.tag, err)
 		return err
 	}
 	if !ok {
 		return ErrUserNotFound
 	}
 
-	err = u.checkPermission(ctx, groupID)
+	err = u.checkPermission(ctx, authID, groupID)
 	if err != nil {
 		return err
 	}
@@ -66,24 +74,26 @@ func (u *addMemberUseCase) Execute(ctx context.Context, groupID string, userID s
 		if errors.Is(err, cerror.ErrRecordAlreadyRegistered) {
 			return ErrMemberAlreadyExists
 		}
+		service.Error(authID, u.tag, err)
 		return err
 	}
 
 	if err = u.notifyMember(ctx, groupID, userID); err != nil {
+		service.Error(authID, u.tag, err)
 		return &ErrEventNotification{Msg: err.Error()}
 	}
 
 	return nil
 }
 
-func (u *addMemberUseCase) checkPermission(ctx context.Context, groupID string) error {
-	authID := ctx.Value(common.AuthContextKey).(string)
-
+func (u *addMemberUseCase) checkPermission(ctx context.Context, authID, groupID string) error {
 	ok, err := u.repository.IsGroupAdmin(ctx, groupID, authID)
 	if err != nil {
+		service.Error(authID, u.tag, err)
 		return err
 	}
 	if !ok {
+		service.Warn(authID, u.tag, ErrOperationNotAllowed.Error())
 		return ErrOperationNotAllowed
 	}
 

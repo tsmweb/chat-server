@@ -2,6 +2,8 @@ package group
 
 import (
 	"context"
+
+	"github.com/tsmweb/user-service/common/service"
 )
 
 // CreateUseCase creates a new Group, otherwise an error is returned.
@@ -10,12 +12,16 @@ type CreateUseCase interface {
 }
 
 type createUseCase struct {
+	tag        string
 	repository Repository
 }
 
 // NewCreateUseCase create a new instance of CreateUseCase.
 func NewCreateUseCase(r Repository) CreateUseCase {
-	return &createUseCase{repository: r}
+	return &createUseCase{
+		tag:        "CreateUseCase",
+		repository: r,
+	}
 }
 
 // Execute performs the creation use case.
@@ -27,6 +33,7 @@ func (u *createUseCase) Execute(ctx context.Context, name, description, owner st
 
 	err = u.repository.Create(ctx, g)
 	if err != nil {
+		service.Error(owner, u.tag, err)
 		return "", err
 	}
 
