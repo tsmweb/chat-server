@@ -4,15 +4,18 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/tsmweb/chat-service/config"
-	"github.com/tsmweb/go-helper-api/middleware"
-	"github.com/urfave/negroni"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/gorilla/mux"
+	"github.com/tsmweb/chat-service/config"
+	"github.com/tsmweb/go-helper-api/middleware"
+	"github.com/tsmweb/go-helper-api/observability/event"
+	"github.com/tsmweb/go-helper-api/observability/metric"
+	"github.com/urfave/negroni"
 )
 
 var (
@@ -54,11 +57,28 @@ func main() {
 		fn()
 	}(ctx, stop)
 
-	router := mux.NewRouter()
+	provider := CreateProvider(ctx)
+
+	// Collect service metrics.
+	producerMetrics := provider.NewKafkaProducer(config.KafkaMetricsTopic())
+	err := metric.Start(config.HostID(), config.MetricsSendInterval(), producerMetrics)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "[!] Could not start metrics collects. Error: %v", err)
+	} else {
+		defer metric.Stop()
+	}
+
+	// Initializes the service's event producer.
+	producerEvents := provider.NewKafkaProducer(config.KafkaEventsTopic())
+	if err = event.Init(producerEvents); err != nil {
+		fmt.Fprintf(os.Stderr, "[!] Could not start events collects. Error: %v", err)
+	} else {
+		defer event.Close()
+	}
 
 	// starts API server
-	providers := CreateProvider(ctx)
-	if err := providers.ChatRouter(router); err != nil {
+	router := mux.NewRouter()
+	if err := provider.ChatRouter(router); err != nil {
 		log.Fatalf("[!] error when starting server: %s\n", err.Error())
 	}
 

@@ -2,11 +2,12 @@ package message
 
 import (
 	"encoding/json"
-	"github.com/tsmweb/go-helper-api/cerror"
-	"github.com/tsmweb/go-helper-api/util/hashutil"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/tsmweb/go-helper-api/cerror"
+	"github.com/tsmweb/go-helper-api/util/hashutil"
 )
 
 const (
@@ -110,9 +111,7 @@ func newMessage(from string, to string, group string, date time.Time, contentTyp
 		return nil, err
 	}
 
-	if err := msg.generateID(); err != nil {
-		return nil, err
-	}
+	msg.GenerateID()
 
 	return msg, nil
 }
@@ -122,14 +121,11 @@ func (m *Message) ReplicateTo(to string) (*Message, error) {
 	return newMessage(m.From, to, m.Group, m.Date, m.ContentType, m.Content)
 }
 
-func (m *Message) generateID() error {
-	id, err := hashutil.HashSHA1(m.From + m.To + m.Group +
-		strconv.FormatInt(time.Now().Unix(), 10))
-	if err != nil {
-		return err
+func (m *Message) GenerateID() {
+	if strings.TrimSpace(m.ID) == "" {
+		m.ID, _ = hashutil.HashSHA1(m.From + m.To + m.Group +
+			strconv.FormatInt(time.Now().Unix(), 10))
 	}
-	m.ID = id
-	return nil
 }
 
 // Validate verifies that the required attributes of the message are present.

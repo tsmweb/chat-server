@@ -11,13 +11,13 @@ import (
 )
 
 var (
-	hostID         string
-	goPoolSize     int
-	serverPort     int
-	keySecureFile  string
-	pubSecureFile  string
-	certSecureFile string
-
+	hostID                  string
+	goPoolSize              int
+	serverPort              int
+	keySecureFile           string
+	pubSecureFile           string
+	certSecureFile          string
+	metricsSendInterval     int
 	kafkaBootstrapServers   string
 	kafkaClientID           string
 	kafkaServersTopic       string
@@ -26,8 +26,9 @@ var (
 	kafkaNewMessagesTopic   string
 	kafkaOffMessagesTopic   string
 	kafkaHostTopic          string
-	kafkaErrorsTopic        string
 	kafkaGroupID            string
+	kafkaEventsTopic        string
+	kafkaMetricsTopic       string
 )
 
 func Load(workDir string) error {
@@ -46,6 +47,11 @@ func Load(workDir string) error {
 		return err
 	}
 
+	metricsSendInterval, err = strconv.Atoi(os.Getenv("METRICS_SEND_INTERVAL")) //sec
+	if err != nil {
+		return err
+	}
+
 	keySecureFile = workDir + "/config/cert/server.pem"
 	pubSecureFile = workDir + "/config/cert/server.pub"
 	certSecureFile = workDir + "/config/cert/server.crt"
@@ -57,9 +63,10 @@ func Load(workDir string) error {
 	kafkaUsersPresenceTopic = os.Getenv("KAFKA_USERS_PRESENCE_TOPIC")
 	kafkaNewMessagesTopic = os.Getenv("KAFKA_NEW_MESSAGES_TOPIC")
 	kafkaOffMessagesTopic = os.Getenv("KAFKA_OFF_MESSAGES_TOPIC")
-	kafkaErrorsTopic = os.Getenv("KAFKA_ERRORS_TOPIC")
 	kafkaHostTopic = fmt.Sprintf("%s_MESSAGES", hostID)
 	kafkaGroupID = os.Getenv("KAFKA_GROUP_ID")
+	kafkaEventsTopic = os.Getenv("KAFKA_EVENTS_TOPIC")
+	kafkaMetricsTopic = os.Getenv("KAFKA_METRICS_TOPIC")
 
 	return nil
 }
@@ -86,6 +93,10 @@ func CertSecureFile() string {
 
 func ServerPort() int {
 	return serverPort
+}
+
+func MetricsSendInterval() int {
+	return metricsSendInterval
 }
 
 func KafkaBootstrapServers() string {
@@ -116,14 +127,18 @@ func KafkaOffMessagesTopic() string {
 	return kafkaOffMessagesTopic
 }
 
-func KafkaErrorsTopic() string {
-	return kafkaErrorsTopic
-}
-
 func KafkaHostTopic() string {
 	return kafkaHostTopic
 }
 
 func KafkaGroupID() string {
 	return kafkaGroupID
+}
+
+func KafkaEventsTopic() string {
+	return kafkaEventsTopic
+}
+
+func KafkaMetricsTopic() string {
+	return kafkaMetricsTopic
 }

@@ -3,12 +3,13 @@ package test
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/tsmweb/chat-service/adapter"
 	"github.com/tsmweb/chat-service/server"
 	"github.com/tsmweb/chat-service/server/user"
-	"testing"
 )
 
 func TestHandleUserStatus_Execute(t *testing.T) {
@@ -33,7 +34,7 @@ func TestHandleUserStatus_Execute(t *testing.T) {
 
 		handler := server.NewHandleUserStatus(encode, userProducer, userPresenceProducer)
 		err := handler.Execute(ctx, userID, user.Online)
-		assert.Equal(t, userID, err.UserID)
+		assert.NotNil(t, err)
 	})
 
 	t.Run("when user handler succeeds", func(t *testing.T) {

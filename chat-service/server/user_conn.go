@@ -2,9 +2,10 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/tsmweb/chat-service/server/message"
 	"net"
 	"sync"
+
+	"github.com/tsmweb/chat-service/server/message"
 )
 
 // UserConn type that represents the user connection.
@@ -35,6 +36,8 @@ func (u *UserConn) Receive() (*message.Message, error) {
 	if err = msg.Validate(); err != nil {
 		return nil, u.WriteResponse(msg.ID, message.ContentTypeError, err.Error())
 	}
+
+	msg.GenerateID()
 
 	return msg, nil
 }

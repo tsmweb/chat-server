@@ -5,6 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
+	"net"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/tsmweb/chat-service/adapter"
@@ -15,11 +21,6 @@ import (
 	"github.com/tsmweb/chat-service/server/user"
 	"github.com/tsmweb/easygo/netpoll"
 	"github.com/tsmweb/go-helper-api/kafka"
-	"io"
-	"net"
-	"strings"
-	"testing"
-	"time"
 )
 
 const (
@@ -110,9 +111,7 @@ func initServer(t *testing.T) *server.Server {
 	config.Load("../../")
 
 	pollerConfig := epoll.ProviderPollerConfig(func(err error) {
-		go func(err error) {
-			t.Fatal("error netpoll.Config(): ", err)
-		}(err)
+		t.Fatal("error netpoll.Config(): ", err)
 	})
 	poller, err := netpoll.New(pollerConfig)
 	if err != nil {
@@ -124,7 +123,6 @@ func initServer(t *testing.T) *server.Server {
 	msgEncoder := message.EncoderFunc(adapter.MessageMarshal)
 	msgDecoder := message.DecoderFunc(adapter.MessageUnmarshal)
 	userEncoder := user.EncoderFunc(adapter.UserMarshal)
-	eventErrorEncoder := server.ErrorEventEncoderFunc(adapter.ErrorEventMarshal)
 
 	chEvent := make(chan kafka.Event)
 
@@ -147,7 +145,6 @@ func initServer(t *testing.T) *server.Server {
 		Return(nil)
 	handleOffMessage := server.NewHandleMessage(msgEncoder, kafkaProducer)
 	handleUserStatus := server.NewHandleUserStatus(userEncoder, kafkaProducer, kafkaProducer)
-	handleError := server.NewHandleError(eventErrorEncoder, kafkaProducer)
 
 	serv := server.NewServer(
 		context.Background(),
@@ -159,7 +156,7 @@ func initServer(t *testing.T) *server.Server {
 		handleMessage,
 		handleOffMessage,
 		handleUserStatus,
-		handleError)
+	)
 
 	return serv
 }

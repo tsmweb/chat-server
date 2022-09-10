@@ -3,12 +3,13 @@ package test
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/tsmweb/chat-service/adapter"
 	"github.com/tsmweb/chat-service/server"
 	"github.com/tsmweb/chat-service/server/message"
-	"testing"
 )
 
 func TestHandleMessage_Execute(t *testing.T) {
@@ -26,8 +27,8 @@ func TestHandleMessage_Execute(t *testing.T) {
 			Once()
 
 		handler := server.NewHandleMessage(encode, p)
-		err := handler.Execute(ctx, *msg)
-		assert.Equal(t, msg.From, err.UserID)
+		err := handler.Execute(ctx, msg)
+		assert.NotNil(t, err)
 	})
 
 	t.Run("when message handler succeeds", func(t *testing.T) {
@@ -39,7 +40,7 @@ func TestHandleMessage_Execute(t *testing.T) {
 			Once()
 
 		handler := server.NewHandleMessage(encode, p)
-		err := handler.Execute(ctx, *msg)
+		err := handler.Execute(ctx, msg)
 		assert.Nil(t, err)
 	})
 }
