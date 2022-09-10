@@ -10,6 +10,7 @@ import (
 	"github.com/tsmweb/file-service/infra/repository"
 	"github.com/tsmweb/file-service/web/handler"
 	"github.com/tsmweb/go-helper-api/auth"
+	"github.com/tsmweb/go-helper-api/kafka"
 	"github.com/tsmweb/go-helper-api/middleware"
 )
 
@@ -17,6 +18,7 @@ type Provider struct {
 	jwt      auth.JWT
 	mAuth    middleware.Auth
 	dataBase db.Database
+	kafka    kafka.Kafka
 }
 
 func CreateProvider() *Provider {
@@ -61,6 +63,10 @@ func (p *Provider) MediaRouter(mr *mux.Router) {
 		uploadUseCase)
 }
 
+func (p *Provider) NewKafkaProducer(topic string) kafka.Producer {
+	return p.KafkaProvider().NewProducer(topic)
+}
+
 func (p *Provider) JwtProvider() auth.JWT {
 	if p.jwt == nil {
 		p.jwt = auth.NewJWT(config.KeySecureFile(), config.PubSecureFile())
@@ -80,4 +86,11 @@ func (p *Provider) DatabaseProvider() db.Database {
 		p.dataBase = db.NewPostgresDatabase()
 	}
 	return p.dataBase
+}
+
+func (p *Provider) KafkaProvider() kafka.Kafka {
+	if p.kafka == nil {
+		p.kafka = kafka.New([]string{config.KafkaBootstrapServers()}, config.KafkaClientID())
+	}
+	return p.kafka
 }

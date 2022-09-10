@@ -4,8 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/tsmweb/file-service/config"
 	"time"
+
+	"github.com/tsmweb/file-service/config"
 
 	_ "github.com/lib/pq"
 )
@@ -40,7 +41,7 @@ func NewPostgresDatabase() Database {
 		panic(err.Error())
 	}
 
-	db.SetMaxOpenConns(100)
+	db.SetMaxOpenConns(50)
 	db.SetMaxIdleConns(3)
 	db.SetConnMaxLifetime(time.Minute * 5)
 

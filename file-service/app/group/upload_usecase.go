@@ -3,10 +3,12 @@ package group
 import (
 	"context"
 	"fmt"
-	"github.com/tsmweb/file-service/common/fileutil"
-	"github.com/tsmweb/file-service/config"
 	"mime/multipart"
 	"path/filepath"
+
+	"github.com/tsmweb/file-service/common/fileutil"
+	"github.com/tsmweb/file-service/common/service"
+	"github.com/tsmweb/file-service/config"
 )
 
 // UploadUseCase validates and writes the uploaded file to the local file system.
@@ -15,18 +17,23 @@ type UploadUseCase interface {
 }
 
 type uploadUseCase struct {
+	tag        string
 	repository Repository
 }
 
 // NewUploadUseCase create a new instance of UploadUseCase.
 func NewUploadUseCase(r Repository) UploadUseCase {
-	return &uploadUseCase{repository: r}
+	return &uploadUseCase{
+		tag:        "group.UploadUseCase",
+		repository: r,
+	}
 }
 
 // Execute executes the UploadUseCase use case.
 func (u *uploadUseCase) Execute(ctx context.Context, file multipart.File, groupID, userID string) error {
 	ok, err := u.repository.ExistsGroup(ctx, groupID)
 	if err != nil {
+		service.Error(userID, u.tag, err)
 		return err
 	}
 	if !ok {
@@ -52,6 +59,7 @@ func (u *uploadUseCase) Execute(ctx context.Context, file multipart.File, groupI
 	// Creates the file on the local file system.
 	path := filepath.Join(config.GroupFilePath(), fmt.Sprintf("%s.%s", groupID, fileExtension))
 	if err = fileutil.CopyFile(path, file); err != nil {
+		service.Error(userID, u.tag, err)
 		return err
 	}
 
@@ -61,9 +69,11 @@ func (u *uploadUseCase) Execute(ctx context.Context, file multipart.File, groupI
 func (u *uploadUseCase) checkPermission(ctx context.Context, groupID, userID string) error {
 	ok, err := u.repository.IsGroupAdmin(ctx, groupID, userID)
 	if err != nil {
+		service.Error(userID, u.tag, err)
 		return err
 	}
 	if !ok {
+		service.Warn(userID, u.tag, ErrOperationNotAllowed.Error())
 		return ErrOperationNotAllowed
 	}
 

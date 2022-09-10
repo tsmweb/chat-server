@@ -3,9 +3,11 @@ package group
 import (
 	"context"
 	"fmt"
-	"github.com/tsmweb/file-service/config"
-	"io/ioutil"
+	"os"
 	"path/filepath"
+
+	"github.com/tsmweb/file-service/common/service"
+	"github.com/tsmweb/file-service/config"
 )
 
 // GetUseCase get a byte array of file by groupID.
@@ -14,18 +16,23 @@ type GetUseCase interface {
 }
 
 type getUseCase struct {
+	tag        string
 	repository Repository
 }
 
 // NewGetUseCase create a new instance of GetUseCase.
 func NewGetUseCase(r Repository) GetUseCase {
-	return &getUseCase{repository: r}
+	return &getUseCase{
+		tag:        "group.GetUseCase",
+		repository: r,
+	}
 }
 
 // Execute executes the GetUseCase use case.
 func (u *getUseCase) Execute(ctx context.Context, groupID, userID string) ([]byte, error) {
 	ok, err := u.repository.ExistsGroup(ctx, groupID)
 	if err != nil {
+		service.Error(userID, u.tag, err)
 		return nil, err
 	}
 	if !ok {
@@ -37,8 +44,9 @@ func (u *getUseCase) Execute(ctx context.Context, groupID, userID string) ([]byt
 	}
 
 	path := filepath.Join(config.GroupFilePath(), fmt.Sprintf("%s.jpg", groupID))
-	fileBytes, err := ioutil.ReadFile(path)
+	fileBytes, err := os.ReadFile(path)
 	if err != nil {
+		service.Error(userID, u.tag, err)
 		return nil, err
 	}
 
@@ -48,9 +56,11 @@ func (u *getUseCase) Execute(ctx context.Context, groupID, userID string) ([]byt
 func (u *getUseCase) checkPermission(ctx context.Context, groupID, userID string) error {
 	ok, err := u.repository.IsGroupMember(ctx, groupID, userID)
 	if err != nil {
+		service.Error(userID, u.tag, err)
 		return err
 	}
 	if !ok {
+		service.Warn(userID, u.tag, ErrOperationNotAllowed.Error())
 		return ErrOperationNotAllowed
 	}
 
