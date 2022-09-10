@@ -30,7 +30,7 @@ func NewAddMemberUseCase(
 	producer kafka.Producer,
 ) AddMemberUseCase {
 	return &addMemberUseCase{
-		tag:        "AddMemberUseCase",
+		tag:        "group.AddMemberUseCase",
 		repository: repository,
 		encoder:    encoder,
 		producer:   producer,

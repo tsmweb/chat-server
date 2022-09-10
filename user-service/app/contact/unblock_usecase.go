@@ -26,7 +26,7 @@ func NewUnblockUseCase(
 	producer kafka.Producer,
 ) UnblockUseCase {
 	return &unblockUseCase{
-		tag:        "UnblockUseCase",
+		tag:        "contact.UnblockUseCase",
 		repository: repository,
 		encoder:    encoder,
 		producer:   producer,

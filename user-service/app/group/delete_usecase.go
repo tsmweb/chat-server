@@ -27,7 +27,7 @@ func NewDeleteUseCase(
 	producer kafka.Producer,
 ) DeleteUseCase {
 	return &deleteUseCase{
-		tag:        "DeleteUseCase",
+		tag:        "group.DeleteUseCase",
 		repository: repository,
 		encoder:    encoder,
 		producer:   producer,

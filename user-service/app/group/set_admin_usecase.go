@@ -29,7 +29,7 @@ func NewSetAdminUseCase(
 	producer kafka.Producer,
 ) SetAdminUseCase {
 	return &setAdminUseCase{
-		tag:        "SetAdminUseCase",
+		tag:        "group.SetAdminUseCase",
 		repository: repository,
 		encoder:    encoder,
 		producer:   producer,
