@@ -2,13 +2,15 @@ package broker
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/tsmweb/broker-service/broker/user"
 )
 
 // UserEventHandler handles user events.
 type UserEventHandler interface {
 	// Execute performs user event handling.
-	Execute(ctx context.Context, evt user.Event) *ErrorEvent
+	Execute(ctx context.Context, evt user.Event) error
 }
 
 type userEventHandler struct {
@@ -23,7 +25,7 @@ func NewUserEventHandler(userRepository user.Repository) UserEventHandler {
 }
 
 // Execute performs user event handling.
-func (h *userEventHandler) Execute(ctx context.Context, evt user.Event) *ErrorEvent {
+func (h *userEventHandler) Execute(ctx context.Context, evt user.Event) error {
 	var isBlocked bool
 
 	if evt.Event == user.EventBlockUser.String() {
@@ -34,11 +36,10 @@ func (h *userEventHandler) Execute(ctx context.Context, evt user.Event) *ErrorEv
 		return nil
 	}
 
-	if err := h.userRepository.UpdateBlockedUserCache(ctx, evt.UserID,
-		evt.ContactID, isBlocked); err != nil {
-
-		return NewErrorEvent(evt.UserID, "UserEventHandler.UpdateBlockedUserCache()",
-			err.Error())
+	if err := h.userRepository.UpdateBlockedUserCache(
+		ctx, evt.UserID, evt.ContactID, isBlocked); err != nil {
+		return fmt.Errorf("UserEventHandler.UpdateBlockedUserCache(%s). Error: %v",
+			evt.UserID, err.Error())
 	}
 
 	return nil

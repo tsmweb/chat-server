@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/tsmweb/broker-service/adapter"
 	"github.com/tsmweb/broker-service/broker"
 	"github.com/tsmweb/broker-service/broker/group"
@@ -34,7 +35,6 @@ func (p *Provider) BrokerProvider() *broker.Broker {
 		messageDecoder := message.DecoderFunc(adapter.MessageUnmarshal)
 		groupEventDecoder := group.EventDecoderFunc(adapter.GroupEventUnmarshal)
 		userEventDecoder := user.EventDecoderFunc(adapter.UserEventUnmarshal)
-		errorEncoder := broker.ErrorEventEncoderFunc(adapter.ErrorEventMarshal)
 
 		userConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(),
 			config.KafkaUsersTopic())
@@ -48,7 +48,6 @@ func (p *Provider) BrokerProvider() *broker.Broker {
 			config.KafkaGroupEventTopic())
 		userEventConsumer := p.KafkaProvider().NewConsumer(config.KafkaClientID(),
 			config.KafkaContactEventTopic())
-		errorProducer := p.KafkaProvider().NewProducer(config.KafkaErrorsTopic())
 
 		userRepository := repository.NewUserRepository(p.DatabaseProvider(), p.CacheDBProvider())
 		messageRepository := repository.NewMessageRepository(p.DatabaseProvider(),
@@ -61,7 +60,6 @@ func (p *Provider) BrokerProvider() *broker.Broker {
 		offMessageHandler := broker.NewOfflineMessageHandler(messageRepository)
 		groupEventHandler := broker.NewGroupEventHandler(messageRepository)
 		userEventHandler := broker.NewUserEventHandler(userRepository)
-		errorHandler := broker.NewErrorHandler(errorEncoder, errorProducer)
 
 		p.broker = broker.NewBroker(
 			p.ctx,
@@ -81,10 +79,13 @@ func (p *Provider) BrokerProvider() *broker.Broker {
 			offMessageHandler,
 			groupEventHandler,
 			userEventHandler,
-			errorHandler,
 		)
 	}
 	return p.broker
+}
+
+func (p *Provider) NewKafkaProducer(topic string) kafka.Producer {
+	return p.KafkaProvider().NewProducer(topic)
 }
 
 func (p *Provider) DatabaseProvider() db.Database {

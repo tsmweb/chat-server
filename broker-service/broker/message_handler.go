@@ -2,17 +2,20 @@ package broker
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"strings"
+
 	"github.com/tsmweb/broker-service/broker/message"
 	"github.com/tsmweb/broker-service/broker/user"
 	"github.com/tsmweb/broker-service/config"
 	"github.com/tsmweb/go-helper-api/kafka"
-	"strings"
 )
 
 // MessageHandler handles messages.
 type MessageHandler interface {
 	// Execute performs message handling.
-	Execute(ctx context.Context, msg message.Message) *ErrorEvent
+	Execute(ctx context.Context, msg message.Message) error
 }
 
 type messageHandler struct {
@@ -38,14 +41,14 @@ func NewMessageHandler(
 }
 
 // Execute performs message handling.
-func (h *messageHandler) Execute(ctx context.Context, msg message.Message) *ErrorEvent {
+func (h *messageHandler) Execute(ctx context.Context, msg message.Message) error {
 	// check if it's a group message
 	if msg.IsGroupMessage() {
-		return h.processGroupMessage(ctx, msg)
+		return h.processGroupMessage(ctx, &msg)
 	}
 
 	// Checks if the addressee is a valid user.
-	ok, err := h.isValidUser(ctx, msg)
+	ok, err := h.isValidUser(ctx, &msg)
 	if err != nil {
 		return err
 	}
@@ -54,7 +57,7 @@ func (h *messageHandler) Execute(ctx context.Context, msg message.Message) *Erro
 	}
 
 	// Check if the sender has been blocked by the addressee.
-	ok, err = h.isBlockedUser(ctx, msg)
+	ok, err = h.isBlockedUser(ctx, &msg)
 	if err != nil {
 		return err
 	}
@@ -62,114 +65,138 @@ func (h *messageHandler) Execute(ctx context.Context, msg message.Message) *Erro
 		return nil
 	}
 
-	return h.sendMessage(ctx, msg)
+	return h.sendMessage(ctx, &msg)
 }
 
-func (h *messageHandler) processGroupMessage(ctx context.Context, msg message.Message) *ErrorEvent {
+func (h *messageHandler) processGroupMessage(ctx context.Context, msg *message.Message) error {
 	members, err := h.msgRepository.GetAllGroupMembers(ctx, msg.Group)
 	if err != nil {
-		return NewErrorEvent(msg.From, "MessageHandler.processGroupMessage()", err.Error())
+		return fmt.Errorf("MessageHandler.processGroupMessage(%s). Error: %v", msg.ID, err.Error())
 	}
-	if members == nil || len(members) < 1 {
-		msgResponse := message.NewResponse(msg.ID, msg.From, msg.Group, message.ContentTypeError,
-			message.ErrGroupIsInvalid.Error())
-		return h.sendMessage(ctx, *msgResponse)
+	if len(members) < 1 {
+		msgResponse := message.NewResponse(
+			msg.ID,
+			msg.From,
+			msg.Group,
+			message.ContentTypeError,
+			message.ErrGroupIsInvalid.Error(),
+		)
+		return h.sendMessage(ctx, msgResponse)
 	}
 	if len(members) == 1 {
 		return nil
 	}
 
-	var errEvents ErrorEvents
+	var errEvents []string
 
 	for _, member := range members {
 		if member == msg.From { // sender
 			continue
 		}
 		m, _ := msg.ReplicateTo(member)
-		if errEvent := h.sendMessage(ctx, *m); errEvent != nil {
-			errEvents = append(errEvents, errEvent)
+		if err := h.sendMessage(ctx, m); err != nil {
+			errEvents = append(errEvents, err.Error())
 		}
 	}
 
 	if len(errEvents) > 0 {
-		return NewErrorEvent(msg.From, "MessageHandler.processGroupMessage()",
-			errEvents.String())
+		return fmt.Errorf("MessageHandler.processGroupMessage(%s). Error: %v",
+			msg.ID, errors.New(strings.Join(errEvents, "|")))
 	}
 
 	return nil
 }
 
 // isValidUser checks if the addressee is a valid user.
-func (h *messageHandler) isValidUser(ctx context.Context, msg message.Message) (bool, *ErrorEvent) {
+func (h *messageHandler) isValidUser(ctx context.Context, msg *message.Message) (bool, error) {
 	ok, err := h.userRepository.IsValidUser(ctx, msg.To)
 	if err != nil {
-		return false, NewErrorEvent(msg.From, "MessageHandler.isValidUser()", err.Error())
+		return false, fmt.Errorf("MessageHandler.isValidUser(%s). Error: %v",
+			msg.To, err.Error())
 	}
 	if !ok {
-		msgResponse := message.NewResponse(msg.ID, msg.From, "", message.ContentTypeError,
-			message.ErrMessageAddresseeIsInvalid.Error())
-
-		return false, h.sendMessage(ctx, *msgResponse)
+		msgResponse := message.NewResponse(
+			msg.ID,
+			msg.From,
+			"",
+			message.ContentTypeError,
+			message.ErrMessageAddresseeIsInvalid.Error(),
+		)
+		return false, h.sendMessage(ctx, msgResponse)
 	}
 
 	return true, nil
 }
 
 // isBlockedUser check if the sender has been blocked by the addressee.
-func (h *messageHandler) isBlockedUser(ctx context.Context, msg message.Message) (bool, *ErrorEvent) {
+func (h *messageHandler) isBlockedUser(ctx context.Context, msg *message.Message) (bool, error) {
 	ok, err := h.userRepository.IsBlockedUser(ctx, msg.To, msg.From)
 	if err != nil {
-		return false, NewErrorEvent(msg.From, "MessageHandler.isBlockedUser()", err.Error())
+		return false, fmt.Errorf("MessageHandler.isBlockedUser(%s, %s). Error: %v",
+			msg.To, msg.From, err.Error())
 	}
 	if ok {
-		msgResponse := message.NewResponse(msg.ID, msg.From, "", message.ContentTypeError,
-			message.ErrMessageSendingBlocked.Error())
-
-		return true, h.sendMessage(ctx, *msgResponse)
+		msgResponse := message.NewResponse(
+			msg.ID,
+			msg.From,
+			"",
+			message.ContentTypeError,
+			message.ErrMessageSendingBlocked.Error(),
+		)
+		return true, h.sendMessage(ctx, msgResponse)
 	}
 
 	return false, nil
 }
 
-func (h *messageHandler) sendMessage(ctx context.Context, msg message.Message) *ErrorEvent {
+func (h *messageHandler) sendMessage(ctx context.Context, msg *message.Message) error {
 	serverID, err := h.userRepository.GetUserServer(ctx, msg.To)
 	if err != nil {
-		return NewErrorEvent(msg.From, "MessageHandler.GetUserServer()", err.Error())
+		return fmt.Errorf("MessageHandler.GetUserServer(%s). Error: %v", msg.To, err.Error())
 	}
 
 	if strings.TrimSpace(serverID) != "" { // online
 		err = h.dispatchMessagesToHosts(ctx, serverID, msg)
 		if err != nil {
-			return NewErrorEvent(msg.From, "MessageHandler.dispatchMessagesToHosts()",
-				err.Error())
+			return fmt.Errorf("MessageHandler.dispatchMessagesToHosts(%s, %s). Error: %v",
+				serverID, msg.ID, err.Error())
 		}
 	} else if msg.ContentType != message.ContentTypeStatus.String() { // offline
 		err = h.dispatchToOfflineMessages(ctx, msg)
 		if err != nil {
-			return NewErrorEvent(msg.From, "MessageHandler.dispatchToOfflineMessages()",
-				err.Error())
+			return fmt.Errorf("MessageHandler.dispatchToOfflineMessages(%s). Error: %v",
+				msg.ID, err.Error())
 		}
 	}
 
 	return nil
 }
 
-func (h *messageHandler) dispatchMessagesToHosts(ctx context.Context, serverID string,
-	msg message.Message) error {
+func (h *messageHandler) dispatchMessagesToHosts(
+	ctx context.Context,
+	serverID string,
+	msg *message.Message,
+) error {
 	producer := h.queue.NewProducer(config.KafkaHostTopic(serverID))
 	defer producer.Close()
 	return h.dispatchMessages(ctx, producer, msg)
 }
 
-func (h *messageHandler) dispatchToOfflineMessages(ctx context.Context, msg message.Message) error {
+func (h *messageHandler) dispatchToOfflineMessages(
+	ctx context.Context,
+	msg *message.Message,
+) error {
 	producer := h.queue.NewProducer(config.KafkaOffMessagesTopic())
 	defer producer.Close()
 	return h.dispatchMessages(ctx, producer, msg)
 }
 
-func (h *messageHandler) dispatchMessages(ctx context.Context, producer kafka.Producer,
-	msg message.Message) error {
-	mpb, err := h.encoder.Marshal(&msg)
+func (h *messageHandler) dispatchMessages(
+	ctx context.Context,
+	producer kafka.Producer,
+	msg *message.Message,
+) error {
+	mpb, err := h.encoder.Marshal(msg)
 	if err != nil {
 		return err
 	}

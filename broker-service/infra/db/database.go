@@ -4,8 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/tsmweb/broker-service/config"
 	"time"
+
+	"github.com/tsmweb/broker-service/config"
 
 	_ "github.com/lib/pq"
 )

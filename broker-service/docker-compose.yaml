@@ -15,16 +15,17 @@ services:
     depends_on:
       - redis
     environment:
-      HOST_ID: B01
+      HOST_ID: BROKER01
       GOPOOL_SIZE: 128
       DB_HOST: host.docker.internal
       DB_PORT: 5432
-      DB_DATABASE: chat_db
+      DB_DATABASE: postgres
       DB_SCHEMA: chat_db
       DB_USER: salesapi
       DB_PASSWORD: password
       REDIS_HOST: host.docker.internal:6379
       REDIS_PASSWORD: password
+      METRICS_SEND_INTERVAL: 60
       KAFKA_BOOTSTRAP_SERVERS: host.docker.internal:9094
       KAFKA_CLIENT_ID: B01_BROKER_SERVICE
       KAFKA_GROUP_ID: BROKER_SERVICE
@@ -33,9 +34,10 @@ services:
       KAFKA_USERS_PRESENCE_TOPIC: USERS_PRESENCE
       KAFKA_NEW_MESSAGES_TOPIC: NEW_MESSAGES
       KAFKA_OFF_MESSAGES_TOPIC: OFF_MESSAGES
-      KAFKA_ERRORS_TOPIC: ERRORS
       KAFKA_GROUP_EVENT_TOPIC: GROUP_EVENTS
       KAFKA_CONTACT_EVENT_TOPIC: CONTACT_EVENTS
       KAFKA_HOST_TOPIC: MESSAGES
+      KAFKA_EVENTS_TOPIC: EVENTS
+      KAFKA_METRICS_TOPIC: METRICS
     extra_hosts:
       - "host.docker.internal:172.17.0.1"

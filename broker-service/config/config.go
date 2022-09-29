@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"runtime"
 	"strconv"
 
 	"github.com/joho/godotenv"
@@ -21,6 +22,7 @@ var (
 	dbSchema                string
 	redisHost               string
 	redisPassword           string
+	metricsSendInterval     int
 	kafkaBootstrapServers   string
 	kafkaClientID           string
 	kafkaGroupID            string
@@ -29,10 +31,11 @@ var (
 	kafkaUsersPresenceTopic string
 	kafkaNewMessagesTopic   string
 	kafkaOffMessagesTopic   string
-	kafkaErrorsTopic        string
 	kafkaGroupEventTopic    string
 	kafkaContactEventTopic  string
 	kafkaHostTopic          string
+	kafkaEventsTopic        string
+	kafkaMetricsTopic       string
 )
 
 func Load(workDir string) error {
@@ -44,7 +47,7 @@ func Load(workDir string) error {
 	hostID = os.Getenv("HOST_ID")
 	goPoolSize, err = strconv.Atoi(os.Getenv("GOPOOL_SIZE"))
 	if err != nil {
-		return err
+		goPoolSize = runtime.NumCPU()
 	}
 
 	dbHost = os.Getenv("DB_HOST")
@@ -60,6 +63,11 @@ func Load(workDir string) error {
 	redisHost = os.Getenv("REDIS_HOST")
 	redisPassword = os.Getenv("REDIS_PASSWORD")
 
+	metricsSendInterval, err = strconv.Atoi(os.Getenv("METRICS_SEND_INTERVAL")) //sec
+	if err != nil {
+		return err
+	}
+
 	kafkaBootstrapServers = os.Getenv("KAFKA_BOOTSTRAP_SERVERS")
 	kafkaClientID = os.Getenv("KAFKA_CLIENT_ID")
 	kafkaGroupID = os.Getenv("KAFKA_GROUP_ID")
@@ -68,10 +76,11 @@ func Load(workDir string) error {
 	kafkaUsersPresenceTopic = os.Getenv("KAFKA_USERS_PRESENCE_TOPIC")
 	kafkaNewMessagesTopic = os.Getenv("KAFKA_NEW_MESSAGES_TOPIC")
 	kafkaOffMessagesTopic = os.Getenv("KAFKA_OFF_MESSAGES_TOPIC")
-	kafkaErrorsTopic = os.Getenv("KAFKA_ERRORS_TOPIC")
 	kafkaGroupEventTopic = os.Getenv("KAFKA_GROUP_EVENT_TOPIC")
 	kafkaContactEventTopic = os.Getenv("KAFKA_CONTACT_EVENT_TOPIC")
 	kafkaHostTopic = os.Getenv("KAFKA_HOST_TOPIC")
+	kafkaEventsTopic = os.Getenv("KAFKA_EVENTS_TOPIC")
+	kafkaMetricsTopic = os.Getenv("KAFKA_METRICS_TOPIC")
 
 	return nil
 }
@@ -116,6 +125,10 @@ func RedisPassword() string {
 	return redisPassword
 }
 
+func MetricsSendInterval() int {
+	return metricsSendInterval
+}
+
 func KafkaBootstrapServers() string {
 	return kafkaBootstrapServers
 }
@@ -148,10 +161,6 @@ func KafkaOffMessagesTopic() string {
 	return kafkaOffMessagesTopic
 }
 
-func KafkaErrorsTopic() string {
-	return kafkaErrorsTopic
-}
-
 func KafkaGroupEventTopic() string {
 	return kafkaGroupEventTopic
 }
@@ -162,4 +171,12 @@ func KafkaContactEventTopic() string {
 
 func KafkaHostTopic(serverID string) string {
 	return fmt.Sprintf("%s_%s", serverID, kafkaHostTopic)
+}
+
+func KafkaEventsTopic() string {
+	return kafkaEventsTopic
+}
+
+func KafkaMetricsTopic() string {
+	return kafkaMetricsTopic
 }
