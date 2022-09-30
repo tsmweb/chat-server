@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"os"
 	"os/signal"
 
@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	fmt.Println("[i] start broker service")
+	log.Println("[INFO] start broker service")
 
 	// Working directory
 	workDir, _ := os.Getwd()
@@ -23,7 +23,7 @@ func main() {
 	ctx, cancelFunc := signal.NotifyContext(context.Background(), os.Interrupt)
 	go func() {
 		<-ctx.Done()
-		fmt.Println("[i] stopping broker service...")
+		log.Println("[INFO] stopping broker service...")
 		cancelFunc()
 	}()
 
@@ -33,15 +33,14 @@ func main() {
 	producerMetrics := provider.NewKafkaProducer(config.KafkaMetricsTopic())
 	err := metric.Start(config.HostID(), config.MetricsSendInterval(), producerMetrics)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[!] Could not start metrics collects. Error: %v", err)
-	} else {
-		defer metric.Stop()
+		log.Fatalf("[ERROR] Could not start metrics collects. Error: %s\n", err.Error())
 	}
+	defer metric.Stop()
 
 	// Initializes the service's event producer.
 	producerEvents := provider.NewKafkaProducer(config.KafkaEventsTopic())
 	if err = event.Init(producerEvents); err != nil {
-		fmt.Fprintf(os.Stderr, "[!] Could not start events collects. Error: %v", err)
+		log.Fatalf("[ERROR] Could not start events collects. Error: %s\n", err.Error())
 	} else {
 		defer event.Close()
 	}

@@ -2,9 +2,7 @@ package broker
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"os"
 	"sync"
 
 	"github.com/tsmweb/broker-service/broker/group"
@@ -124,7 +122,7 @@ func (b *Broker) messageProcessor() {
 	go func() {
 		defer func() {
 			wg.Done()
-			fmt.Println("[STOP] chUser")
+			log.Println("[STOP] Broker.chUser")
 		}()
 
 		var userWG sync.WaitGroup
@@ -132,7 +130,7 @@ func (b *Broker) messageProcessor() {
 		for u := range b.chUser {
 			userWG.Add(1)
 			if err := poolUsers.Schedule(b.userTask(u, &userWG)); err != nil {
-				fmt.Fprintf(os.Stderr, "[ERROR] poolUsers: %v\n", err)
+				log.Printf("[ERROR] Broker.poolUsers: %v\n", err)
 			}
 		}
 
@@ -145,12 +143,12 @@ func (b *Broker) messageProcessor() {
 	go func() {
 		defer func() {
 			wg.Done()
-			fmt.Println("[STOP] chUserPresence")
+			log.Println("[STOP] Broker.chUserPresence")
 		}()
 
 		for u := range b.chUserPresence {
 			if err := poolUsers.Schedule(b.userPresenceTask(u)); err != nil {
-				fmt.Fprintf(os.Stderr, "[ERROR] poolUsers: %v\n", err)
+				log.Printf("[ERROR] Broker.poolUsers: %v\n", err)
 			}
 		}
 	}()
@@ -160,12 +158,12 @@ func (b *Broker) messageProcessor() {
 	go func() {
 		defer func() {
 			wg.Done()
-			fmt.Println("[STOP] chUserMessage")
+			log.Println("[STOP] Broker.chUserMessage")
 		}()
 
 		for m := range b.chUserMessage {
 			if err := poolMessages.Schedule(b.messageTask(m)); err != nil {
-				fmt.Fprintf(os.Stderr, "[ERROR] poolMessages: %v\n", err)
+				log.Printf("[ERROR] Broker.poolMessages: %v\n", err)
 			}
 		}
 	}()
@@ -175,12 +173,12 @@ func (b *Broker) messageProcessor() {
 	go func() {
 		defer func() {
 			wg.Done()
-			fmt.Println("[STOP] chMessage")
+			log.Println("[STOP] Broker.chMessage")
 		}()
 
 		for m := range b.chMessage {
 			if err := poolMessages.Schedule(b.messageTask(m)); err != nil {
-				fmt.Fprintf(os.Stderr, "[ERROR] poolMessages: %v\n", err)
+				log.Printf("[ERROR] Broker.poolMessages: %v\n", err)
 			}
 		}
 	}()
@@ -190,12 +188,12 @@ func (b *Broker) messageProcessor() {
 	go func() {
 		defer func() {
 			wg.Done()
-			fmt.Println("[STOP] chOfflineMessage")
+			log.Println("[STOP] Broker.chOfflineMessage")
 		}()
 
 		for m := range b.chOfflineMessage {
 			if err := poolMessages.Schedule(b.offlineMessageTask(m)); err != nil {
-				fmt.Fprintf(os.Stderr, "[ERROR] poolMessages: %v\n", err)
+				log.Printf("[ERROR] Broker.poolMessages: %v\n", err)
 			}
 		}
 	}()
@@ -205,12 +203,12 @@ func (b *Broker) messageProcessor() {
 	go func() {
 		defer func() {
 			wg.Done()
-			fmt.Println("[STOP] chGroupEvent")
+			log.Println("[STOP] Broker.chGroupEvent")
 		}()
 
 		for e := range b.chGroupEvent {
 			if err := poolEvents.Schedule(b.groupEventTask(e)); err != nil {
-				fmt.Fprintf(os.Stderr, "[ERROR] poolEvents: %v\n", err)
+				log.Printf("[ERROR] Broker.poolEvents: %v\n", err)
 			}
 		}
 	}()
@@ -220,12 +218,12 @@ func (b *Broker) messageProcessor() {
 	go func() {
 		defer func() {
 			wg.Done()
-			fmt.Println("[STOP] chUserEvent")
+			log.Println("[STOP] Broker.chUserEvent")
 		}()
 
 		for e := range b.chUserEvent {
 			if err := poolEvents.Schedule(b.userEventTask(e)); err != nil {
-				fmt.Fprintf(os.Stderr, "[ERROR] poolEvents: %v\n", err)
+				log.Printf("[ERROR] Broker.poolEvents: %v\n", err)
 			}
 		}
 	}()
@@ -237,7 +235,7 @@ func (b *Broker) usersConsumer() {
 	defer func() {
 		b.userConsumer.Close()
 		close(b.chUser)
-		log.Println("[STOP] usersConsumer")
+		log.Println("[STOP] Broker.usersConsumer")
 	}()
 
 	callbackFn := func(event *kafka.Event, err error) {
@@ -262,7 +260,7 @@ func (b *Broker) usersPresenceConsumer() {
 	defer func() {
 		b.userPresenceConsumer.Close()
 		close(b.chUserPresence)
-		log.Println("[STOP] usersPresenceConsumer")
+		log.Println("[STOP] Broker.usersPresenceConsumer")
 	}()
 
 	callbackFn := func(event *kafka.Event, err error) {
@@ -287,7 +285,7 @@ func (b *Broker) messagesConsumer() {
 	defer func() {
 		b.messageConsumer.Close()
 		close(b.chMessage)
-		fmt.Println("[STOP] messagesConsumer")
+		log.Println("[STOP] Broker.messagesConsumer")
 	}()
 
 	callbackFn := func(event *kafka.Event, err error) {
@@ -312,7 +310,7 @@ func (b *Broker) offlineMessagesConsumer() {
 	defer func() {
 		b.offlineMessageConsumer.Close()
 		close(b.chOfflineMessage)
-		log.Println("[STOP] offlineMessagesConsumer")
+		log.Println("[STOP] Broker.offlineMessagesConsumer")
 	}()
 
 	callbackFn := func(event *kafka.Event, err error) {
@@ -337,7 +335,7 @@ func (b *Broker) groupEventsConsumer() {
 	defer func() {
 		b.groupEventConsumer.Close()
 		close(b.chGroupEvent)
-		log.Println("[STOP] groupEventsConsumer")
+		log.Println("[STOP] Broker.groupEventsConsumer")
 	}()
 
 	callbackFn := func(event *kafka.Event, err error) {
@@ -362,7 +360,7 @@ func (b *Broker) userEventsConsumer() {
 	defer func() {
 		b.userEventConsumer.Close()
 		close(b.chUserEvent)
-		log.Println("[STOP] userEventsConsumer")
+		log.Println("[STOP] Broker.userEventsConsumer")
 	}()
 
 	callbackFn := func(event *kafka.Event, err error) {
