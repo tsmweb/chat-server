@@ -38,25 +38,21 @@ func (h *userHandler) Execute(
 	chMessage chan<- message.Message,
 ) error {
 	if err := h.setUserPresence(ctx, usr.ID, usr.Status, usr.ServerID); err != nil {
-		return fmt.Errorf("UserHandler.setUserPresence(%s). Error: %v",
-			usr.ID, err.Error())
+		return fmt.Errorf("UserHandler::setUserPresence. Error: %v", err.Error())
 	}
 
 	if usr.Status == user.Online.String() {
 		if err := h.sendMessagesOffline(ctx, usr.ID, chMessage); err != nil {
-			return fmt.Errorf("UserHandler.sendMessagesOffline(%s). Error: %v",
-				usr.ID, err.Error())
+			return fmt.Errorf("UserHandler::sendMessagesOffline. Error: %v", err.Error())
 		}
 
 		if err := h.notifyPresenceOfContactsToUser(ctx, usr.ID, chMessage); err != nil {
-			return fmt.Errorf("UserHandler.notifyPresenceOfContactsToUser(%s). Error: %v",
-				usr.ID, err.Error())
+			return fmt.Errorf("UserHandler::notifyPresenceOfContactsToUser. Error: %v", err.Error())
 		}
 	}
 
 	if err := h.notifyUserPresenceToContacts(ctx, usr.ID, usr.Status, chMessage); err != nil {
-		return fmt.Errorf("UserHandler.notifyUserPresenceToContacts(%s). Error: %v",
-			usr.ID, err.Error())
+		return fmt.Errorf("UserHandler::notifyUserPresenceToContacts. Error: %v", err.Error())
 	}
 
 	return nil

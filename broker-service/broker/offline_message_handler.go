@@ -27,7 +27,7 @@ func NewOfflineMessageHandler(msgRepository message.Repository) OfflineMessageHa
 // Execute performs message handling.
 func (h *offlineMessageHandler) Execute(ctx context.Context, msg message.Message) error {
 	if err := h.msgRepository.AddMessage(ctx, msg); err != nil {
-		return fmt.Errorf("OfflineMessageHandler.AddMessage(%s). Error: %v", msg.ID, err.Error())
+		return fmt.Errorf("OfflineMessageHandler::msgRepository. Error: %v", err.Error())
 	}
 	return nil
 }

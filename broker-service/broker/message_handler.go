@@ -71,7 +71,8 @@ func (h *messageHandler) Execute(ctx context.Context, msg message.Message) error
 func (h *messageHandler) processGroupMessage(ctx context.Context, msg *message.Message) error {
 	members, err := h.msgRepository.GetAllGroupMembers(ctx, msg.Group)
 	if err != nil {
-		return fmt.Errorf("MessageHandler.processGroupMessage(%s). Error: %v", msg.ID, err.Error())
+		return fmt.Errorf("MessageHandler::processGroupMessage::msgRepository::GetAllGroupMembers. Error: %v",
+			err.Error())
 	}
 	if len(members) < 1 {
 		msgResponse := message.NewResponse(
@@ -100,8 +101,8 @@ func (h *messageHandler) processGroupMessage(ctx context.Context, msg *message.M
 	}
 
 	if len(errEvents) > 0 {
-		return fmt.Errorf("MessageHandler.processGroupMessage(%s). Error: %v",
-			msg.ID, errors.New(strings.Join(errEvents, "|")))
+		return fmt.Errorf("MessageHandler::processGroupMessage::sendMessage. Error: %v",
+			errors.New(strings.Join(errEvents, "|")))
 	}
 
 	return nil
@@ -111,8 +112,8 @@ func (h *messageHandler) processGroupMessage(ctx context.Context, msg *message.M
 func (h *messageHandler) isValidUser(ctx context.Context, msg *message.Message) (bool, error) {
 	ok, err := h.userRepository.IsValidUser(ctx, msg.To)
 	if err != nil {
-		return false, fmt.Errorf("MessageHandler.isValidUser(%s). Error: %v",
-			msg.To, err.Error())
+		return false, fmt.Errorf("MessageHandler::isValidUser::userRepository::IsValidUser. Error: %v",
+			err.Error())
 	}
 	if !ok {
 		msgResponse := message.NewResponse(
@@ -132,8 +133,8 @@ func (h *messageHandler) isValidUser(ctx context.Context, msg *message.Message) 
 func (h *messageHandler) isBlockedUser(ctx context.Context, msg *message.Message) (bool, error) {
 	ok, err := h.userRepository.IsBlockedUser(ctx, msg.To, msg.From)
 	if err != nil {
-		return false, fmt.Errorf("MessageHandler.isBlockedUser(%s, %s). Error: %v",
-			msg.To, msg.From, err.Error())
+		return false, fmt.Errorf("MessageHandler::isBlockedUser::userRepository::IsBlockedUser. Error: %v",
+			err.Error())
 	}
 	if ok {
 		msgResponse := message.NewResponse(
@@ -152,20 +153,21 @@ func (h *messageHandler) isBlockedUser(ctx context.Context, msg *message.Message
 func (h *messageHandler) sendMessage(ctx context.Context, msg *message.Message) error {
 	serverID, err := h.userRepository.GetUserServer(ctx, msg.To)
 	if err != nil {
-		return fmt.Errorf("MessageHandler.GetUserServer(%s). Error: %v", msg.To, err.Error())
+		return fmt.Errorf("MessageHandler::sendMessage::userRepository::GetUserServer. Error: %v",
+			err.Error())
 	}
 
 	if strings.TrimSpace(serverID) != "" { // online
 		err = h.dispatchMessagesToHosts(ctx, serverID, msg)
 		if err != nil {
-			return fmt.Errorf("MessageHandler.dispatchMessagesToHosts(%s, %s). Error: %v",
-				serverID, msg.ID, err.Error())
+			return fmt.Errorf("MessageHandler::sendMessage::dispatchMessagesToHosts. Error: %v",
+				err.Error())
 		}
 	} else if msg.ContentType != message.ContentTypeStatus.String() { // offline
 		err = h.dispatchToOfflineMessages(ctx, msg)
 		if err != nil {
-			return fmt.Errorf("MessageHandler.dispatchToOfflineMessages(%s). Error: %v",
-				msg.ID, err.Error())
+			return fmt.Errorf("MessageHandler::sendMessage::dispatchToOfflineMessages. Error: %v",
+				err.Error())
 		}
 	}
 

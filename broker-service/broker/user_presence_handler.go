@@ -27,7 +27,8 @@ func NewUserPresenceHandler(userRepository user.Repository) UserPresenceHandler 
 func (h *userPresenceHandler) Execute(ctx context.Context, usr user.User) error {
 	if err := h.userRepository.UpdateUserPresenceCache(ctx, usr.ID, usr.ServerID,
 		usr.Status); err != nil {
-		return fmt.Errorf("UserPresenceHandler.Execute(%s). Error: %v", usr.ID, err.Error())
+		return fmt.Errorf("UserPresenceHandler::userRepository::UpdateUserPresenceCache. Error: %v",
+			err.Error())
 	}
 	return nil
 }
