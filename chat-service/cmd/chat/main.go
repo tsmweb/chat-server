@@ -23,7 +23,7 @@ var (
 )
 
 func main() {
-	log.Println("[>] starting server")
+	log.Println("[INFO] starting server")
 	flag.Parse()
 
 	// Working directory
@@ -45,17 +45,18 @@ func main() {
 
 	// Enable pprof hooks
 	if x := *debug; x != "" {
-		log.Printf("[>] starting pprof server on %s", x)
+		log.Printf("[INFO] starting pprof server on %s\n", x)
 		go func() {
-			log.Printf("[!] pprof server error: %v", http.ListenAndServe(x, nil))
+			log.Printf("[ERROR] pprof server error: %v\n", http.ListenAndServe(x, nil))
 		}()
 	}
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	go func(ctx context.Context, fn context.CancelFunc) {
+	ctx, cancelFunc := signal.NotifyContext(context.Background(), os.Interrupt)
+	go func() {
 		<-ctx.Done()
-		fn()
-	}(ctx, stop)
+		log.Println("[INFO] stopping chat service...")
+		cancelFunc()
+	}()
 
 	provider := CreateProvider(ctx)
 
@@ -63,23 +64,21 @@ func main() {
 	producerMetrics := provider.NewKafkaProducer(config.KafkaMetricsTopic())
 	err := metric.Start(config.HostID(), config.MetricsSendInterval(), producerMetrics)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[!] Could not start metrics collects. Error: %v", err)
-	} else {
-		defer metric.Stop()
+		log.Fatalf("[ERROR] Could not start metrics collects. Error: %s\n", err.Error())
 	}
+	defer metric.Stop()
 
 	// Initializes the service's event producer.
 	producerEvents := provider.NewKafkaProducer(config.KafkaEventsTopic())
 	if err = event.Init(producerEvents); err != nil {
-		fmt.Fprintf(os.Stderr, "[!] Could not start events collects. Error: %v", err)
-	} else {
-		defer event.Close()
+		log.Fatalf("[ERROR] Could not start events collects. Error: %s\n", err.Error())
 	}
+	defer event.Close()
 
 	// starts API server
 	router := mux.NewRouter()
 	if err := provider.ChatRouter(router); err != nil {
-		log.Fatalf("[!] error when starting server: %s\n", err.Error())
+		log.Fatalf("[ERROR] error when starting server: %s\n", err.Error())
 	}
 
 	handler := middleware.GZIP(router)

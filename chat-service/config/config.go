@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"runtime"
 	"strconv"
 
 	"github.com/joho/godotenv"
@@ -40,7 +41,7 @@ func Load(workDir string) error {
 	hostID = os.Getenv("HOST_ID")
 	goPoolSize, err = strconv.Atoi(os.Getenv("GOPOOL_SIZE"))
 	if err != nil {
-		return err
+		goPoolSize = runtime.NumCPU()
 	}
 	serverPort, err = strconv.Atoi(os.Getenv("SERVER_PORT"))
 	if err != nil {

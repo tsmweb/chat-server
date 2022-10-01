@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/tsmweb/chat-service/server/message"
 	"github.com/tsmweb/go-helper-api/kafka"
@@ -36,11 +37,11 @@ func NewHandleMessage(
 func (h *handleMessage) Execute(ctx context.Context, msg *message.Message) error {
 	mpb, err := h.encoder.Marshal(msg)
 	if err != nil {
-		return err
+		return fmt.Errorf("HandleMessage::encoder. Error: %s", err.Error())
 	}
 
 	if err = h.producer.Publish(ctx, []byte(msg.ID), mpb); err != nil {
-		return err
+		return fmt.Errorf("HandleMessage::producer. Error: %s", err.Error())
 	}
 
 	return nil

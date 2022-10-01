@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"crypto/tls"
+	"log"
 	"net"
 
 	"github.com/tsmweb/chat-service/common/service"
@@ -10,7 +11,7 @@ import (
 	"github.com/tsmweb/chat-service/pkg/epoll"
 	"github.com/tsmweb/chat-service/server/message"
 	"github.com/tsmweb/chat-service/server/user"
-	"github.com/tsmweb/go-helper-api/concurrent/executor"
+	"github.com/tsmweb/go-helper-api/concurrent/gopool"
 	"github.com/tsmweb/go-helper-api/kafka"
 )
 
@@ -18,15 +19,15 @@ import (
 // the connection.
 // It also produces and consumes Apache Kafka data to communicate with the cluster of services.
 type Server struct {
-	ctx             context.Context
-	execMessageRecv *executor.Executor
-	execMessageSent *executor.Executor
-	poller          epoll.EPoll
+	ctx              context.Context
+	poller           epoll.EPoll
+	poolUsers        *gopool.Pool
+	poolSendMessages *gopool.Pool
+	poolRecvMessages *gopool.Pool
 
 	chUserIN       chan *UserConn
 	chUserOUT      chan string
-	chMessageRecv  chan *message.Message
-	chMessageSent  chan *message.Message
+	chRecvMessage  chan message.Message
 	connReader     ConnReader
 	connWriter     ConnWriter
 	msgDecoder     message.Decoder
@@ -54,8 +55,7 @@ func NewServer(
 		poller:           poll,
 		chUserIN:         make(chan *UserConn),
 		chUserOUT:        make(chan string),
-		chMessageRecv:    make(chan *message.Message),
-		chMessageSent:    make(chan *message.Message),
+		chRecvMessage:    make(chan message.Message),
 		connReader:       connReader,
 		connWriter:       connWriter,
 		msgDecoder:       msgDecoder,
@@ -91,7 +91,7 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 
 	observer, err := s.poller.ObservableRead(fdConn)
 	if err != nil {
-		service.Error(userConn.userID, "Server.Register()", err)
+		service.Error(userConn.userID, "Server::Register::poller", err)
 		return err
 	}
 
@@ -100,12 +100,12 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 			observer.Stop()
 			s.chUserOUT <- userConn.userID
 			if errPoller != nil {
-				service.Error(userConn.userID, "Server.Register():poller", errPoller)
+				service.Error(userConn.userID, "Server::Register::poller::observer", errPoller)
 			}
 			return
 		}
 
-		s.execMessageRecv.Schedule(func(ctx context.Context) {
+		s.poolSendMessages.Schedule(func(ctx context.Context) {
 			msg, err := userConn.Receive() // receive message from userConn connection
 			if err != nil {
 				observer.Stop()
@@ -113,17 +113,34 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 				return
 			}
 			if msg != nil {
-				s.chMessageRecv <- msg
+				if err := s.handleMessage.Execute(s.ctx, msg); err != nil {
+					service.Error(msg.From, "Server::poolSendMessages::handleMessage", err)
 
-				if err = userConn.WriteResponse(msg.ID, message.ContentTypeACK, message.AckMessage); err != nil {
-					service.Error(userConn.userID, "UserConn.WriteACK()", err)
+					if err = userConn.WriteResponse(
+						msg.ID,
+						message.ContentTypeError,
+						"internal server error",
+					); err != nil {
+						service.Error(userConn.userID,
+							"Server::poolSendMessages::userConn", err)
+					}
+					return
+				}
+
+				if err = userConn.WriteResponse(
+					msg.ID,
+					message.ContentTypeACK,
+					message.AckMessage,
+				); err != nil {
+					service.Error(userConn.userID,
+						"Server::poolSendMessages::userConn", err)
 				}
 			}
 		})
 	})
 
 	if err != nil {
-		service.Error(userConn.userID, "Server.Register()", err)
+		service.Error(userConn.userID, "Server::Register", err)
 		return err
 	}
 
@@ -134,16 +151,21 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 func (s *Server) run() {
 	// Executor to perform background processing,
 	// limiting resource consumption when executing a collection of jobs.
-	s.execMessageRecv = executor.New(config.GoPoolSize())
-	s.execMessageSent = executor.New(config.GoPoolSize())
+	workerSize := config.GoPoolSize()
+	queueSize := 1
+
+	s.poolUsers = gopool.New(workerSize, queueSize)
+	s.poolSendMessages = gopool.New(workerSize, queueSize)
+	s.poolRecvMessages = gopool.New(workerSize, queueSize)
 
 	go s.messageProcessor()
 	go s.messageConsumer()
 }
 
 func (s *Server) stop() {
-	s.execMessageRecv.Shutdown()
-	s.execMessageSent.Shutdown()
+	s.poolUsers.Close()
+	s.poolSendMessages.Close()
+	s.poolRecvMessages.Close()
 
 	s.handleMessage.Close()
 	s.handleOffMessage.Close()
@@ -156,12 +178,9 @@ func (s *Server) messageProcessor() {
 loop:
 	for {
 		select {
-		case msg := <-s.chMessageRecv:
-			s.messageRecvTask(msg)
-
-		case msg := <-s.chMessageSent:
+		case msg := <-s.chRecvMessage:
 			userConn := users[msg.To]
-			s.messageSendTask(msg, userConn)
+			s.recvMessageTask(msg, userConn)
 
 		case u := <-s.chUserIN:
 			users[u.userID] = u
@@ -180,7 +199,10 @@ loop:
 }
 
 func (s *Server) messageConsumer() {
-	defer s.consumeMessage.Close()
+	defer func() {
+		s.consumeMessage.Close()
+		log.Println("[STOP] Server.consumeMessage")
+	}()
 
 	callbackFn := func(event *kafka.Event, err error) {
 		if err != nil && err.Error() != "nil" {
@@ -194,29 +216,21 @@ func (s *Server) messageConsumer() {
 			return
 		}
 
-		s.chMessageSent <- &msg
+		s.chRecvMessage <- msg
 	}
 
 	s.consumeMessage.Subscribe(s.ctx, callbackFn)
 }
 
-func (s *Server) messageRecvTask(msg *message.Message) {
-	go func() {
-		if err := s.handleMessage.Execute(s.ctx, msg); err != nil {
-			service.Error(msg.From, "Server.handleMessage()", err)
-		}
-	}()
-}
-
-func (s *Server) messageSendTask(msg *message.Message, userConn *UserConn) {
-	s.execMessageSent.Schedule(func(ctx context.Context) {
+func (s *Server) recvMessageTask(msg message.Message, userConn *UserConn) {
+	s.poolRecvMessages.Schedule(func(ctx context.Context) {
 		if userConn != nil {
 			// write a message on user connection
-			if err := userConn.WriteMessage(msg); err != nil {
-				s.sendOffMessage(ctx, msg)
+			if err := userConn.WriteMessage(&msg); err != nil {
+				s.sendOffMessage(ctx, &msg)
 			}
 		} else {
-			s.sendOffMessage(ctx, msg)
+			s.sendOffMessage(ctx, &msg)
 		}
 	})
 }
@@ -228,14 +242,14 @@ func (s *Server) sendOffMessage(ctx context.Context, msg *message.Message) {
 	}
 
 	if err := s.handleOffMessage.Execute(ctx, msg); err != nil {
-		service.Error(msg.From, "Server.handleOffMessage()", err)
+		service.Error(msg.From, "Server::sendOffMessage::handleOffMessage", err)
 	}
 }
 
 func (s *Server) userStatusTask(userID string, status user.Status) {
-	go func() {
+	s.poolUsers.Schedule(func(ctx context.Context) {
 		if err := s.handleUserStatus.Execute(s.ctx, userID, status); err != nil {
-			service.Error(userID, "Server.handleUserStatus()", err)
+			service.Error(userID, "Server::userStatusTask::handleUserStatus", err)
 		}
-	}()
+	})
 }
