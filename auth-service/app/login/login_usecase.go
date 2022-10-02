@@ -24,7 +24,7 @@ type loginUseCase struct {
 // NewLoginUseCase create a new instance of LoginUseCase.
 func NewLoginUseCase(repository Repository, jwt auth.JWT) LoginUseCase {
 	return &loginUseCase{
-		tag:        "login.LoginUseCase",
+		tag:        "login::LoginUseCase",
 		repository: repository,
 		jwt:        jwt,
 	}
