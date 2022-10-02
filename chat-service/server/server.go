@@ -95,7 +95,7 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 	observer, err := s.poller.ObservableRead(fdConn)
 	if err != nil {
 		service.Error(userConn.userID, s.tag,
-			service.FormatError("epoll::EPoll", err))
+			fmt.Errorf("epoll::EPoll: %s", err.Error()))
 		return err
 	}
 
@@ -105,7 +105,7 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 			s.chUserOUT <- userConn.userID
 			if errPoller != nil {
 				service.Error(userConn.userID, s.tag,
-					service.FormatError("epoll::Observer", errPoller))
+					fmt.Errorf("epoll::Observer: %s", errPoller.Error()))
 			}
 			return
 		}
@@ -127,7 +127,7 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 						"internal server error",
 					); err != nil {
 						service.Error(userConn.userID, s.tag,
-							service.FormatError("server::UserConn", err))
+							fmt.Errorf("server::UserConn: %s", err.Error()))
 					}
 					return
 				}
@@ -138,7 +138,7 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 					message.AckMessage,
 				); err != nil {
 					service.Error(userConn.userID, s.tag,
-						service.FormatError("server::UserConn", err))
+						fmt.Errorf("server::UserConn: %s", err.Error()))
 				}
 			}
 		})
@@ -211,13 +211,13 @@ func (s *Server) messageConsumer() {
 
 	callbackFn := func(event *kafka.Event, err error) {
 		if err != nil && err.Error() != "nil" {
-			service.Error("", s.tag, fmt.Errorf("kafka::Consumer [%s]", err.Error()))
+			service.Error("", s.tag, fmt.Errorf("kafka::Consumer: %s", err.Error()))
 			return
 		}
 
 		var msg message.Message
 		if err = s.msgDecoder.Unmarshal(event.Value, &msg); err != nil {
-			service.Error("", s.tag, fmt.Errorf("kafka::Consumer [%s]", err.Error()))
+			service.Error("", s.tag, fmt.Errorf("kafka::Consumer: %s", err.Error()))
 			return
 		}
 
@@ -247,14 +247,16 @@ func (s *Server) sendOffMessage(ctx context.Context, msg *message.Message) {
 	}
 
 	if err := s.handleOffMessage.Execute(ctx, msg); err != nil {
-		service.Error(msg.From, s.tag, err)
+		service.Error(msg.From, s.tag,
+			fmt.Errorf("server::HandleOffMessage: %s", err.Error()))
 	}
 }
 
 func (s *Server) userStatusTask(userID string, status user.Status) {
 	s.poolUsers.Schedule(func(ctx context.Context) {
 		if err := s.handleUserStatus.Execute(s.ctx, userID, status); err != nil {
-			service.Error(userID, s.tag, err)
+			service.Error(userID, s.tag,
+				fmt.Errorf("server::HandleUserStatus: %s", err.Error()))
 		}
 	})
 }

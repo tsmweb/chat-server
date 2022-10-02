@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 
-	"github.com/tsmweb/chat-service/common/service"
 	"github.com/tsmweb/chat-service/server/message"
 	"github.com/tsmweb/go-helper-api/kafka"
 )
@@ -18,7 +17,6 @@ type HandleMessage interface {
 }
 
 type handleMessage struct {
-	tag      string
 	encoder  message.Encoder
 	producer kafka.Producer
 }
@@ -29,7 +27,6 @@ func NewHandleMessage(
 	producer kafka.Producer,
 ) HandleMessage {
 	return &handleMessage{
-		tag:      "server::HandleMessage",
 		encoder:  encoder,
 		producer: producer,
 	}
@@ -39,11 +36,11 @@ func NewHandleMessage(
 func (h *handleMessage) Execute(ctx context.Context, msg *message.Message) error {
 	mpb, err := h.encoder.Marshal(msg)
 	if err != nil {
-		return service.FormatError(h.tag, err)
+		return err
 	}
 
 	if err = h.producer.Publish(ctx, []byte(msg.ID), mpb); err != nil {
-		return service.FormatError(h.tag, err)
+		return err
 	}
 
 	return nil
