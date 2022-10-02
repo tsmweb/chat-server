@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/tsmweb/broker-service/broker/message"
-	"github.com/tsmweb/broker-service/infra/db"
 	"time"
+
+	"github.com/tsmweb/broker-service/broker/message"
+	"github.com/tsmweb/broker-service/common/service"
+	"github.com/tsmweb/broker-service/infra/db"
 )
 
 const (
@@ -19,6 +21,7 @@ const (
 
 // userRepository implementation for message.Repository interface.
 type messageRepository struct {
+	tag      string
 	database db.Database
 	cache    db.CacheDB
 }
@@ -26,6 +29,7 @@ type messageRepository struct {
 // NewMessageRepository creates a new instance of message.Repository.
 func NewMessageRepository(database db.Database, cache db.CacheDB) message.Repository {
 	return &messageRepository{
+		tag:      "repository::messageRepository",
 		database: database,
 		cache:    cache,
 	}
@@ -42,17 +46,17 @@ func (r *messageRepository) GetAllGroupMembers(ctx context.Context,
 
 	members, err := r.getAllGroupMembers(ctx, groupID)
 	if err != nil {
-		return nil, err
+		return nil, service.FormatError(r.tag, err)
 	}
 	if members == nil {
 		return nil, nil
 	}
 
 	if err = r.cache.SAdd(ctx, _groupMembersKey, members); err != nil {
-		return nil, err
+		return nil, service.FormatError(r.tag, err)
 	}
 	if err = r.cache.Expire(ctx, _groupMembersKey, groupMembersExpiration); err != nil {
-		return nil, err
+		return nil, service.FormatError(r.tag, err)
 	}
 
 	return members, nil
@@ -65,13 +69,13 @@ func (r *messageRepository) getAllGroupMembers(ctx context.Context,
 		FROM group_member
 		WHERE group_id = $1`)
 	if err != nil {
-		return nil, err
+		return nil, service.FormatError(r.tag, err)
 	}
 	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, groupID)
 	if err != nil {
-		return nil, err
+		return nil, service.FormatError(r.tag, err)
 	}
 	defer rows.Close()
 
@@ -83,14 +87,14 @@ func (r *messageRepository) getAllGroupMembers(ctx context.Context,
 			if err == sql.ErrNoRows {
 				return nil, nil
 			}
-			return nil, err
+			return nil, service.FormatError(r.tag, err)
 		}
 
 		members = append(members, member)
 	}
 
 	if rows.Err() != nil {
-		return nil, err
+		return nil, service.FormatError(r.tag, err)
 	}
 
 	return members, nil
@@ -123,7 +127,7 @@ func (r *messageRepository) RemoveGroupMemberFromCache(ctx context.Context, grou
 func (r *messageRepository) GetAllMessages(ctx context.Context,
 	userID string) ([]*message.Message, error) {
 	if err := r.updateMessageStatusToProcessed(ctx, userID); err != nil {
-		return nil, err
+		return nil, service.FormatError(r.tag, err)
 	}
 
 	stmt, err := r.database.DB().PrepareContext(ctx, `
@@ -132,13 +136,13 @@ func (r *messageRepository) GetAllMessages(ctx context.Context,
 		WHERE msg_to = $1
 		AND msg_status = $2`)
 	if err != nil {
-		return nil, err
+		return nil, service.FormatError(r.tag, err)
 	}
 	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, userID, processedStatusMessage)
 	if err != nil {
-		return nil, err
+		return nil, service.FormatError(r.tag, err)
 	}
 	defer rows.Close()
 
@@ -158,14 +162,14 @@ func (r *messageRepository) GetAllMessages(ctx context.Context,
 			if err == sql.ErrNoRows {
 				return nil, nil
 			}
-			return nil, err
+			return nil, service.FormatError(r.tag, err)
 		}
 
 		messages = append(messages, &msg)
 	}
 
 	if rows.Err() != nil {
-		return nil, err
+		return nil, service.FormatError(r.tag, err)
 	}
 
 	return messages, nil
@@ -175,7 +179,7 @@ func (r *messageRepository) updateMessageStatusToProcessed(ctx context.Context,
 	userID string) error {
 	txn, err := r.database.DB().Begin()
 	if err != nil {
-		return err
+		return service.FormatError(r.tag, err)
 	}
 
 	stmt, err := txn.PrepareContext(ctx, `
@@ -184,19 +188,19 @@ func (r *messageRepository) updateMessageStatusToProcessed(ctx context.Context,
 		WHERE msg_to = $2
 		AND msg_status = $3`)
 	if err != nil {
-		return err
+		return service.FormatError(r.tag, err)
 	}
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, processedStatusMessage, userID, insertedStatusMessage)
 	if err != nil {
 		txn.Rollback()
-		return err
+		return service.FormatError(r.tag, err)
 	}
 
 	if err = txn.Commit(); err != nil {
 		txn.Rollback()
-		return err
+		return service.FormatError(r.tag, err)
 	}
 
 	return nil
@@ -206,7 +210,7 @@ func (r *messageRepository) updateMessageStatusToProcessed(ctx context.Context,
 func (r *messageRepository) AddMessage(ctx context.Context, msg message.Message) error {
 	txn, err := r.database.DB().Begin()
 	if err != nil {
-		return err
+		return service.FormatError(r.tag, err)
 	}
 
 	stmt, err := txn.PrepareContext(ctx, `
@@ -221,7 +225,7 @@ func (r *messageRepository) AddMessage(ctx context.Context, msg message.Message)
 			msg_content)
 		VALUES($1, $2, $3, $4, $5, $6, $7, $8)`)
 	if err != nil {
-		return err
+		return service.FormatError(r.tag, err)
 	}
 	defer stmt.Close()
 
@@ -230,12 +234,12 @@ func (r *messageRepository) AddMessage(ctx context.Context, msg message.Message)
 		msg.Content)
 	if err != nil {
 		txn.Rollback()
-		return err
+		return service.FormatError(r.tag, err)
 	}
 
 	if err = txn.Commit(); err != nil {
 		txn.Rollback()
-		return err
+		return service.FormatError(r.tag, err)
 	}
 
 	return nil
@@ -245,7 +249,7 @@ func (r *messageRepository) AddMessage(ctx context.Context, msg message.Message)
 func (r *messageRepository) DeleteAllMessages(ctx context.Context, userID string) error {
 	txn, err := r.database.DB().Begin()
 	if err != nil {
-		return err
+		return service.FormatError(r.tag, err)
 	}
 
 	stmt, err := txn.PrepareContext(ctx, `
@@ -253,19 +257,19 @@ func (r *messageRepository) DeleteAllMessages(ctx context.Context, userID string
 		WHERE msg_to = $1
 		AND msg_status = $2`)
 	if err != nil {
-		return err
+		return service.FormatError(r.tag, err)
 	}
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, userID, processedStatusMessage)
 	if err != nil {
 		txn.Rollback()
-		return err
+		return service.FormatError(r.tag, err)
 	}
 
 	if err = txn.Commit(); err != nil {
 		txn.Rollback()
-		return err
+		return service.FormatError(r.tag, err)
 	}
 
 	return nil

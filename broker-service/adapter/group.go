@@ -1,23 +1,29 @@
 package adapter
 
 import (
+	"time"
+
 	"github.com/tsmweb/broker-service/broker/group"
+	"github.com/tsmweb/broker-service/common/service"
 	"github.com/tsmweb/broker-service/infra/protobuf"
 	"google.golang.org/protobuf/proto"
-	"time"
 )
 
 // GroupEventMarshal is a group.Event encoder for protobuf.GroupEvent.
 func GroupEventMarshal(e *group.Event) ([]byte, error) {
 	epb := protobufFromGroupEvent(e)
-	return proto.Marshal(epb)
+	b, err := proto.Marshal(epb)
+	if err != nil {
+		return nil, service.FormatError("adapter::GroupEventMarshal", err)
+	}
+	return b, nil
 }
 
 // GroupEventUnmarshal is a protobuf.GroupEvent decoder for group.Event.
 func GroupEventUnmarshal(in []byte, e *group.Event) error {
 	epb := new(protobuf.GroupEvent)
 	if err := proto.Unmarshal(in, epb); err != nil {
-		return err
+		return service.FormatError("adapter::GroupEventUnmarshal", err)
 	}
 	protobufToGroupEvent(epb, e)
 	return nil

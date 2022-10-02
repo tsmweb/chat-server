@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/tsmweb/broker-service/common/service"
 )
 
 // CacheDB interface with methods for manipulating data in the cache.
@@ -49,7 +50,8 @@ type CacheDB interface {
 
 // RedisCacheDB implements the CacheDB interface.
 type RedisCacheDB struct {
-	db *redis.Client
+	tag string
+	db  *redis.Client
 }
 
 // NewRedisCacheDB returns an instance of CacheDB.
@@ -60,7 +62,10 @@ func NewRedisCacheDB(addr string, password string) CacheDB {
 		DB:       0, // use default DB
 	})
 
-	return &RedisCacheDB{db: db}
+	return &RedisCacheDB{
+		tag: "db::RedisCacheDB",
+		db:  db,
+	}
 }
 
 func (c *RedisCacheDB) Key(ctx context.Context, key string) bool {
@@ -74,7 +79,7 @@ func (c *RedisCacheDB) Key(ctx context.Context, key string) bool {
 func (c *RedisCacheDB) Set(ctx context.Context, key string, value interface{},
 	expiration time.Duration) error {
 	_, err := c.db.Set(ctx, key, value, expiration).Result()
-	return err
+	return service.FormatError(c.tag, err)
 }
 
 func (c *RedisCacheDB) Get(ctx context.Context, key string) (string, error) {
@@ -83,7 +88,7 @@ func (c *RedisCacheDB) Get(ctx context.Context, key string) (string, error) {
 		if err == redis.Nil {
 			return "", nil
 		}
-		return "", err
+		return "", service.FormatError(c.tag, err)
 	}
 
 	return val, nil
@@ -91,12 +96,12 @@ func (c *RedisCacheDB) Get(ctx context.Context, key string) (string, error) {
 
 func (c *RedisCacheDB) Del(ctx context.Context, keys ...string) error {
 	_, err := c.db.Del(ctx, keys...).Result()
-	return err
+	return service.FormatError(c.tag, err)
 }
 
 func (c *RedisCacheDB) HSet(ctx context.Context, key string, values ...interface{}) error {
 	_, err := c.db.HSet(ctx, key, values...).Result()
-	return err
+	return service.FormatError(c.tag, err)
 }
 
 func (c *RedisCacheDB) HGet(ctx context.Context, key, field string) (string, error) {
@@ -105,7 +110,7 @@ func (c *RedisCacheDB) HGet(ctx context.Context, key, field string) (string, err
 		if err == redis.Nil {
 			return "", nil
 		}
-		return "", err
+		return "", service.FormatError(c.tag, err)
 	}
 
 	return val, nil
@@ -113,24 +118,28 @@ func (c *RedisCacheDB) HGet(ctx context.Context, key, field string) (string, err
 
 func (c *RedisCacheDB) HDel(ctx context.Context, key string, fields ...string) error {
 	_, err := c.db.HDel(ctx, key, fields...).Result()
-	return err
+	return service.FormatError(c.tag, err)
 }
 
 func (c *RedisCacheDB) SAdd(ctx context.Context, key string, members ...interface{}) error {
 	_, err := c.db.SAdd(ctx, key, members...).Result()
-	return err
+	return service.FormatError(c.tag, err)
 }
 
 func (c *RedisCacheDB) SRem(ctx context.Context, key string, members ...interface{}) error {
 	_, err := c.db.SRem(ctx, key, members...).Result()
-	return err
+	return service.FormatError(c.tag, err)
 }
 
 func (c *RedisCacheDB) SMembers(ctx context.Context, key string) ([]string, error) {
-	return c.db.SMembers(ctx, key).Result()
+	values, err := c.db.SMembers(ctx, key).Result()
+	if err != nil {
+		return nil, service.FormatError(c.tag, err)
+	}
+	return values, nil
 }
 
 func (c *RedisCacheDB) Expire(ctx context.Context, key string, expiration time.Duration) error {
 	_, err := c.db.Expire(ctx, key, expiration).Result()
-	return err
+	return service.FormatError(c.tag, err)
 }

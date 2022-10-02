@@ -2,11 +2,11 @@ package broker
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/tsmweb/broker-service/broker/message"
 	"github.com/tsmweb/broker-service/broker/user"
+	"github.com/tsmweb/broker-service/common/service"
 )
 
 // UserHandler handles user.
@@ -16,6 +16,7 @@ type UserHandler interface {
 }
 
 type userHandler struct {
+	tag            string
 	userRepository user.Repository
 	msgRepository  message.Repository
 }
@@ -26,6 +27,7 @@ func NewUserHandler(
 	msgRepository message.Repository,
 ) UserHandler {
 	return &userHandler{
+		tag:            "broker::UserHandler",
 		userRepository: userRepository,
 		msgRepository:  msgRepository,
 	}
@@ -38,21 +40,21 @@ func (h *userHandler) Execute(
 	chMessage chan<- message.Message,
 ) error {
 	if err := h.setUserPresence(ctx, usr.ID, usr.Status, usr.ServerID); err != nil {
-		return fmt.Errorf("UserHandler::setUserPresence. Error: %v", err.Error())
+		return service.FormatError(h.tag, err)
 	}
 
 	if usr.Status == user.Online.String() {
 		if err := h.sendMessagesOffline(ctx, usr.ID, chMessage); err != nil {
-			return fmt.Errorf("UserHandler::sendMessagesOffline. Error: %v", err.Error())
+			return service.FormatError(h.tag, err)
 		}
 
 		if err := h.notifyPresenceOfContactsToUser(ctx, usr.ID, chMessage); err != nil {
-			return fmt.Errorf("UserHandler::notifyPresenceOfContactsToUser. Error: %v", err.Error())
+			return service.FormatError(h.tag, err)
 		}
 	}
 
 	if err := h.notifyUserPresenceToContacts(ctx, usr.ID, usr.Status, chMessage); err != nil {
-		return fmt.Errorf("UserHandler::notifyUserPresenceToContacts. Error: %v", err.Error())
+		return service.FormatError(h.tag, err)
 	}
 
 	return nil

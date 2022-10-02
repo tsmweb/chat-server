@@ -1,23 +1,29 @@
 package adapter
 
 import (
+	"time"
+
 	"github.com/tsmweb/broker-service/broker/user"
+	"github.com/tsmweb/broker-service/common/service"
 	"github.com/tsmweb/broker-service/infra/protobuf"
 	"google.golang.org/protobuf/proto"
-	"time"
 )
 
 // UserEventMarshal is a user.Event encoder for protobuf.ContactEvent.
 func UserEventMarshal(e *user.Event) ([]byte, error) {
 	epb := protobufFromUserEvent(e)
-	return proto.Marshal(epb)
+	b, err := proto.Marshal(epb)
+	if err != nil {
+		return nil, service.FormatError("adapter::UserEventMarshal", err)
+	}
+	return b, nil
 }
 
 // UserEventUnmarshal is a protobuf.ContactEvent decoder for user.Event.
 func UserEventUnmarshal(in []byte, e *user.Event) error {
 	epb := new(protobuf.ContactEvent)
 	if err := proto.Unmarshal(in, epb); err != nil {
-		return err
+		return service.FormatError("adapter::UserEventUnmarshal", err)
 	}
 	protobufToUserEvent(epb, e)
 	return nil

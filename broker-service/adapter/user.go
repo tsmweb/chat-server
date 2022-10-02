@@ -1,23 +1,29 @@
 package adapter
 
 import (
+	"time"
+
 	"github.com/tsmweb/broker-service/broker/user"
+	"github.com/tsmweb/broker-service/common/service"
 	"github.com/tsmweb/broker-service/infra/protobuf"
 	"google.golang.org/protobuf/proto"
-	"time"
 )
 
 // UserMarshal is a user.User encoder for protobuf.User.
 func UserMarshal(u *user.User) ([]byte, error) {
 	upb := protobufFromUser(u)
-	return proto.Marshal(upb)
+	b, err := proto.Marshal(upb)
+	if err != nil {
+		return nil, service.FormatError("adapter::UserMarshal", err)
+	}
+	return b, nil
 }
 
 // UserUnmarshal is a protobuf.User decoder for user.User.
 func UserUnmarshal(in []byte, u *user.User) error {
 	upb := new(protobuf.User)
 	if err := proto.Unmarshal(in, upb); err != nil {
-		return err
+		return service.FormatError("adapter::UserUnmarshal", err)
 	}
 	protobufToUser(upb, u)
 	return nil

@@ -1,23 +1,29 @@
 package adapter
 
 import (
+	"time"
+
 	"github.com/tsmweb/broker-service/broker/message"
+	"github.com/tsmweb/broker-service/common/service"
 	"github.com/tsmweb/broker-service/infra/protobuf"
 	"google.golang.org/protobuf/proto"
-	"time"
 )
 
 // MessageMarshal is a message.Message encoder for protobuf.Message.
 func MessageMarshal(m *message.Message) ([]byte, error) {
 	mpb := protobufFromMessage(m)
-	return proto.Marshal(mpb)
+	b, err := proto.Marshal(mpb)
+	if err != nil {
+		return nil, service.FormatError("adapter::MessageMarshal", err)
+	}
+	return b, nil
 }
 
 // MessageUnmarshal is a protobuf.Message decoder for message.Message.
 func MessageUnmarshal(in []byte, m *message.Message) error {
 	mpb := new(protobuf.Message)
 	if err := proto.Unmarshal(in, mpb); err != nil {
-		return err
+		return service.FormatError("adapter::MessageUnmarshal", err)
 	}
 	protobufToMessage(mpb, m)
 	return nil

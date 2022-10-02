@@ -246,7 +246,7 @@ func (b *Broker) usersConsumer() {
 
 		var usr user.User
 		if err = b.userDecoder.Unmarshal(event.Value, &usr); err != nil {
-			service.Error(string(event.Key), "Broker::usersConsumer::userDecoder", err)
+			service.Error(string(event.Key), "Broker::usersConsumer", err)
 			return
 		}
 
@@ -271,7 +271,7 @@ func (b *Broker) usersPresenceConsumer() {
 
 		var usr user.User
 		if err = b.userDecoder.Unmarshal(event.Value, &usr); err != nil {
-			service.Error(string(event.Key), "Broker::usersPresenceConsumer::userDecoder", err)
+			service.Error(string(event.Key), "Broker::usersPresenceConsumer", err)
 			return
 		}
 
@@ -296,7 +296,7 @@ func (b *Broker) messagesConsumer() {
 
 		var msg message.Message
 		if err = b.msgDecoder.Unmarshal(event.Value, &msg); err != nil {
-			service.Error(string(event.Key), "Broker::messagesConsumer::msgDecoder", err)
+			service.Error(string(event.Key), "Broker::messagesConsumer", err)
 			return
 		}
 
@@ -321,7 +321,7 @@ func (b *Broker) offlineMessagesConsumer() {
 
 		var msg message.Message
 		if err = b.msgDecoder.Unmarshal(event.Value, &msg); err != nil {
-			service.Error(string(event.Key), "Broker::offlineMessagesConsumer::msgDecoder", err)
+			service.Error(string(event.Key), "Broker::offlineMessagesConsumer", err)
 			return
 		}
 
@@ -346,7 +346,7 @@ func (b *Broker) groupEventsConsumer() {
 
 		var groupEvent group.Event
 		if err = b.groupEventDecoder.Unmarshal(event.Value, &groupEvent); err != nil {
-			service.Error(string(event.Key), "Broker::groupEventsConsumer::groupEventDecoder", err)
+			service.Error(string(event.Key), "Broker::groupEventsConsumer", err)
 			return
 		}
 
@@ -371,7 +371,7 @@ func (b *Broker) userEventsConsumer() {
 
 		var userEvent user.Event
 		if err = b.userEventDecoder.Unmarshal(event.Value, &userEvent); err != nil {
-			service.Error(string(event.Key), "Broker::userEventsConsumer::userEventDecoder", err)
+			service.Error(string(event.Key), "Broker::userEventsConsumer", err)
 			return
 		}
 
@@ -386,7 +386,7 @@ func (b *Broker) userTask(usr user.User, wg *sync.WaitGroup) func(ctx context.Co
 		defer wg.Done()
 
 		if err := b.userHandler.Execute(ctx, usr, b.chUserMessage); err != nil {
-			service.Error(usr.ID, "Broker::userTask::userHandler", err)
+			service.Error(usr.ID, "Broker::userTask", err)
 		}
 	}
 }
@@ -394,7 +394,7 @@ func (b *Broker) userTask(usr user.User, wg *sync.WaitGroup) func(ctx context.Co
 func (b *Broker) userPresenceTask(usr user.User) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		if err := b.userPresenceHandler.Execute(ctx, usr); err != nil {
-			service.Error(usr.ID, "Broker::userPresenceTask::userPresenceHandler", err)
+			service.Error(usr.ID, "Broker::userPresenceTask", err)
 		}
 	}
 }
@@ -402,7 +402,7 @@ func (b *Broker) userPresenceTask(usr user.User) func(ctx context.Context) {
 func (b *Broker) messageTask(msg message.Message) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		if err := b.messageHandler.Execute(ctx, msg); err != nil {
-			service.Error(msg.ID, "Broker::messageTask::messageHandler", err)
+			service.Error(msg.ID, "Broker::messageTask", err)
 		}
 	}
 }
@@ -410,7 +410,7 @@ func (b *Broker) messageTask(msg message.Message) func(ctx context.Context) {
 func (b *Broker) offlineMessageTask(msg message.Message) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		if err := b.offlineMessageHandler.Execute(ctx, msg); err != nil {
-			service.Error(msg.ID, "Broker::offlineMessageTask::offlineMessageHandler", err)
+			service.Error(msg.ID, "Broker::offlineMessageTask", err)
 		}
 	}
 }
@@ -418,7 +418,7 @@ func (b *Broker) offlineMessageTask(msg message.Message) func(ctx context.Contex
 func (b *Broker) groupEventTask(evt group.Event) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		if err := b.groupEventHandler.Execute(ctx, evt); err != nil {
-			service.Error(evt.GroupID, "Broker::groupEventTask::groupEventHandler", err)
+			service.Error(evt.GroupID, "Broker::groupEventTask", err)
 		}
 	}
 }
@@ -426,7 +426,7 @@ func (b *Broker) groupEventTask(evt group.Event) func(ctx context.Context) {
 func (b *Broker) userEventTask(evt user.Event) func(ctx context.Context) {
 	return func(ctx context.Context) {
 		if err := b.userEventHandler.Execute(ctx, evt); err != nil {
-			service.Error(evt.UserID, "Broker::userEventTask::userEventHandler", err)
+			service.Error(evt.UserID, "Broker::userEventTask", err)
 		}
 	}
 }
