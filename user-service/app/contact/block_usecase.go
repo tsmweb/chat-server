@@ -29,7 +29,7 @@ func NewBlockUseCase(
 	producer kafka.Producer,
 ) BlockUseCase {
 	return &blockUseCase{
-		tag:        "contact.BlockUseCase",
+		tag:        "contact::BlockUseCase",
 		repository: repository,
 		encoder:    encoder,
 		producer:   producer,

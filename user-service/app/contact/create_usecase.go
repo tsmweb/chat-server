@@ -21,7 +21,7 @@ type createUseCase struct {
 // NewCreateUseCase create a new instance of CreateUseCase.
 func NewCreateUseCase(r Repository) CreateUseCase {
 	return &createUseCase{
-		tag:        "contact.CreateUseCase",
+		tag:        "contact::CreateUseCase",
 		repository: r,
 	}
 }

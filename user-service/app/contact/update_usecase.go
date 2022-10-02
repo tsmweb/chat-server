@@ -20,7 +20,7 @@ type updateUseCase struct {
 // NewUpdateUseCase create a new instance of UpdateUseCase.
 func NewUpdateUseCase(r Repository) UpdateUseCase {
 	return &updateUseCase{
-		tag:        "contact.UpdateUseCase",
+		tag:        "contact::UpdateUseCase",
 		repository: r,
 	}
 }

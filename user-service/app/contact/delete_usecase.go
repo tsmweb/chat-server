@@ -19,7 +19,7 @@ type deleteUseCase struct {
 // NewDeleteUseCase create a new instance of DeleteUseCase.
 func NewDeleteUseCase(r Repository) DeleteUseCase {
 	return &deleteUseCase{
-		tag:        "contact.DeleteUseCase",
+		tag:        "contact::DeleteUseCase",
 		repository: r,
 	}
 }

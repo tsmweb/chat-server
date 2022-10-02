@@ -2,7 +2,9 @@ package service
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"strings"
 
 	"github.com/tsmweb/go-helper-api/observability/event"
 	"github.com/tsmweb/user-service/config"
@@ -53,7 +55,10 @@ func Warn(id, title, detail string) {
 }
 
 func send(e *event.Event) {
+	log.Printf("[%s] HostID: %s | UserID: %s | Title: %s | Detail: %s\n",
+		strings.ToUpper(e.Type), e.Host, e.User, e.Title, e.Detail)
+
 	if err := event.Send(e); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "[!] Error sending event: %v\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "[ERROR] sending event: %v\n", err)
 	}
 }

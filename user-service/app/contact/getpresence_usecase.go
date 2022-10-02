@@ -20,7 +20,7 @@ type getPresenceUseCase struct {
 // NewGetPresenceUseCase create a new instance of GetPresenceUseCase.
 func NewGetPresenceUseCase(r Repository) GetPresenceUseCase {
 	return &getPresenceUseCase{
-		tag:        "contact.GetPresenceUseCase",
+		tag:        "contact::GetPresenceUseCase",
 		repository: r,
 	}
 }

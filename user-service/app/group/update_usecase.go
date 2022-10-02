@@ -28,7 +28,7 @@ func NewUpdateUseCase(
 	producer kafka.Producer,
 ) UpdateUseCase {
 	return &updateUseCase{
-		tag:        "group.UpdateUseCase",
+		tag:        "group::UpdateUseCase",
 		repository: repository,
 		encoder:    encoder,
 		producer:   producer,

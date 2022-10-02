@@ -28,7 +28,7 @@ func NewRemoveMemberUseCase(
 	producer kafka.Producer,
 ) RemoveMemberUseCase {
 	return &removeMemberUseCase{
-		tag:        "group.RemoveMemberUseCase",
+		tag:        "group::RemoveMemberUseCase",
 		repository: repository,
 		encoder:    encoder,
 		producer:   producer,

@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	log.Println("[>] Starting server")
+	log.Println("[INFO] Starting server")
 
 	// Working directory
 	workDir, _ := os.Getwd()
@@ -28,7 +28,7 @@ func main() {
 	producerMetrics := provider.NewKafkaProducer(config.KafkaMetricsTopic())
 	err := metric.Start(config.HostID(), config.MetricsSendInterval(), producerMetrics)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[!] Could not start metrics collects. Error: %v", err)
+		log.Printf("[ERROR] Could not start metrics collects. Error: %s", err.Error())
 	} else {
 		defer metric.Stop()
 	}
@@ -36,7 +36,7 @@ func main() {
 	// Initializes the service's event producer.
 	producerEvents := provider.NewKafkaProducer(config.KafkaEventsTopic())
 	if err = event.Init(producerEvents); err != nil {
-		fmt.Fprintf(os.Stderr, "[!] Could not start events collects. Error: %v", err)
+		log.Printf("[ERROR] Could not start events collects. Error: %s", err.Error())
 	} else {
 		defer event.Close()
 	}

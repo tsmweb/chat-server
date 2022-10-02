@@ -21,7 +21,7 @@ type getAllUseCase struct {
 // NewGetAllUseCase create a new instance of GetAllUseCase.
 func NewGetAllUseCase(r Repository) GetAllUseCase {
 	return &getAllUseCase{
-		tag:        "contact.GetAllUseCase",
+		tag:        "contact::GetAllUseCase",
 		repository: r,
 	}
 }
