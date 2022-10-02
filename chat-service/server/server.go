@@ -95,7 +95,7 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 	observer, err := s.poller.ObservableRead(fdConn)
 	if err != nil {
 		service.Error(userConn.userID, s.tag,
-			fmt.Errorf("epoll::EPoll [%s]", err.Error()))
+			service.FormatError("epoll::EPoll", err))
 		return err
 	}
 
@@ -105,7 +105,7 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 			s.chUserOUT <- userConn.userID
 			if errPoller != nil {
 				service.Error(userConn.userID, s.tag,
-					fmt.Errorf("epoll::Observer [%s]", errPoller.Error()))
+					service.FormatError("epoll::Observer", errPoller))
 			}
 			return
 		}
@@ -127,7 +127,7 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 						"internal server error",
 					); err != nil {
 						service.Error(userConn.userID, s.tag,
-							fmt.Errorf("server::UserConn [%s]", err.Error()))
+							service.FormatError("server::UserConn", err))
 					}
 					return
 				}
@@ -138,7 +138,7 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 					message.AckMessage,
 				); err != nil {
 					service.Error(userConn.userID, s.tag,
-						fmt.Errorf("server::UserConn [%s]", err.Error()))
+						service.FormatError("server::UserConn", err))
 				}
 			}
 		})

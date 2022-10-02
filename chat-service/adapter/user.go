@@ -1,10 +1,11 @@
 package adapter
 
 import (
+	"time"
+
 	"github.com/tsmweb/chat-service/infra/protobuf"
 	"github.com/tsmweb/chat-service/server/user"
 	"google.golang.org/protobuf/proto"
-	"time"
 )
 
 // UserMarshal is a user.User encoder for protobuf.User.

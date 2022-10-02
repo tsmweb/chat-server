@@ -2,8 +2,8 @@ package server
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/tsmweb/chat-service/common/service"
 	"github.com/tsmweb/chat-service/config"
 	"github.com/tsmweb/chat-service/server/user"
 	"github.com/tsmweb/go-helper-api/kafka"
@@ -49,15 +49,15 @@ func (h *handleUserStatus) Execute(ctx context.Context, userID string, status us
 	u := user.NewUser(userID, status, serverID)
 	upb, err := h.encoder.Marshal(u)
 	if err != nil {
-		return fmt.Errorf("%s [%s]", h.tag, err.Error())
+		return service.FormatError(h.tag, err)
 	}
 
 	if err = h.userProducer.Publish(ctx, []byte(userID), upb); err != nil {
-		return fmt.Errorf("%s [%s]", h.tag, err.Error())
+		return service.FormatError(h.tag, err)
 	}
 
 	if err = h.userPresenceProducer.Publish(ctx, []byte(userID), upb); err != nil {
-		return fmt.Errorf("%s [%s]", h.tag, err.Error())
+		return service.FormatError(h.tag, err)
 	}
 
 	return nil
