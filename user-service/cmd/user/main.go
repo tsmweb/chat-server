@@ -28,18 +28,16 @@ func main() {
 	producerMetrics := provider.NewKafkaProducer(config.KafkaMetricsTopic())
 	err := metric.Start(config.HostID(), config.MetricsSendInterval(), producerMetrics)
 	if err != nil {
-		log.Printf("[ERROR] Could not start metrics collects. Error: %s", err.Error())
-	} else {
-		defer metric.Stop()
+		log.Fatalf("[ERROR] Could not start metrics collects. Error: %s", err.Error())
 	}
+	defer metric.Stop()
 
 	// Initializes the service's event producer.
 	producerEvents := provider.NewKafkaProducer(config.KafkaEventsTopic())
 	if err = event.Init(producerEvents); err != nil {
-		log.Printf("[ERROR] Could not start events collects. Error: %s", err.Error())
-	} else {
-		defer event.Close()
+		log.Fatalf("[ERROR] Could not start events collects. Error: %s", err.Error())
 	}
+	defer event.Close()
 
 	// Configure the routes.
 	router := mux.NewRouter()
