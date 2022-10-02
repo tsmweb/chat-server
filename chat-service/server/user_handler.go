@@ -19,6 +19,7 @@ type HandleUserStatus interface {
 }
 
 type handleUserStatus struct {
+	tag                  string
 	encoder              user.Encoder
 	userProducer         kafka.Producer
 	userPresenceProducer kafka.Producer
@@ -31,6 +32,7 @@ func NewHandleUserStatus(
 	userPresenceProducer kafka.Producer,
 ) HandleUserStatus {
 	return &handleUserStatus{
+		tag:                  "server::HandleUserStatus",
 		encoder:              encoder,
 		userProducer:         userProducer,
 		userPresenceProducer: userPresenceProducer,
@@ -47,15 +49,15 @@ func (h *handleUserStatus) Execute(ctx context.Context, userID string, status us
 	u := user.NewUser(userID, status, serverID)
 	upb, err := h.encoder.Marshal(u)
 	if err != nil {
-		return fmt.Errorf("HandleUserStatus::encoder. Error: %s", err.Error())
+		return fmt.Errorf("%s [%s]", h.tag, err.Error())
 	}
 
 	if err = h.userProducer.Publish(ctx, []byte(userID), upb); err != nil {
-		return fmt.Errorf("HandleUserStatus::userProducer. Error: %s", err.Error())
+		return fmt.Errorf("%s [%s]", h.tag, err.Error())
 	}
 
 	if err = h.userPresenceProducer.Publish(ctx, []byte(userID), upb); err != nil {
-		return fmt.Errorf("HandleUserStatus::userPresenceProducer. Error: %s", err.Error())
+		return fmt.Errorf("%s [%s]", h.tag, err.Error())
 	}
 
 	return nil

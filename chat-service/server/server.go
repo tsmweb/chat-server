@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"log"
 	"net"
 
@@ -19,6 +20,7 @@ import (
 // the connection.
 // It also produces and consumes Apache Kafka data to communicate with the cluster of services.
 type Server struct {
+	tag              string
 	ctx              context.Context
 	poller           epoll.EPoll
 	poolUsers        *gopool.Pool
@@ -51,6 +53,7 @@ func NewServer(
 	handleUserStatus HandleUserStatus,
 ) *Server {
 	server := &Server{
+		tag:              "server::Server",
 		ctx:              ctx,
 		poller:           poll,
 		chUserIN:         make(chan *UserConn),
@@ -91,7 +94,8 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 
 	observer, err := s.poller.ObservableRead(fdConn)
 	if err != nil {
-		service.Error(userConn.userID, "Server::Register::poller", err)
+		service.Error(userConn.userID, s.tag,
+			fmt.Errorf("epoll::EPoll [%s]", err.Error()))
 		return err
 	}
 
@@ -100,7 +104,8 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 			observer.Stop()
 			s.chUserOUT <- userConn.userID
 			if errPoller != nil {
-				service.Error(userConn.userID, "Server::Register::poller::observer", errPoller)
+				service.Error(userConn.userID, s.tag,
+					fmt.Errorf("epoll::Observer [%s]", errPoller.Error()))
 			}
 			return
 		}
@@ -114,15 +119,15 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 			}
 			if msg != nil {
 				if err := s.handleMessage.Execute(s.ctx, msg); err != nil {
-					service.Error(msg.From, "Server::poolSendMessages::handleMessage", err)
+					service.Error(msg.From, s.tag, err)
 
 					if err = userConn.WriteResponse(
 						msg.ID,
 						message.ContentTypeError,
 						"internal server error",
 					); err != nil {
-						service.Error(userConn.userID,
-							"Server::poolSendMessages::userConn", err)
+						service.Error(userConn.userID, s.tag,
+							fmt.Errorf("server::UserConn [%s]", err.Error()))
 					}
 					return
 				}
@@ -132,15 +137,15 @@ func (s *Server) Register(userID string, conn net.Conn) error {
 					message.ContentTypeACK,
 					message.AckMessage,
 				); err != nil {
-					service.Error(userConn.userID,
-						"Server::poolSendMessages::userConn", err)
+					service.Error(userConn.userID, s.tag,
+						fmt.Errorf("server::UserConn [%s]", err.Error()))
 				}
 			}
 		})
 	})
 
 	if err != nil {
-		service.Error(userConn.userID, "Server::Register", err)
+		service.Error(userConn.userID, s.tag, err)
 		return err
 	}
 
@@ -201,18 +206,18 @@ loop:
 func (s *Server) messageConsumer() {
 	defer func() {
 		s.consumeMessage.Close()
-		log.Println("[STOP] Server.consumeMessage")
+		log.Println("[STOP] Server::consumeMessage")
 	}()
 
 	callbackFn := func(event *kafka.Event, err error) {
 		if err != nil && err.Error() != "nil" {
-			service.Error("", "Server.messageConsumer()", err)
+			service.Error("", s.tag, fmt.Errorf("kafka::Consumer [%s]", err.Error()))
 			return
 		}
 
 		var msg message.Message
 		if err = s.msgDecoder.Unmarshal(event.Value, &msg); err != nil {
-			service.Error("", "Server.messageConsumer()", err)
+			service.Error("", s.tag, fmt.Errorf("kafka::Consumer [%s]", err.Error()))
 			return
 		}
 
@@ -242,14 +247,14 @@ func (s *Server) sendOffMessage(ctx context.Context, msg *message.Message) {
 	}
 
 	if err := s.handleOffMessage.Execute(ctx, msg); err != nil {
-		service.Error(msg.From, "Server::sendOffMessage::handleOffMessage", err)
+		service.Error(msg.From, s.tag, err)
 	}
 }
 
 func (s *Server) userStatusTask(userID string, status user.Status) {
 	s.poolUsers.Schedule(func(ctx context.Context) {
 		if err := s.handleUserStatus.Execute(s.ctx, userID, status); err != nil {
-			service.Error(userID, "Server::userStatusTask::handleUserStatus", err)
+			service.Error(userID, s.tag, err)
 		}
 	})
 }

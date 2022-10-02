@@ -10,6 +10,8 @@ CREATE ROLE salesapi WITH
 	NOBYPASSRLS
 	CONNECTION LIMIT -1;
 
+ALTER user salesapi ENCRYPTED PASSWORD 'password';
+
 -- DROP SCHEMA chat_db;
 
 CREATE SCHEMA chat_db AUTHORIZATION salesapi;

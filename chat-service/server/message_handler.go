@@ -18,6 +18,7 @@ type HandleMessage interface {
 }
 
 type handleMessage struct {
+	tag      string
 	encoder  message.Encoder
 	producer kafka.Producer
 }
@@ -28,6 +29,7 @@ func NewHandleMessage(
 	producer kafka.Producer,
 ) HandleMessage {
 	return &handleMessage{
+		tag:      "server::HandleMessage",
 		encoder:  encoder,
 		producer: producer,
 	}
@@ -37,11 +39,11 @@ func NewHandleMessage(
 func (h *handleMessage) Execute(ctx context.Context, msg *message.Message) error {
 	mpb, err := h.encoder.Marshal(msg)
 	if err != nil {
-		return fmt.Errorf("HandleMessage::encoder. Error: %s", err.Error())
+		return fmt.Errorf("%s [%s]", h.tag, err.Error())
 	}
 
 	if err = h.producer.Publish(ctx, []byte(msg.ID), mpb); err != nil {
-		return fmt.Errorf("HandleMessage::producer. Error: %s", err.Error())
+		return fmt.Errorf("%s [%s]", h.tag, err.Error())
 	}
 
 	return nil
