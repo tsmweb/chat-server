@@ -23,7 +23,7 @@ type getUseCase struct {
 // NewGetUseCase create a new instance of GetUseCase.
 func NewGetUseCase(r Repository) GetUseCase {
 	return &getUseCase{
-		tag:        "group.GetUseCase",
+		tag:        "group::GetUseCase",
 		repository: r,
 	}
 }

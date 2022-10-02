@@ -24,7 +24,7 @@ type uploadUseCase struct {
 // NewUploadUseCase create a new instance of UploadUseCase.
 func NewUploadUseCase(r Repository) UploadUseCase {
 	return &uploadUseCase{
-		tag:        "group.UploadUseCase",
+		tag:        "group::UploadUseCase",
 		repository: r,
 	}
 }

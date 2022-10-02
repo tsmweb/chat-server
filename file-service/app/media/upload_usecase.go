@@ -24,7 +24,7 @@ type uploadUseCase struct {
 // NewUploadUseCase create a new instance of UploadUseCase.
 func NewUploadUseCase() UploadUseCase {
 	return &uploadUseCase{
-		tag: "media.UploadUseCase",
+		tag: "media::UploadUseCase",
 	}
 }
 

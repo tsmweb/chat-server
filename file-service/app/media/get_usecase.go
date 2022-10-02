@@ -20,7 +20,7 @@ type getUseCase struct {
 // NewGetUseCase create a new instance of GetUseCase.
 func NewGetUseCase() GetUseCase {
 	return &getUseCase{
-		tag: "media.GetUseCase",
+		tag: "media::GetUseCase",
 	}
 }
 

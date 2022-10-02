@@ -22,7 +22,7 @@ type uploadUseCase struct {
 // NewUploadUseCase create a new instance of UploadUseCase.
 func NewUploadUseCase() UploadUseCase {
 	return &uploadUseCase{
-		tag: "user.UploadUseCase",
+		tag: "user::UploadUseCase",
 	}
 }
 
