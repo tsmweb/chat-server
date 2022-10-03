@@ -6,7 +6,6 @@ import (
 
 	"github.com/tsmweb/broker-service/broker/message"
 	"github.com/tsmweb/broker-service/broker/user"
-	"github.com/tsmweb/broker-service/common/service"
 )
 
 // UserHandler handles user.
@@ -16,7 +15,6 @@ type UserHandler interface {
 }
 
 type userHandler struct {
-	tag            string
 	userRepository user.Repository
 	msgRepository  message.Repository
 }
@@ -27,7 +25,6 @@ func NewUserHandler(
 	msgRepository message.Repository,
 ) UserHandler {
 	return &userHandler{
-		tag:            "broker::UserHandler",
 		userRepository: userRepository,
 		msgRepository:  msgRepository,
 	}
@@ -40,21 +37,21 @@ func (h *userHandler) Execute(
 	chMessage chan<- message.Message,
 ) error {
 	if err := h.setUserPresence(ctx, usr.ID, usr.Status, usr.ServerID); err != nil {
-		return service.FormatError(h.tag, err)
+		return err
 	}
 
 	if usr.Status == user.Online.String() {
 		if err := h.sendMessagesOffline(ctx, usr.ID, chMessage); err != nil {
-			return service.FormatError(h.tag, err)
+			return err
 		}
 
 		if err := h.notifyPresenceOfContactsToUser(ctx, usr.ID, chMessage); err != nil {
-			return service.FormatError(h.tag, err)
+			return err
 		}
 	}
 
 	if err := h.notifyUserPresenceToContacts(ctx, usr.ID, usr.Status, chMessage); err != nil {
-		return service.FormatError(h.tag, err)
+		return err
 	}
 
 	return nil

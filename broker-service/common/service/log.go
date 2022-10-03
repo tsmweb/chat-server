@@ -10,10 +10,6 @@ import (
 	"github.com/tsmweb/go-helper-api/observability/event"
 )
 
-func FormatError(tag string, err error) error {
-	return fmt.Errorf(`{"%s":%s}`, tag, err.Error())
-}
-
 func Info(id, title, detail string) {
 	e := event.New(
 		config.HostID(),

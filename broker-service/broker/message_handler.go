@@ -7,7 +7,6 @@ import (
 
 	"github.com/tsmweb/broker-service/broker/message"
 	"github.com/tsmweb/broker-service/broker/user"
-	"github.com/tsmweb/broker-service/common/service"
 	"github.com/tsmweb/broker-service/config"
 	"github.com/tsmweb/go-helper-api/kafka"
 )
@@ -19,7 +18,6 @@ type MessageHandler interface {
 }
 
 type messageHandler struct {
-	tag            string
 	userRepository user.Repository
 	msgRepository  message.Repository
 	queue          kafka.Kafka
@@ -34,7 +32,6 @@ func NewMessageHandler(
 	encoder message.Encoder,
 ) MessageHandler {
 	return &messageHandler{
-		tag:            "broker::MessageHandler",
 		userRepository: userRepository,
 		msgRepository:  msgRepository,
 		queue:          queue,
@@ -73,7 +70,7 @@ func (h *messageHandler) Execute(ctx context.Context, msg message.Message) error
 func (h *messageHandler) processGroupMessage(ctx context.Context, msg *message.Message) error {
 	members, err := h.msgRepository.GetAllGroupMembers(ctx, msg.Group)
 	if err != nil {
-		return service.FormatError(h.tag, err)
+		return err
 	}
 	if len(members) < 1 {
 		msgResponse := message.NewResponse(
@@ -102,7 +99,7 @@ func (h *messageHandler) processGroupMessage(ctx context.Context, msg *message.M
 	}
 
 	if len(errEvents) > 0 {
-		return service.FormatError(h.tag, errors.New(strings.Join(errEvents, "|")))
+		return errors.New(strings.Join(errEvents, "|"))
 	}
 
 	return nil
@@ -112,7 +109,7 @@ func (h *messageHandler) processGroupMessage(ctx context.Context, msg *message.M
 func (h *messageHandler) isValidUser(ctx context.Context, msg *message.Message) (bool, error) {
 	ok, err := h.userRepository.IsValidUser(ctx, msg.To)
 	if err != nil {
-		return false, service.FormatError(h.tag, err)
+		return false, err
 	}
 	if !ok {
 		msgResponse := message.NewResponse(
@@ -132,7 +129,7 @@ func (h *messageHandler) isValidUser(ctx context.Context, msg *message.Message) 
 func (h *messageHandler) isBlockedUser(ctx context.Context, msg *message.Message) (bool, error) {
 	ok, err := h.userRepository.IsBlockedUser(ctx, msg.To, msg.From)
 	if err != nil {
-		return false, service.FormatError(h.tag, err)
+		return false, err
 	}
 	if ok {
 		msgResponse := message.NewResponse(
@@ -151,7 +148,7 @@ func (h *messageHandler) isBlockedUser(ctx context.Context, msg *message.Message
 func (h *messageHandler) sendMessage(ctx context.Context, msg *message.Message) error {
 	serverID, err := h.userRepository.GetUserServer(ctx, msg.To)
 	if err != nil {
-		return service.FormatError(h.tag, err)
+		return err
 	}
 
 	if strings.TrimSpace(serverID) != "" { // online
@@ -195,11 +192,11 @@ func (h *messageHandler) dispatchMessages(
 ) error {
 	mpb, err := h.encoder.Marshal(msg)
 	if err != nil {
-		return service.FormatError("message::Encoder", err)
+		return err
 	}
 
 	if err = producer.Publish(ctx, []byte(msg.ID), mpb); err != nil {
-		return service.FormatError("kafka::Producer", err)
+		return err
 	}
 
 	return nil

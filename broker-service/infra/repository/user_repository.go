@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/tsmweb/broker-service/broker/user"
-	"github.com/tsmweb/broker-service/common/service"
 	"github.com/tsmweb/broker-service/infra/db"
 )
 
@@ -26,7 +25,6 @@ const (
 
 // userRepository implementation for user.Repository interface.
 type userRepository struct {
-	tag      string
 	database db.Database
 	cache    db.CacheDB
 }
@@ -34,7 +32,6 @@ type userRepository struct {
 // NewUserRepository creates a new instance of user.Repository.
 func NewUserRepository(database db.Database, cache db.CacheDB) user.Repository {
 	return &userRepository{
-		tag:      "repository::userRepository",
 		database: database,
 		cache:    cache,
 	}
@@ -45,7 +42,7 @@ func (r *userRepository) AddUserPresence(ctx context.Context, userID string, ser
 	createAt time.Time) error {
 	txn, err := r.database.DB().Begin()
 	if err != nil {
-		return service.FormatError(r.tag, err)
+		return err
 	}
 
 	stmt, err := txn.PrepareContext(ctx, `
@@ -56,19 +53,19 @@ func (r *userRepository) AddUserPresence(ctx context.Context, userID string, ser
 			server_id = $2,
 			created_at = $3`)
 	if err != nil {
-		return service.FormatError(r.tag, err)
+		return err
 	}
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, userID, serverID, createAt)
 	if err != nil {
 		txn.Rollback()
-		return service.FormatError(r.tag, err)
+		return err
 	}
 
 	if err = txn.Commit(); err != nil {
 		txn.Rollback()
-		return service.FormatError(r.tag, err)
+		return err
 	}
 
 	return nil
@@ -78,26 +75,26 @@ func (r *userRepository) AddUserPresence(ctx context.Context, userID string, ser
 func (r *userRepository) RemoveUserPresence(ctx context.Context, userID string) error {
 	txn, err := r.database.DB().Begin()
 	if err != nil {
-		return service.FormatError(r.tag, err)
+		return err
 	}
 
 	stmt, err := txn.PrepareContext(ctx, `
 		DELETE FROM online_user
 		WHERE user_id = $1`)
 	if err != nil {
-		return service.FormatError(r.tag, err)
+		return err
 	}
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, userID)
 	if err != nil {
 		txn.Rollback()
-		return service.FormatError(r.tag, err)
+		return err
 	}
 
 	if err = txn.Commit(); err != nil {
 		txn.Rollback()
-		return service.FormatError(r.tag, err)
+		return err
 	}
 
 	return nil
@@ -122,7 +119,7 @@ func (r *userRepository) IsValidUser(ctx context.Context, userID string) (bool, 
 	_validUserKey := fmt.Sprintf(validUserKey, userID)
 	isValidStr, err := r.cache.Get(ctx, _validUserKey)
 	if err != nil {
-		return false, service.FormatError(r.tag, err)
+		return false, err
 	}
 	if isValidStr == validUserTrue {
 		return true, nil
@@ -133,12 +130,12 @@ func (r *userRepository) IsValidUser(ctx context.Context, userID string) (bool, 
 
 	isValid, err := r.isValidUser(ctx, userID)
 	if err != nil {
-		return false, service.FormatError(r.tag, err)
+		return false, err
 	}
 
 	if err = r.cache.Set(ctx, _validUserKey,
 		strconv.FormatBool(isValid), validUserExpiration); err != nil {
-		return false, service.FormatError(r.tag, err)
+		return false, err
 	}
 
 	return isValid, nil
@@ -147,14 +144,14 @@ func (r *userRepository) IsValidUser(ctx context.Context, userID string) (bool, 
 func (r *userRepository) isValidUser(ctx context.Context, userID string) (bool, error) {
 	stmt, err := r.database.DB().PrepareContext(ctx, `SELECT id FROM "user" WHERE id = $1`)
 	if err != nil {
-		return false, service.FormatError(r.tag, err)
+		return false, err
 	}
 	defer stmt.Close()
 
 	var _userID string
 	err = stmt.QueryRowContext(ctx, userID).Scan(&_userID)
 	if (err != nil) && (err != sql.ErrNoRows) {
-		return false, service.FormatError(r.tag, err)
+		return false, err
 	}
 
 	return userID == _userID, nil
@@ -166,7 +163,7 @@ func (r *userRepository) IsBlockedUser(ctx context.Context, userID string,
 	_blockedUserKey := fmt.Sprintf(blockedUserKey, userID, blockedUserID)
 	isBlockedStr, err := r.cache.Get(ctx, _blockedUserKey)
 	if err != nil {
-		return false, service.FormatError(r.tag, err)
+		return false, err
 	}
 	if isBlockedStr == blockedUserTrue {
 		return true, nil
@@ -177,12 +174,12 @@ func (r *userRepository) IsBlockedUser(ctx context.Context, userID string,
 
 	isBlocked, err := r.isBlockedUser(ctx, userID, blockedUserID)
 	if err != nil {
-		return false, service.FormatError(r.tag, err)
+		return false, err
 	}
 
 	if err = r.cache.Set(ctx, _blockedUserKey,
 		strconv.FormatBool(isBlocked), blockedUserExpiration); err != nil {
-		return false, service.FormatError(r.tag, err)
+		return false, err
 	}
 
 	return isBlocked, nil
@@ -196,14 +193,14 @@ func (r *userRepository) isBlockedUser(ctx context.Context, userID string,
 		WHERE user_id = $1
 		AND blocked_user_id = $2`)
 	if err != nil {
-		return false, service.FormatError(r.tag, err)
+		return false, err
 	}
 	defer stmt.Close()
 
 	var _blockedUserID string
 	err = stmt.QueryRowContext(ctx, userID, blockedUserID).Scan(&_blockedUserID)
 	if (err != nil) && (err != sql.ErrNoRows) {
-		return false, service.FormatError(r.tag, err)
+		return false, err
 	}
 
 	return _blockedUserID == blockedUserID, nil
@@ -217,7 +214,7 @@ func (r *userRepository) UpdateBlockedUserCache(ctx context.Context, userID stri
 	if r.cache.Key(ctx, _blockedUserKey) {
 		if err := r.cache.Set(ctx, _blockedUserKey,
 			strconv.FormatBool(blocked), blockedUserExpiration); err != nil {
-			return service.FormatError(r.tag, err)
+			return err
 		}
 	}
 
@@ -233,7 +230,7 @@ func (r *userRepository) GetAllContactsOnline(ctx context.Context,
 		INNER JOIN online_user u ON u.user_id = c.contact_id
 		WHERE c.user_id = $1`)
 	if err != nil {
-		return nil, service.FormatError(r.tag, err)
+		return nil, err
 	}
 	defer stmt.Close()
 
@@ -241,7 +238,7 @@ func (r *userRepository) GetAllContactsOnline(ctx context.Context,
 
 	rows, err := stmt.QueryContext(ctx, userID)
 	if err != nil {
-		return nil, service.FormatError(r.tag, err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -251,14 +248,14 @@ func (r *userRepository) GetAllContactsOnline(ctx context.Context,
 			if err == sql.ErrNoRows {
 				return nil, nil
 			}
-			return nil, service.FormatError(r.tag, err)
+			return nil, err
 		}
 
 		contacts = append(contacts, contactID)
 	}
 
 	if rows.Err() != nil {
-		return nil, service.FormatError(r.tag, err)
+		return nil, err
 	}
 
 	return contacts, nil
@@ -273,7 +270,7 @@ func (r *userRepository) GetAllRelationshipsOnline(ctx context.Context,
 		INNER JOIN online_user ou ON ou.user_id = c.user_id
 		WHERE c.contact_id = $1`)
 	if err != nil {
-		return nil, service.FormatError(r.tag, err)
+		return nil, err
 	}
 	defer stmt.Close()
 
@@ -281,7 +278,7 @@ func (r *userRepository) GetAllRelationshipsOnline(ctx context.Context,
 
 	rows, err := stmt.QueryContext(ctx, userID)
 	if err != nil {
-		return nil, service.FormatError(r.tag, err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -291,14 +288,14 @@ func (r *userRepository) GetAllRelationshipsOnline(ctx context.Context,
 			if err == sql.ErrNoRows {
 				return nil, nil
 			}
-			return nil, service.FormatError(r.tag, err)
+			return nil, err
 		}
 
 		relationships = append(relationships, _userID)
 	}
 
 	if rows.Err() != nil {
-		return nil, service.FormatError(r.tag, err)
+		return nil, err
 	}
 
 	return relationships, nil
