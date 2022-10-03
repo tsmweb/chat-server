@@ -50,16 +50,15 @@ services:
         command: >
             bash -c
             "sleep 10s &&
-            kafka-topics --create --topic=SERVERS --partitions 3 --if-not-exists --bootstrap-server=kafka:9092 &&
             kafka-topics --create --topic=USERS --partitions 3 --if-not-exists --bootstrap-server=kafka:9092 &&
             kafka-topics --create --topic=USERS_PRESENCE --partitions 1 --if-not-exists --bootstrap-server=kafka:9092 &&
             kafka-topics --create --topic=NEW_MESSAGES --partitions 3 --if-not-exists --bootstrap-server=kafka:9092 &&
             kafka-topics --create --topic=OFF_MESSAGES --partitions 3 --if-not-exists --bootstrap-server=kafka:9092 &&
             kafka-topics --create --topic=GROUP_EVENTS --partitions 3 --if-not-exists --bootstrap-server=kafka:9092 &&
             kafka-topics --create --topic=CONTACT_EVENTS --partitions 3 --if-not-exists --bootstrap-server=kafka:9092 &&
-            kafka-topics --create --topic=H01_MESSAGES --partitions 1 --if-not-exists --bootstrap-server=kafka:9092 &&
-            kafka-topics --create --topic=H02_MESSAGES --partitions 1 --if-not-exists --bootstrap-server=kafka:9092 &&
-            kafka-topics --create --topic=H03_MESSAGES --partitions 1 --if-not-exists --bootstrap-server=kafka:9092 &&
+            kafka-topics --create --topic=CHAT01_MESSAGES --partitions 1 --if-not-exists --bootstrap-server=kafka:9092 &&
+            kafka-topics --create --topic=CHAT02_MESSAGES --partitions 1 --if-not-exists --bootstrap-server=kafka:9092 &&
+            kafka-topics --create --topic=CHAT03_MESSAGES --partitions 1 --if-not-exists --bootstrap-server=kafka:9092 &&
             kafka-topics --create --topic=EVENTS --partitions 3 --if-not-exists --bootstrap-server=kafka:9092 &&
             kafka-topics --create --topic=METRICS --partitions 3 --if-not-exists --bootstrap-server=kafka:9092"
 
