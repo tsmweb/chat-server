@@ -12,15 +12,13 @@ services:
       HOST_ID: AUTH01
       SERVER_PORT: 8081
       EXPIRE_TOKEN: 24
-      DB_HOST: host.docker.app
+      DB_HOST: localhost
       DB_PORT: 5432
       DB_DATABASE: postgres
       DB_SCHEMA: chat_db
       DB_USER: salesapi
       DB_PASSWORD: password
-      KAFKA_BOOTSTRAP_SERVERS: host.docker.internal:9094
+      KAFKA_BOOTSTRAP_SERVERS: localhost:9094
       KAFKA_CLIENT_ID: AUTH_SERVICE
       KAFKA_EVENTS_TOPIC: EVENTS
-    extra_hosts:
-      - "host.docker.app:172.17.0.1"
 
