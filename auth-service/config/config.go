@@ -10,24 +10,21 @@ import (
 )
 
 var (
-	hostID              string
-	serverPort          int
-	dbHost              string
-	dbPort              int
-	dbUser              string
-	dbPassword          string
-	dbName              string
-	dbSchema            string
-	keySecureFile       string
-	pubSecureFile       string
-	certSecureFile      string
-	expireToken         int
-	metricsSendInterval int
-
+	hostID                string
+	serverPort            int
+	dbHost                string
+	dbPort                int
+	dbUser                string
+	dbPassword            string
+	dbName                string
+	dbSchema              string
+	keySecureFile         string
+	pubSecureFile         string
+	certSecureFile        string
+	expireToken           int
 	kafkaBootstrapServers string
 	kafkaClientID         string
 	kafkaEventsTopic      string
-	kafkaMetricsTopic     string
 )
 
 func Load(workDir string) error {
@@ -62,15 +59,9 @@ func Load(workDir string) error {
 		return err
 	}
 
-	metricsSendInterval, err = strconv.Atoi(os.Getenv("METRICS_SEND_INTERVAL")) //sec
-	if err != nil {
-		return err
-	}
-
 	kafkaBootstrapServers = os.Getenv("KAFKA_BOOTSTRAP_SERVERS")
 	kafkaClientID = os.Getenv("KAFKA_CLIENT_ID")
 	kafkaEventsTopic = os.Getenv("KAFKA_EVENTS_TOPIC")
-	kafkaMetricsTopic = os.Getenv("KAFKA_METRICS_TOPIC")
 
 	return nil
 }
@@ -123,10 +114,6 @@ func ExpireToken() int {
 	return expireToken
 }
 
-func MetricsSendInterval() int {
-	return metricsSendInterval
-}
-
 func KafkaBootstrapServers() string {
 	return kafkaBootstrapServers
 }
@@ -137,8 +124,4 @@ func KafkaClientID() string {
 
 func KafkaEventsTopic() string {
 	return kafkaEventsTopic
-}
-
-func KafkaMetricsTopic() string {
-	return kafkaMetricsTopic
 }
