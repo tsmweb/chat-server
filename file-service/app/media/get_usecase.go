@@ -26,7 +26,7 @@ func NewGetUseCase() GetUseCase {
 
 // Execute executes the GetUseCase use case.
 func (u *getUseCase) Execute(fileName string) ([]byte, error) {
-	path := filepath.Join(config.MediaFilePath(), fileName)
+	path := filepath.Join(config.MediaFileDir(), fileName)
 	fileBytes, err := os.ReadFile(path)
 	if err != nil {
 		service.Error("", u.tag, err)

@@ -27,7 +27,7 @@ func NewGetUseCase() GetUseCase {
 
 // Execute executes the GetUseCase use case.
 func (u *getUseCase) Execute(userID string) ([]byte, error) {
-	path := filepath.Join(config.UserFilePath(), fmt.Sprintf("%s.jpg", userID))
+	path := filepath.Join(config.UserFileDir(), fmt.Sprintf("%s.jpg", userID))
 	fileBytes, err := os.ReadFile(path)
 	if err != nil {
 		service.Error(userID, u.tag, err)

@@ -43,7 +43,7 @@ func (u *getUseCase) Execute(ctx context.Context, groupID, userID string) ([]byt
 		return nil, err
 	}
 
-	path := filepath.Join(config.GroupFilePath(), fmt.Sprintf("%s.jpg", groupID))
+	path := filepath.Join(config.GroupFileDir(), fmt.Sprintf("%s.jpg", groupID))
 	fileBytes, err := os.ReadFile(path)
 	if err != nil {
 		service.Error(userID, u.tag, err)

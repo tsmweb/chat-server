@@ -23,15 +23,13 @@ var (
 	keySecureFile         string
 	pubSecureFile         string
 	certSecureFile        string
-	filePath              string
-	userFilePath          string
-	groupFilePath         string
-	mediaFilePath         string
-	metricsSendInterval   int
+	fileDir               string
+	userFileDir           string
+	groupFileDir          string
+	mediaFileDir          string
 	kafkaBootstrapServers string
 	kafkaClientID         string
 	kafkaEventsTopic      string
-	kafkaMetricsTopic     string
 )
 
 func Load(workDir string) error {
@@ -53,20 +51,20 @@ func Load(workDir string) error {
 	}
 	maxUploadSize = int64(1024 * 1024 * _maxUploadSize)
 
-	filePath = filepath.Join(workDir, "files")
-	userFilePath = filepath.Join(filePath, "user")
-	groupFilePath = filepath.Join(filePath, "group")
-	mediaFilePath = filepath.Join(filePath, "media")
+	fileDir = filepath.Join(workDir, "files")
+	userFileDir = filepath.Join(fileDir, "user")
+	groupFileDir = filepath.Join(fileDir, "group")
+	mediaFileDir = filepath.Join(fileDir, "media")
 
-	if err = os.MkdirAll(userFilePath, os.ModePerm); err != nil {
+	if err = os.MkdirAll(userFileDir, os.ModePerm); err != nil {
 		return err
 	}
 
-	if err = os.MkdirAll(groupFilePath, os.ModePerm); err != nil {
+	if err = os.MkdirAll(groupFileDir, os.ModePerm); err != nil {
 		return err
 	}
 
-	if err = os.MkdirAll(mediaFilePath, os.ModePerm); err != nil {
+	if err = os.MkdirAll(mediaFileDir, os.ModePerm); err != nil {
 		return err
 	}
 
@@ -85,15 +83,9 @@ func Load(workDir string) error {
 	pubSecureFile = workDir + "/config/cert/server.pub"
 	certSecureFile = workDir + "/config/cert/server.crt"
 
-	metricsSendInterval, err = strconv.Atoi(os.Getenv("METRICS_SEND_INTERVAL")) //sec
-	if err != nil {
-		return err
-	}
-
 	kafkaBootstrapServers = os.Getenv("KAFKA_BOOTSTRAP_SERVERS")
 	kafkaClientID = os.Getenv("KAFKA_CLIENT_ID")
 	kafkaEventsTopic = os.Getenv("KAFKA_EVENTS_TOPIC")
-	kafkaMetricsTopic = os.Getenv("KAFKA_METRICS_TOPIC")
 
 	return nil
 }
@@ -150,24 +142,20 @@ func CertSecureFile() string {
 	return certSecureFile
 }
 
-func FilePath() string {
-	return filePath
+func FileDir() string {
+	return fileDir
 }
 
-func UserFilePath() string {
-	return userFilePath
+func UserFileDir() string {
+	return userFileDir
 }
 
-func GroupFilePath() string {
-	return groupFilePath
+func GroupFileDir() string {
+	return groupFileDir
 }
 
-func MediaFilePath() string {
-	return mediaFilePath
-}
-
-func MetricsSendInterval() int {
-	return metricsSendInterval
+func MediaFileDir() string {
+	return mediaFileDir
 }
 
 func KafkaBootstrapServers() string {
@@ -180,8 +168,4 @@ func KafkaClientID() string {
 
 func KafkaEventsTopic() string {
 	return kafkaEventsTopic
-}
-
-func KafkaMetricsTopic() string {
-	return kafkaMetricsTopic
 }

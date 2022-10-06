@@ -41,7 +41,7 @@ func (u *uploadUseCase) Execute(userID string, file multipart.File) error {
 	}
 
 	// Creates the file on the local file system.
-	path := filepath.Join(config.UserFilePath(), fmt.Sprintf("%s.%s", userID, fileExtension))
+	path := filepath.Join(config.UserFileDir(), fmt.Sprintf("%s.%s", userID, fileExtension))
 	if err = fileutil.CopyFile(path, file); err != nil {
 		service.Error(userID, u.tag, err)
 		return err
