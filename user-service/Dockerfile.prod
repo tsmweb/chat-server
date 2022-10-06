@@ -1,11 +1,8 @@
-FROM golang:1.19
+FROM golang:1.19.2-alpine
 
 WORKDIR /go/src
 ENV PATH="/go/bin:${PATH}"
 
-RUN apt-get update && \
-    apt-get install build-essential -y
-
 COPY . .
-RUN GOOS=linux go build -ldflags="-s -w" -o user cmd/user/main.go cmd/user/di.go
+RUN go build -ldflags="-s -w" -o user cmd/user/main.go cmd/user/di.go
 ENTRYPOINT ["./user"]

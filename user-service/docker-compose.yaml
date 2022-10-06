@@ -11,18 +11,14 @@ services:
     environment:
       HOST_ID: USER01
       SERVER_PORT: 8082
-      DB_HOST: host.docker.internal
+      DB_HOST: localhost
       DB_PORT: 5432
       DB_DATABASE: postgres
       DB_SCHEMA: chat_db
       DB_USER: salesapi
       DB_PASSWORD: password
-      METRICS_SEND_INTERVAL: 60
-      KAFKA_BOOTSTRAP_SERVERS: host.docker.internal:9094
+      KAFKA_BOOTSTRAP_SERVERS: localhost:9094
       KAFKA_CLIENT_ID: USER_SERVICE
       KAFKA_GROUP_EVENT_TOPIC: GROUP_EVENTS
       KAFKA_CONTACT_EVENT_TOPIC: CONTACT_EVENTS
       KAFKA_EVENTS_TOPIC: EVENTS
-      KAFKA_METRICS_TOPIC: METRICS
-    extra_hosts:
-      - "host.docker.internal:172.17.0.1"

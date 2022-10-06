@@ -21,13 +21,11 @@ var (
 	keySecureFile          string
 	pubSecureFile          string
 	certSecureFile         string
-	metricsSendInterval    int
 	kafkaBootstrapServers  string
 	kafkaClientID          string
 	kafkaGroupEventTopic   string
 	kafkaContactEventTopic string
 	kafkaEventsTopic       string
-	kafkaMetricsTopic      string
 )
 
 func Load(workDir string) error {
@@ -58,17 +56,11 @@ func Load(workDir string) error {
 	pubSecureFile = workDir + "/config/cert/server.pub"
 	certSecureFile = workDir + "/config/cert/server.crt"
 
-	metricsSendInterval, err = strconv.Atoi(os.Getenv("METRICS_SEND_INTERVAL")) //sec
-	if err != nil {
-		return err
-	}
-
 	kafkaBootstrapServers = os.Getenv("KAFKA_BOOTSTRAP_SERVERS")
 	kafkaClientID = os.Getenv("KAFKA_CLIENT_ID")
 	kafkaGroupEventTopic = os.Getenv("KAFKA_GROUP_EVENT_TOPIC")
 	kafkaContactEventTopic = os.Getenv("KAFKA_CONTACT_EVENT_TOPIC")
 	kafkaEventsTopic = os.Getenv("KAFKA_EVENTS_TOPIC")
-	kafkaMetricsTopic = os.Getenv("KAFKA_METRICS_TOPIC")
 
 	return nil
 }
@@ -117,10 +109,6 @@ func DBSchema() string {
 	return dbSchema
 }
 
-func MetricsSendInterval() int {
-	return metricsSendInterval
-}
-
 func KafkaBootstrapServers() string {
 	return kafkaBootstrapServers
 }
@@ -139,8 +127,4 @@ func KafkaContactEventTopic() string {
 
 func KafkaEventsTopic() string {
 	return kafkaEventsTopic
-}
-
-func KafkaMetricsTopic() string {
-	return kafkaMetricsTopic
 }
