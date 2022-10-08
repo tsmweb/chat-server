@@ -2,6 +2,7 @@ version: "3"
 
 services: 
 
+    # INFRASTRUCTURE
     postgres:
         image: postgres:14.5
         restart: 'no'
@@ -91,6 +92,7 @@ services:
         networks:
             - proxy
 
+    # AUTH SERVICE CLUSTER
     auth-service-01:
         image: tsmweb/auth-service:latest
         container_name: auth-service-01
@@ -112,7 +114,7 @@ services:
             DB_USER: salesapi
             DB_PASSWORD: password
             KAFKA_BOOTSTRAP_SERVERS: 'kafka:9094'
-            KAFKA_CLIENT_ID: AUTH_SERVICE
+            KAFKA_CLIENT_ID: AUTH01_SERVICE
             KAFKA_EVENTS_TOPIC: EVENTS
     
     auth-service-02:
@@ -136,9 +138,10 @@ services:
             DB_USER: salesapi
             DB_PASSWORD: password
             KAFKA_BOOTSTRAP_SERVERS: 'kafka:9094'
-            KAFKA_CLIENT_ID: AUTH_SERVICE
+            KAFKA_CLIENT_ID: AUTH02_SERVICE
             KAFKA_EVENTS_TOPIC: EVENTS
 
+    # USER SERVICE CLUSTER
     user-service-01:
         image: tsmweb/user-service:latest
         container_name: user-service-01
@@ -159,7 +162,7 @@ services:
             DB_USER: salesapi
             DB_PASSWORD: password
             KAFKA_BOOTSTRAP_SERVERS: 'kafka:9094'
-            KAFKA_CLIENT_ID: USER_SERVICE
+            KAFKA_CLIENT_ID: USER01_SERVICE
             KAFKA_GROUP_EVENT_TOPIC: GROUP_EVENTS
             KAFKA_CONTACT_EVENT_TOPIC: CONTACT_EVENTS
             KAFKA_EVENTS_TOPIC: EVENTS
@@ -184,11 +187,12 @@ services:
             DB_USER: salesapi
             DB_PASSWORD: password
             KAFKA_BOOTSTRAP_SERVERS: 'kafka:9094'
-            KAFKA_CLIENT_ID: USER_SERVICE
+            KAFKA_CLIENT_ID: USER02_SERVICE
             KAFKA_GROUP_EVENT_TOPIC: GROUP_EVENTS
             KAFKA_CONTACT_EVENT_TOPIC: CONTACT_EVENTS
             KAFKA_EVENTS_TOPIC: EVENTS
 
+    # FILE SERVICE CLUSTER
     file-service-01:
         image: tsmweb/file-service:latest
         container_name: file-service-01
@@ -212,7 +216,7 @@ services:
             DB_PASSWORD: password
             MAX_UPLOAD_SIZE: 10
             KAFKA_BOOTSTRAP_SERVERS: 'kafka:9094'
-            KAFKA_CLIENT_ID: FILE_SERVICE
+            KAFKA_CLIENT_ID: FILE01_SERVICE
             KAFKA_EVENTS_TOPIC: EVENTS
 
     file-service-02:
@@ -238,9 +242,138 @@ services:
             DB_PASSWORD: password
             MAX_UPLOAD_SIZE: 10
             KAFKA_BOOTSTRAP_SERVERS: 'kafka:9094'
-            KAFKA_CLIENT_ID: FILE_SERVICE
+            KAFKA_CLIENT_ID: FILE02_SERVICE
             KAFKA_EVENTS_TOPIC: EVENTS
 
+    # CHAT SERVICE CLUSTER
+    chat-service-01:
+        image: tsmweb/chat-service:latest
+        container_name: chat-service-01
+        depends_on:
+            - kafka
+        ports:
+            - 80
+        networks:
+            - proxy
+        environment:
+            HOST_ID: CHAT01
+            SERVER_PORT: 80
+            PPROF_PORT: 6060
+            GOPOOL_SIZE: 128
+            KAFKA_BOOTSTRAP_SERVERS: 'kafka:9094'
+            KAFKA_CLIENT_ID: CHAT01_SERVICE
+            KAFKA_GROUP_ID: CHAT_SERVICE
+            KAFKA_USERS_TOPIC: USERS
+            KAFKA_USERS_PRESENCE_TOPIC: USERS_PRESENCE
+            KAFKA_NEW_MESSAGES_TOPIC: NEW_MESSAGES
+            KAFKA_OFF_MESSAGES_TOPIC: OFF_MESSAGES
+            KAFKA_EVENTS_TOPIC: EVENTS
+
+    chat-service-02:
+        image: tsmweb/chat-service:latest
+        container_name: chat-service-02
+        depends_on:
+            - kafka
+        ports:
+            - 80
+        networks:
+            - proxy
+        environment:
+            HOST_ID: CHAT02
+            SERVER_PORT: 80
+            PPROF_PORT: 6060
+            GOPOOL_SIZE: 128
+            KAFKA_BOOTSTRAP_SERVERS: 'kafka:9094'
+            KAFKA_CLIENT_ID: CHAT02_SERVICE
+            KAFKA_GROUP_ID: CHAT_SERVICE
+            KAFKA_USERS_TOPIC: USERS
+            KAFKA_USERS_PRESENCE_TOPIC: USERS_PRESENCE
+            KAFKA_NEW_MESSAGES_TOPIC: NEW_MESSAGES
+            KAFKA_OFF_MESSAGES_TOPIC: OFF_MESSAGES
+            KAFKA_EVENTS_TOPIC: EVENTS
+
+    # BROKER SERVICE CLUSTER
+    redis-01:
+        image: redis
+        container_name: redis-01
+        command: redis-server --requirepass password
+        ports:
+            - 6379
+        networks:
+            - proxy
+
+    broker-service-01:
+        image: tsmweb/broker-service:latest
+        container_name: broker-service-01
+        depends_on:
+            - postgres
+            - kafka
+            - redis-01
+        networks:
+            - proxy
+        environment:
+            HOST_ID: BROKER01
+            GOPOOL_SIZE: 128
+            DB_HOST: postgres
+            DB_PORT: 5432
+            DB_DATABASE: postgres
+            DB_SCHEMA: chat_db
+            DB_USER: salesapi
+            DB_PASSWORD: password
+            REDIS_HOST: 'redis-01:6379'
+            REDIS_PASSWORD: password
+            KAFKA_BOOTSTRAP_SERVERS: 'kafka:9094'
+            KAFKA_CLIENT_ID: BROKER01_SERVICE
+            KAFKA_GROUP_ID: BROKER_SERVICE
+            KAFKA_USERS_TOPIC: USERS
+            KAFKA_USERS_PRESENCE_TOPIC: USERS_PRESENCE
+            KAFKA_NEW_MESSAGES_TOPIC: NEW_MESSAGES
+            KAFKA_OFF_MESSAGES_TOPIC: OFF_MESSAGES
+            KAFKA_GROUP_EVENT_TOPIC: GROUP_EVENTS
+            KAFKA_CONTACT_EVENT_TOPIC: CONTACT_EVENTS
+            KAFKA_HOST_TOPIC: MESSAGES
+            KAFKA_EVENTS_TOPIC: EVENTS
+
+    redis-02:
+        image: redis
+        container_name: redis-02
+        command: redis-server --requirepass password
+        ports:
+            - 6379
+        networks:
+            - proxy
+
+    broker-service-02:
+        image: tsmweb/broker-service:latest
+        container_name: broker-service-02
+        depends_on:
+            - postgres
+            - kafka
+            - redis-02
+        networks:
+            - proxy
+        environment:
+            HOST_ID: BROKER02
+            GOPOOL_SIZE: 128
+            DB_HOST: postgres
+            DB_PORT: 5432
+            DB_DATABASE: postgres
+            DB_SCHEMA: chat_db
+            DB_USER: salesapi
+            DB_PASSWORD: password
+            REDIS_HOST: 'redis-02:6379'
+            REDIS_PASSWORD: password
+            KAFKA_BOOTSTRAP_SERVERS: 'kafka:9094'
+            KAFKA_CLIENT_ID: BROKER02_SERVICE
+            KAFKA_GROUP_ID: BROKER_SERVICE
+            KAFKA_USERS_TOPIC: USERS
+            KAFKA_USERS_PRESENCE_TOPIC: USERS_PRESENCE
+            KAFKA_NEW_MESSAGES_TOPIC: NEW_MESSAGES
+            KAFKA_OFF_MESSAGES_TOPIC: OFF_MESSAGES
+            KAFKA_GROUP_EVENT_TOPIC: GROUP_EVENTS
+            KAFKA_CONTACT_EVENT_TOPIC: CONTACT_EVENTS
+            KAFKA_HOST_TOPIC: MESSAGES
+            KAFKA_EVENTS_TOPIC: EVENTS
 
 #     kafka-connect:
 #         image: confluentinc/cp-kafka-connect-base:6.0.0
