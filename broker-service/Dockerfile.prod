@@ -4,5 +4,5 @@ WORKDIR /go/src
 ENV PATH="/go/bin:${PATH}"
 
 COPY . .
-RUN go build -ldflags="-s -w" -o broker cmd/broker/main.go cmd/broker/di.go
-ENTRYPOINT ["./broker"]
+RUN go build -ldflags="-s -w" -o service cmd/broker/main.go cmd/broker/di.go
+ENTRYPOINT ["./service"]

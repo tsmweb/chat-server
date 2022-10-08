@@ -25,7 +25,6 @@ var (
 	kafkaBootstrapServers   string
 	kafkaClientID           string
 	kafkaGroupID            string
-	kafkaServersTopic       string
 	kafkaUsersTopic         string
 	kafkaUsersPresenceTopic string
 	kafkaNewMessagesTopic   string
@@ -64,7 +63,6 @@ func Load(workDir string) error {
 	kafkaBootstrapServers = os.Getenv("KAFKA_BOOTSTRAP_SERVERS")
 	kafkaClientID = os.Getenv("KAFKA_CLIENT_ID")
 	kafkaGroupID = os.Getenv("KAFKA_GROUP_ID")
-	kafkaServersTopic = os.Getenv("KAFKA_SERVERS_TOPIC")
 	kafkaUsersTopic = os.Getenv("KAFKA_USERS_TOPIC")
 	kafkaUsersPresenceTopic = os.Getenv("KAFKA_USERS_PRESENCE_TOPIC")
 	kafkaNewMessagesTopic = os.Getenv("KAFKA_NEW_MESSAGES_TOPIC")
@@ -127,10 +125,6 @@ func KafkaClientID() string {
 
 func KafkaGroupID() string {
 	return kafkaGroupID
-}
-
-func KafkaServersTopic() string {
-	return kafkaServersTopic
 }
 
 func KafkaUsersTopic() string {

@@ -32,9 +32,8 @@ func main() {
 	producerEvents := provider.NewKafkaProducer(config.KafkaEventsTopic())
 	if err := event.Init(producerEvents); err != nil {
 		log.Fatalf("[ERROR] Could not start events collects. Error: %s\n", err.Error())
-	} else {
-		defer event.Close()
 	}
+	defer event.Close()
 
 	// Start broker service
 	brokerService := provider.BrokerProvider()
