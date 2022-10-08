@@ -14,7 +14,6 @@ import (
 	"github.com/tsmweb/chat-service/config"
 	"github.com/tsmweb/go-helper-api/middleware"
 	"github.com/tsmweb/go-helper-api/observability/event"
-	"github.com/tsmweb/go-helper-api/observability/metric"
 	"github.com/urfave/negroni"
 )
 
@@ -60,17 +59,9 @@ func main() {
 
 	provider := CreateProvider(ctx)
 
-	// Collect service metrics.
-	producerMetrics := provider.NewKafkaProducer(config.KafkaMetricsTopic())
-	err := metric.Start(config.HostID(), config.MetricsSendInterval(), producerMetrics)
-	if err != nil {
-		log.Fatalf("[ERROR] Could not start metrics collects. Error: %s\n", err.Error())
-	}
-	defer metric.Stop()
-
 	// Initializes the service's event producer.
 	producerEvents := provider.NewKafkaProducer(config.KafkaEventsTopic())
-	if err = event.Init(producerEvents); err != nil {
+	if err := event.Init(producerEvents); err != nil {
 		log.Fatalf("[ERROR] Could not start events collects. Error: %s\n", err.Error())
 	}
 	defer event.Close()

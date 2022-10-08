@@ -21,7 +21,6 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.4.2 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
-	github.com/mackerelio/go-osstat v0.2.3 // indirect
 	github.com/pierrec/lz4/v4 v4.1.16 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/segmentio/kafka-go v0.4.35 // indirect
