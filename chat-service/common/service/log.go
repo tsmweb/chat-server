@@ -1,9 +1,7 @@
 package service
 
 import (
-	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/tsmweb/chat-service/config"
@@ -59,6 +57,6 @@ func send(e *event.Event) {
 		strings.ToUpper(e.Type), e.Host, e.User, e.Title, e.Detail)
 
 	if err := event.Send(e); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "[ERROR] sending event: %v\n", err)
+		log.Printf("[ERROR] sending event: %s\n", err.Error())
 	}
 }

@@ -20,7 +20,6 @@ var (
 	certSecureFile          string
 	kafkaBootstrapServers   string
 	kafkaClientID           string
-	kafkaServersTopic       string
 	kafkaUsersTopic         string
 	kafkaUsersPresenceTopic string
 	kafkaNewMessagesTopic   string
@@ -52,7 +51,6 @@ func Load(workDir string) error {
 
 	kafkaBootstrapServers = os.Getenv("KAFKA_BOOTSTRAP_SERVERS")
 	kafkaClientID = os.Getenv("KAFKA_CLIENT_ID")
-	kafkaServersTopic = os.Getenv("KAFKA_SERVERS_TOPIC")
 	kafkaUsersTopic = os.Getenv("KAFKA_USERS_TOPIC")
 	kafkaUsersPresenceTopic = os.Getenv("KAFKA_USERS_PRESENCE_TOPIC")
 	kafkaNewMessagesTopic = os.Getenv("KAFKA_NEW_MESSAGES_TOPIC")
@@ -94,10 +92,6 @@ func KafkaBootstrapServers() string {
 
 func KafkaClientID() string {
 	return kafkaClientID
-}
-
-func KafkaServersTopic() string {
-	return kafkaServersTopic
 }
 
 func KafkaUsersTopic() string {
