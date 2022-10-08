@@ -22,7 +22,6 @@ var (
 	dbSchema                string
 	redisHost               string
 	redisPassword           string
-	metricsSendInterval     int
 	kafkaBootstrapServers   string
 	kafkaClientID           string
 	kafkaGroupID            string
@@ -35,7 +34,6 @@ var (
 	kafkaContactEventTopic  string
 	kafkaHostTopic          string
 	kafkaEventsTopic        string
-	kafkaMetricsTopic       string
 )
 
 func Load(workDir string) error {
@@ -63,11 +61,6 @@ func Load(workDir string) error {
 	redisHost = os.Getenv("REDIS_HOST")
 	redisPassword = os.Getenv("REDIS_PASSWORD")
 
-	metricsSendInterval, err = strconv.Atoi(os.Getenv("METRICS_SEND_INTERVAL")) //sec
-	if err != nil {
-		return err
-	}
-
 	kafkaBootstrapServers = os.Getenv("KAFKA_BOOTSTRAP_SERVERS")
 	kafkaClientID = os.Getenv("KAFKA_CLIENT_ID")
 	kafkaGroupID = os.Getenv("KAFKA_GROUP_ID")
@@ -80,7 +73,6 @@ func Load(workDir string) error {
 	kafkaContactEventTopic = os.Getenv("KAFKA_CONTACT_EVENT_TOPIC")
 	kafkaHostTopic = os.Getenv("KAFKA_HOST_TOPIC")
 	kafkaEventsTopic = os.Getenv("KAFKA_EVENTS_TOPIC")
-	kafkaMetricsTopic = os.Getenv("KAFKA_METRICS_TOPIC")
 
 	return nil
 }
@@ -123,10 +115,6 @@ func RedisHost() string {
 
 func RedisPassword() string {
 	return redisPassword
-}
-
-func MetricsSendInterval() int {
-	return metricsSendInterval
 }
 
 func KafkaBootstrapServers() string {
@@ -175,8 +163,4 @@ func KafkaHostTopic(serverID string) string {
 
 func KafkaEventsTopic() string {
 	return kafkaEventsTopic
-}
-
-func KafkaMetricsTopic() string {
-	return kafkaMetricsTopic
 }
