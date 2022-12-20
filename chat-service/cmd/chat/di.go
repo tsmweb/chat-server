@@ -46,7 +46,7 @@ func (p *Provider) ServerProvider() (*server.Server, error) {
 		messageEncoder := message.EncoderFunc(adapter.MessageMarshal)
 		userEncoder := user.EncoderFunc(adapter.UserMarshal)
 
-		messageConsumer := p.KafkaProvider().NewConsumer(config.KafkaGroupID(),
+		messageConsumer := p.KafkaProvider().NewConsumer(config.KafkaClientID(),
 			config.KafkaHostTopic())
 		messageProducer := p.KafkaProvider().NewProducer(config.KafkaNewMessagesTopic())
 		offMessageProducer := p.KafkaProvider().NewProducer(config.KafkaOffMessagesTopic())
